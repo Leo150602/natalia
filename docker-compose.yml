@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: natalia-postgres-db
+    environment:
+      POSTGRES_DB: natalia_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./main
+    image: leonardo0604/natalia-backend:latest
+    container_name: natalia-springboot-backend
+    ports:
+      - "8080:8080"
+    environment:
+      # Para usar la base de datos local en Docker, descomente las siguientes líneas:
+      # SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/natalia_db
+      # SPRING_DATASOURCE_USERNAME: postgres
+      # SPRING_DATASOURCE_PASSWORD: password123
+      
+      # Por defecto, sigue conectándose a la base de datos en la nube (Neon) para mantener sincronía entre PCs:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ep-lingering-cake-atlc67d5.c-9.us-east-1.aws.neon.tech:5432/neondb?sslmode=require
+      SPRING_DATASOURCE_USERNAME: neondb_owner
+      SPRING_DATASOURCE_PASSWORD: npg_yxsFi27PfgNv
+    depends_on:
+      - db
+
+  frontend:
+    build: ./pagina
+    image: leonardo0604/natalia-frontend:latest
+    container_name: natalia-angular-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
