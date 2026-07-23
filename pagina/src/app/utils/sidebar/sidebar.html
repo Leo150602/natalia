@@ -1,0 +1,51 @@
+<nav class="sidebar d-flex flex-column h-100">
+    
+    <!-- Brand Logo Area (Matches CODI logo and typography) -->
+    <div class="sidebar-brand-box p-3 d-flex align-items-center gap-2 border-bottom border-dark-subtle">
+        <div class="brand-logo-circle">O</div>
+        <div class="brand-text-block">
+            <h2 class="brand-title mb-0">ODECOR</h2>
+            <span class="brand-subtitle">Centro de Control Posventa</span>
+        </div>
+    </div>
+    
+    <!-- Warning message if no promotion is active -->
+    <div *ngIf="!promocionSeleccionada" class="alert alert-warning m-3 p-2 text-center alert-custom-sidebar" style="font-size: 0.78rem;">
+      ⚠️ Seleccione una promoción en la barra superior para habilitar accesos de incidencias, pisos y visitas.
+    </div>
+
+    <!-- Navigation Menu Sections -->
+    <div class="sidebar-menu-sections flex-grow-1 p-2">
+        <div class="seccion mb-3" *ngFor="let seccion of secciones">
+            
+            <!-- Section Header (Clickable collapsible) -->
+            <button class="titulo-btn d-flex justify-content-between align-items-center w-100 py-2 px-3 text-start" (click)="cambiarEstado(seccion)">
+                <span class="sec-lbl">{{ seccion.nombre }}</span>
+                <span class="sec-chevron">
+                    {{ seccion.abierta ? '▼' : '►' }}
+                </span>
+            </button>
+
+            <!-- Section Child Links (Items under header) -->
+            <div class="hijos-list d-flex flex-column gap-1 mt-1" *ngIf="seccion.abierta">
+                <a *ngFor="let hijo of seccion.hijos" 
+                   [routerLink]="(hijo.requierePromo && !promocionSeleccionada) ? null : hijo.link" 
+                   [class.deshabilitado]="hijo.requierePromo && !promocionSeleccionada"
+                   routerLinkActive="activo"
+                   class="menu-link-item d-flex align-items-center py-2 px-3 rounded text-decoration-none">
+                    <!-- Dynamic icons representing each option -->
+                    <span class="menu-icon me-2">
+                      <span *ngIf="hijo.nombre === 'Incidencias'">📋</span>
+                      <span *ngIf="hijo.nombre === 'Visitas'">📅</span>
+                      <span *ngIf="hijo.nombre === 'Promociones'">🏢</span>
+                      <span *ngIf="hijo.nombre === 'Propietarios'">👥</span>
+                      <span *ngIf="hijo.nombre === 'Pisos'">🔑</span>
+                      <span *ngIf="hijo.nombre.startsWith('Crear')">➕</span>
+                    </span>
+                    <span class="menu-text">{{ hijo.nombre }}</span>
+                </a>
+            </div>
+
+        </div>
+    </div>
+</nav>

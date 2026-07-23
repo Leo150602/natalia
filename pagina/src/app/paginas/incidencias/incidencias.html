@@ -1,0 +1,150 @@
+<div class="container-fluid p-4">
+  <!-- Cabecera -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="mb-0 font-weight-bold text-dark">Gestión de Incidencias</h1>
+      <p class="text-muted mb-0">Listado completo e incidencias técnicas registradas en la promoción activa</p>
+    </div>
+    
+    <div class="d-flex gap-2 align-items-center">
+      <!-- Input de archivo oculto -->
+      <input 
+        type="file" 
+        #fileInput 
+        (change)="importarExcel($event)" 
+        accept=".xlsx, .xls" 
+        class="d-none" />
+
+      <!-- Botón Filtros (Menú Flotante) -->
+      <div class="position-relative">
+        <button class="btn btn-outline-secondary d-flex align-items-center gap-2" (click)="toggleMenuFiltros()">
+          <span>🔍</span> <span>Filtrar</span>
+        </button>
+
+        <!-- Tarjeta de Filtros Flotante -->
+        <div *ngIf="mostrarMenuFiltros" class="card shadow-lg border border-light position-absolute end-0 mt-2 p-3 panel-filtros-flotante" style="width: 380px; z-index: 1080;">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 font-weight-bold text-dark">🔍 Búsqueda Avanzada</h6>
+            <button type="button" class="btn-close" style="font-size: 12px;" (click)="toggleMenuFiltros()"></button>
+          </div>
+
+          <form (ngSubmit)="aplicarFiltros()" #filtrosForm="ngForm">
+            <!-- Nº Incidencia -->
+            <div class="mb-2">
+              <label for="numeroIncidencia" class="form-label small font-weight-bold mb-1">Número de Incidencia</label>
+              <input 
+                type="text" 
+                class="form-control form-control-sm" 
+                id="numeroIncidencia" 
+                name="numeroIncidencia" 
+                [(ngModel)]="filtros.numeroIncidencia" 
+                placeholder="Ej. INC-001" />
+            </div>
+
+            <!-- Piso -->
+            <div class="mb-2">
+              <label for="piso" class="form-label small font-weight-bold mb-1">Piso</label>
+              <input 
+                type="text" 
+                class="form-control form-control-sm" 
+                id="piso" 
+                name="piso" 
+                [(ngModel)]="filtros.piso" 
+                placeholder="Ej. 1º A" />
+            </div>
+
+            <!-- Categoría -->
+            <div class="mb-2">
+              <label for="categoria" class="form-label small font-weight-bold mb-1">Categoría</label>
+              <select 
+                class="form-select form-select-sm" 
+                id="categoria" 
+                name="categoria" 
+                [(ngModel)]="filtros.categoriaIncidencia">
+                <option value="">Todas...</option>
+                <option *ngFor="let cat of categorias" [value]="cat.value">
+                  {{ cat.descripcion }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Estado -->
+            <div class="mb-2">
+              <label for="estado" class="form-label small font-weight-bold mb-1">Estado</label>
+              <select 
+                class="form-select form-select-sm" 
+                id="estado" 
+                name="estado" 
+                [(ngModel)]="filtros.estadoIncidencia">
+                <option value="">Todos...</option>
+                <option *ngFor="let est of estados" [value]="est.value">
+                  {{ est.descripcion }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Rango Fecha Desde -->
+            <div class="mb-2">
+              <label for="fechaInicial" class="form-label small font-weight-bold mb-1">Fecha Desde</label>
+              <input 
+                type="datetime-local" 
+                class="form-control form-control-sm" 
+                id="fechaInicial" 
+                name="fechaInicial" 
+                [(ngModel)]="filtros.fechaInicial" />
+            </div>
+
+            <!-- Rango Fecha Hasta -->
+            <div class="mb-3">
+              <label for="fechaFinal" class="form-label small font-weight-bold mb-1">Fecha Hasta</label>
+              <input 
+                type="datetime-local" 
+                class="form-control form-control-sm" 
+                id="fechaFinal" 
+                name="fechaFinal" 
+                [(ngModel)]="filtros.fechaFinal" />
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex justify-content-end gap-2 border-top pt-2">
+              <button type="button" class="btn btn-outline-secondary btn-sm px-3" (click)="limpiarFiltros()">
+                Limpiar
+              </button>
+              <button type="submit" class="btn btn-primary btn-sm px-4">
+                Buscar
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Backdrop invisible para clics fuera -->
+        <div *ngIf="mostrarMenuFiltros" class="backdrop-filtros" (click)="toggleMenuFiltros()"></div>
+      </div>
+
+      <!-- Botón Importar -->
+      <button class="btn btn-outline-primary d-flex align-items-center gap-2" (click)="fileInput.click()">
+        <span>Importar Excel</span>
+      </button>
+
+      <!-- Botón Exportar -->
+      <button class="btn btn-primary d-flex align-items-center gap-2" (click)="exportarExcel()">
+        <span>Exportar Excel</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabla de Resultados -->
+  <div class="row">
+    <div class="col-12">
+      <app-tabla-datos
+        [datos]="datos"
+        [columnas]="config.columnas"
+        [mostrarId]="config.mostrarId"
+        [idCampo]="config.idCampo"
+        [idNombre]="config.idNombre"
+        (editar)="editarIncidencia($event)"
+        (eliminar)="eliminarIncidencia($event)">
+      </app-tabla-datos>
+    </div>
+  </div>
+</div>

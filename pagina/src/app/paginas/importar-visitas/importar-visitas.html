@@ -1,0 +1,122 @@
+<div class="container p-4" style="max-width: 600px;">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white p-3">
+      <h2 class="mb-0">{{ modoEdicion ? 'Actualizar Visita' : 'Programar Nueva Visita' }}</h2>
+      <small>{{ modoEdicion ? 'Modifique los campos necesarios' : 'Complete la ficha para agendar una visita técnica posventa' }}</small>
+    </div>
+
+    <div class="card-body p-4">
+      <form (ngSubmit)="guardar()" #visitaForm="ngForm">
+        
+        <!-- Incidencia Relacionada -->
+        <div class="mb-3">
+          <label for="numeroIncidencia" class="form-label font-weight-bold">Incidencia Relacionada *</label>
+          <select 
+            class="form-select" 
+            id="numeroIncidencia" 
+            name="numeroIncidencia" 
+            [(ngModel)]="nuevaVisita.numeroIncidencia" 
+            required>
+            <option value="" disabled selected>Seleccione la incidencia...</option>
+            <option *ngFor="let inc of incidencias" [value]="inc.numeroIncidencia">
+              {{ inc.numeroIncidencia }} - {{ inc.descripcion || 'Sin descripción' }} (Piso: {{ inc.pisos?.piso }})
+            </option>
+          </select>
+        </div>
+
+        <!-- Técnico Asignado -->
+        <div class="mb-3">
+          <label for="idTecnico" class="form-label font-weight-bold">Técnico Asignado *</label>
+          <select 
+            class="form-select" 
+            id="idTecnico" 
+            name="idTecnico" 
+            [(ngModel)]="nuevaVisita.idTecnico" 
+            required>
+            <option [value]="null" disabled selected>Seleccione un técnico...</option>
+            <option value="nuevo">-- Registrar Nuevo Técnico --</option>
+            <option *ngFor="let t of tecnicos" [value]="t.idPersona">
+              {{ t.nombre }} (Tel: {{ t.telefono }})
+            </option>
+          </select>
+
+          <!-- Registrar nuevo técnico inline -->
+          <div *ngIf="nuevaVisita.idTecnico === 'nuevo'" class="card p-3 mt-2 border-dashed bg-transparent text-white">
+            <h6 class="small text-warning font-weight-bold mb-2">Datos del Nuevo Técnico</h6>
+            <div class="mb-2">
+              <label for="nuevoTecnicoNombre" class="form-label small mb-1">Nombre Completo *</label>
+              <input 
+                type="text" 
+                class="form-control form-control-sm" 
+                id="nuevoTecnicoNombre" 
+                name="nuevoTecnicoNombre" 
+                [(ngModel)]="nuevoTecnicoNombre" 
+                placeholder="Ej. Juan Pérez" />
+            </div>
+            <div>
+              <label for="nuevoTecnicoTelefono" class="form-label small mb-1">Teléfono *</label>
+              <input 
+                type="text" 
+                class="form-control form-control-sm" 
+                id="nuevoTecnicoTelefono" 
+                name="nuevoTecnicoTelefono" 
+                [(ngModel)]="nuevoTecnicoTelefono" 
+                placeholder="Ej. 600123456" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Fecha de la Visita -->
+        <div class="mb-3">
+          <label for="diaVisita" class="form-label font-weight-bold">Fecha y Hora de la Visita *</label>
+          <input 
+            type="datetime-local" 
+            class="form-control" 
+            id="diaVisita" 
+            name="diaVisita" 
+            [(ngModel)]="nuevaVisita.diaVisita" 
+            required />
+        </div>
+
+        <!-- Estado de la Visita -->
+        <div class="mb-3">
+          <label for="estadoVisita" class="form-label">Estado de la Visita</label>
+          <select 
+            class="form-select" 
+            id="estadoVisita" 
+            name="estadoVisita" 
+            [(ngModel)]="nuevaVisita.estadoVisita">
+            <option value="">Ninguno...</option>
+            <option *ngFor="let est of estados" [value]="est.value">
+              {{ est.descripcion }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Observaciones -->
+        <div class="mb-4">
+          <label for="observaciones" class="form-label">Observaciones</label>
+          <textarea 
+            class="form-control" 
+            id="observaciones" 
+            name="observaciones" 
+            rows="3" 
+            [(ngModel)]="nuevaVisita.observaciones" 
+            placeholder="Anotaciones importantes..."></textarea>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-outline-secondary" (click)="cancelar()" [disabled]="cargando">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!visitaForm.form.valid || cargando">
+            <span *ngIf="!cargando">Registrar Visita</span>
+            <span *ngIf="cargando">Registrando...</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,62 @@
+<div class="container p-4" style="max-width: 600px;">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white p-3">
+      <h2 class="mb-0">{{ modoEdicion ? 'Actualizar Piso' : 'Registrar Nuevo Piso' }}</h2>
+      <small>{{ modoEdicion ? 'Modifique los campos necesarios' : 'Complete la ficha del piso para darlo de alta en la promoción seleccionada' }}</small>
+    </div>
+
+    <div class="card-body p-4">
+      <form (ngSubmit)="guardar()" #pisoForm="ngForm">
+        
+        <!-- Identificación del Piso -->
+        <div class="mb-3">
+          <label for="piso" class="form-label font-weight-bold">Identificación del Piso *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="piso" 
+            name="piso" 
+            [(ngModel)]="nuevoPiso.piso" 
+            required 
+            placeholder="Ej. 1º A, Ático B" />
+        </div>
+
+        <!-- Nombre del Propietario -->
+        <div class="mb-3">
+          <label for="propietarioNombre" class="form-label">Nombre del Propietario</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="propietarioNombre" 
+            name="propietarioNombre" 
+            [(ngModel)]="nuevoPiso.propietarioNombre" 
+            placeholder="Nombre completo" />
+        </div>
+
+        <!-- Teléfono del Propietario -->
+        <div class="mb-4">
+          <label for="propietarioTelefono" class="form-label">Teléfono del Propietario</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="propietarioTelefono" 
+            name="propietarioTelefono" 
+            [(ngModel)]="nuevoPiso.propietarioTelefono" 
+            placeholder="Teléfono único (para rol PROPIETARIO)" />
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-outline-secondary" (click)="cancelar()" [disabled]="cargando">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!pisoForm.form.valid || cargando">
+            <span *ngIf="!cargando">Guardar Registro</span>
+            <span *ngIf="cargando">Registrando...</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>

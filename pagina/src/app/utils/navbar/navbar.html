@@ -1,0 +1,74 @@
+<div class="navbar-wrapper-container px-3 d-flex justify-content-between align-items-center">
+    
+    <!-- Left side: Hamburger & Breadcrumbs -->
+    <div class="d-flex align-items-center left-section">
+        <!-- Toggle button -->
+        <button class="toggle-btn me-3 d-flex align-items-center justify-content-center" (click)="toggleSidebar()">
+            <span class="toggle-icon">☰</span>
+        </button>
+
+        <!-- Breadcrumbs path -->
+        <div class="breadcrumbs-path d-flex align-items-center me-3">
+            <h2 *ngIf="!principal" class="mb-0 breadcrumb-link">
+                <a routerLink="/" class="text-decoration-none">Inicio</a> /&nbsp;
+            </h2>
+            <h2 class="mb-0 breadcrumb-active">{{ paginaActual }}</h2>
+        </div>
+    </div>
+
+    <!-- Right side: Promotion select & Profile Dropdown -->
+    <div class="d-flex align-items-center right-section gap-3">
+        
+        <!-- Promotion Select (Desktop only: d-none d-md-flex) -->
+        <div class="d-none d-md-flex align-items-center select-promocion-group">
+            <span class="select-label font-weight-bold me-2">Promoción:</span>
+            <mat-select 
+                placeholder="Seleccione promoción" 
+                class="mat-select-custom" 
+                [value]="promocionSeleccionada"
+                (selectionChange)="onPromocionChange($event.value)">
+                <mat-optgroup *ngFor="let group of promocionesAgrupadas" [label]="group.promotora">
+                    <mat-option *ngFor="let promo of group.promocion" [value]="promo.idPromocion">
+                        {{ promo.nombre }}
+                    </mat-option>
+                </mat-optgroup>
+            </mat-select>
+        </div>
+
+        <!-- Profile badge and dropdown container -->
+        <div class="position-relative">
+            <div class="navbar-profile-box d-flex align-items-center gap-2 px-2 py-1 rounded cursor-pointer" (click)="toggleMenuUsuario()">
+                <div class="profile-circle-avatar">{{ iniciales }}</div>
+                <div class="profile-details-lbl d-none d-sm-flex flex-column text-start">
+                    <span class="user-name-lbl font-weight-bold">{{ nombreUsuario }}</span>
+                    <span class="user-role-lbl text-muted">{{ rolUsuario }}</span>
+                </div>
+                <span class="dropdown-chevron ms-1 d-none d-sm-inline">▼</span>
+            </div>
+
+            <!-- Float Dropdown Menu (Visible on toggle) -->
+            <div class="navbar-user-dropdown-menu shadow-lg p-3 rounded bg-white border" *ngIf="mostrarMenuUsuario">
+                <!-- Mobile only: Promotion select inside dropdown -->
+                <div class="d-md-none border-bottom pb-2 mb-2 select-promocion-group-mobile">
+                    <span class="select-label-mobile font-weight-bold d-block mb-1">Promoción:</span>
+                    <mat-select 
+                        placeholder="Seleccione promoción" 
+                        class="mat-select-custom w-100" 
+                        [value]="promocionSeleccionada"
+                        (selectionChange)="onPromocionChange($event.value); toggleMenuUsuario()">
+                        <mat-optgroup *ngFor="let group of promocionesAgrupadas" [label]="group.promotora">
+                            <mat-option *ngFor="let promo of group.promocion" [value]="promo.idPromocion">
+                                {{ promo.nombre }}
+                            </mat-option>
+                        </mat-optgroup>
+                    </mat-select>
+                </div>
+                
+                <!-- Logout Action Button inside dropdown for all/mobile -->
+                <button class="btn btn-logout-action w-100 d-flex align-items-center justify-content-center gap-2" (click)="cerrarSesion(); toggleMenuUsuario()">
+                    🚪 <span>Cerrar Sesión</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

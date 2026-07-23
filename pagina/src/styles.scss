@@ -1,0 +1,278 @@
+// Include theming for Angular Material with `mat.theme()`.
+// This Sass mixin will define CSS variables that are used for styling Angular Material
+// components according to the Material 3 design spec.
+// Learn more about theming and how to use it for your application's
+// custom components at https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+body {
+  // Default the application to a light color theme. This can be changed to
+  // `dark` to enable the dark color theme, or to `light dark` to defer to the
+  // user's system settings.
+  color-scheme: light;
+
+  // Set a default background, font and text colors for the application using
+  // Angular Material's system-level CSS variables. Learn more about these
+  // variables at https://material.angular.dev/guide/system-variables
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+
+  // Reset the user agent margin.
+  margin: 0;
+  height: 100%;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Estilos para diferenciar Promotoras (grupos) y Promociones (opciones) en los select */
+.mat-mdc-optgroup-label {
+  font-weight: 800 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.2px !important;
+  color: #4c70bf !important; /* Azul distintivo para Promotoras */
+  background-color: #f9fafb !important; /* Fondo suave para separar grupos */
+  padding-top: 8px !important;
+  padding-bottom: 4px !important;
+}
+
+.mat-mdc-option {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #1f2937 !important; /* Negro/Gris oscuro para Promociones */
+  padding-left: 24px !important; /* Más sangría para denotar jerarquía */
+}
+
+/* Reducir el tamaño de letra general de las páginas, exceptuando el Sidebar */
+.content-wrapper {
+  font-size: 13.5px !important;
+
+  h1 {
+    font-size: 22px !important;
+  }
+  h2 {
+    font-size: 18px !important;
+  }
+  h3 {
+    font-size: 16px !important;
+  }
+  h5 {
+    font-size: 14.5px !important;
+  }
+  h6, label, input, select, textarea, button, th, td, span, a {
+    font-size: 13px !important;
+  }
+
+  .dato-celda {
+    font-size: 13px !important;
+  }
+
+  .cabecera-celda {
+    font-size: 11.5px !important;
+  }
+}
+
+/* Estilo premium grisáceo para los formularios de inserción (coincide con el sidebar) */
+.container, .container-fluid {
+  .card {
+    background-color: #1f2937 !important;
+    color: #f3f4f6 !important;
+    border: 1px solid #374151 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+
+    .card-header {
+      background-color: #111827 !important; /* Fondo carbón oscuro */
+      border-bottom: 1px solid #374151 !important;
+      border-top-left-radius: 12px !important;
+      border-top-right-radius: 12px !important;
+
+      h2 {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+      }
+      small {
+        color: #9ca3af !important;
+      }
+    }
+
+    .card-body {
+      background-color: #1f2937 !important;
+      border-bottom-left-radius: 12px !important;
+      border-bottom-right-radius: 12px !important;
+    }
+
+    label {
+      color: #d1d5db !important;
+      font-weight: 600 !important;
+    }
+
+    .form-control, .form-select {
+      background-color: #374151 !important;
+      color: #ffffff !important;
+      border: 1px solid #4b5563 !important;
+      border-radius: 6px !important;
+      transition: border-color 0.2s, box-shadow 0.2s;
+
+      &::placeholder {
+        color: #9ca3af !important;
+        opacity: 0.7;
+      }
+
+      &:focus {
+        border-color: #4c70bf !important;
+        box-shadow: 0 0 0 3px rgba(76, 112, 191, 0.25) !important;
+        outline: none !important;
+      }
+
+      /* Legibilidad de opciones select en dark background */
+      option {
+        background-color: #1f2937 !important;
+        color: #ffffff !important;
+      }
+    }
+
+    .btn-primary {
+      background-color: #4c70bf !important;
+      border-color: #4c70bf !important;
+      color: #ffffff !important;
+      font-weight: 600 !important;
+
+      &:hover {
+        background-color: #3b5ba3 !important;
+        border-color: #3b5ba3 !important;
+      }
+
+      &:disabled {
+        background-color: #4b5563 !important;
+        border-color: #4b5563 !important;
+        opacity: 0.5;
+      }
+    }
+
+    .btn-outline-secondary {
+      border-color: #4b5563 !important;
+      color: #d1d5db !important;
+
+      &:hover {
+        background-color: #374151 !important;
+        color: #ffffff !important;
+      }
+    }
+  }
+}
+
+// Asegurar que los elementos de formulario no se estiren verticalmente y se ajusten con flex-wrap
+form {
+  .row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 15px !important;
+    margin: 0 !important;
+
+    > [class*="col-"] {
+      flex: 1 1 250px !important;
+      width: auto !important;
+      max-width: 100% !important;
+      padding: 0 !important;
+      margin-bottom: 0 !important;
+    }
+  }
+
+  // Evitar estiramientos verticales de inputs
+  .form-control, .form-select, textarea {
+    align-self: flex-start;
+  }
+}
+
+/* Mobile Styles for page headers, filters and tables sizing */
+@media (max-width: 576px) {
+  // Target page header flex layout containing titles and buttons
+  .container-fluid > .d-flex.justify-content-between.align-items-center.mb-4,
+  .p-4 > .d-flex.justify-content-between.align-items-center.mb-4,
+  .p-3 > .d-flex.justify-content-between.align-items-center.mb-4 {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+
+    h1, .h1 {
+      font-size: 1.35rem !important;
+    }
+
+    p.text-muted {
+      font-size: 0.78rem !important;
+    }
+
+    // Force buttons container to wrap on its own row
+    .d-flex.gap-2, .d-flex.gap-3 {
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: row !important;
+      
+      .btn, button {
+        flex: 1 !important;
+        justify-content: center !important;
+        padding: 8px 10px !important;
+        font-size: 0.78rem !important;
+      }
+    }
+  }
+
+  // Stack filters row on mobile
+  .card.bg-dark, .card.bg-secondary {
+    .row.g-3 {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+
+      .col-md-3, .col-md-4, .col-md-2, .col-md-5, .col-md-6 {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+      }
+    }
+  }
+
+  // Tighter and narrower tables on mobile
+  .table {
+    thead th {
+      font-size: 0.68rem !important;
+      padding: 8px 6px !important;
+    }
+    
+    tbody td {
+      font-size: 0.72rem !important;
+      padding: 8px 6px !important;
+    }
+    
+    .progress-col {
+      width: 80px !important;
+    }
+  }
+}
+
+

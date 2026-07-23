@@ -1,0 +1,19 @@
+<div class="app-layout" [class.sidebar-colapsado]="sidebarColapsado" [class.no-auth]="!authService.isLoggedIn()">
+  <div class="sidebar-wrapper" *ngIf="authService.isLoggedIn()">
+    <app-sidebar></app-sidebar>
+  </div>
+
+  <!-- Backdrop overlay for mobile to close sidebar when clicking outside -->
+  <div 
+    class="sidebar-backdrop" 
+    *ngIf="authService.isLoggedIn() && !sidebarColapsado" 
+    (click)="cerrarSidebar()">
+  </div>
+
+  <div class="content-wrapper">
+    <app-navbar *ngIf="authService.isLoggedIn()"></app-navbar>
+    <div class="main-outlet">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

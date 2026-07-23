@@ -1,0 +1,67 @@
+<div class="container p-4" style="max-width: 600px;">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white p-3">
+      <h2 class="mb-0">Registrar Propietario o Técnico</h2>
+      <small>Complete la ficha para dar de alta a una persona en el sistema</small>
+    </div>
+
+    <div class="card-body p-4">
+      <form (ngSubmit)="guardar()" #personaForm="ngForm">
+        
+        <!-- Nombre Completo -->
+        <div class="mb-3">
+          <label for="nombre" class="form-label font-weight-bold">Nombre Completo *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="nombre" 
+            name="nombre" 
+            [(ngModel)]="nuevaPersona.nombre" 
+            required 
+            placeholder="Ej. Juan Pérez García" />
+        </div>
+
+        <!-- Teléfono Único -->
+        <div class="mb-3">
+          <label for="telefono" class="form-label font-weight-bold">Teléfono de Contacto *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="telefono" 
+            name="telefono" 
+            [(ngModel)]="nuevaPersona.telefono" 
+            required 
+            placeholder="Ej. 600123456" />
+        </div>
+
+        <!-- Rol/Tipo de Persona -->
+        <div class="mb-4">
+          <label for="tipoPersonas" class="form-label font-weight-bold">Tipo de Persona (Rol) *</label>
+          <select 
+            class="form-select" 
+            id="tipoPersonas" 
+            name="tipoPersonas" 
+            [(ngModel)]="nuevaPersona.tipoPersonas" 
+            required>
+            <option value="" disabled selected>Seleccione el rol...</option>
+            <option *ngFor="let r of roles" [value]="r.value">
+              {{ r.descripcion }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-outline-secondary" (click)="cancelar()" [disabled]="cargando">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!personaForm.form.valid || cargando">
+            <span *ngIf="!cargando">Guardar Registro</span>
+            <span *ngIf="cargando">Registrando...</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>

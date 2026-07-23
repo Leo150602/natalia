@@ -1,0 +1,160 @@
+.tabla-wrapper {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.tabla-scrollable {
+  max-width: 100%;
+  max-height: 480px; /* Altura máxima interna para scroll vertical */
+  overflow-x: auto;
+  overflow-y: auto;
+  position: relative;
+}
+
+.table-custom {
+  background: transparent;
+  border-collapse: collapse;
+  width: max-content; /* Fuerza a las columnas a respetar sus min-widths */
+  min-width: 100%;
+}
+
+.cabecera-celda {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  font-weight: 700 !important;
+  font-size: 11.5px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 14px !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+  
+  /* Mantener cabecera fija al hacer scroll vertical */
+  position: sticky !important;
+  top: 0;
+  z-index: 2;
+  box-shadow: 0 1px 0 #e2e8f0;
+}
+
+.dato-celda {
+  font-size: 13px !important;
+  color: #334155 !important;
+  padding: 12px 14px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* Anchos de columnas estándar */
+th[mat-header-cell], td[mat-cell] {
+  min-width: 140px;
+  max-width: 220px;
+  box-sizing: border-box;
+}
+
+/* Columnas de descripción y observaciones (doble tamaño) */
+th.mat-column-descripcion, td.mat-column-descripcion,
+th.mat-column-descripcionIncidencia, td.mat-column-descripcionIncidencia,
+th.mat-column-observacion, td.mat-column-observacion,
+th.mat-column-observaciones, td.mat-column-observaciones {
+  min-width: 280px !important;
+  max-width: 400px !important;
+  white-space: normal !important; /* Permitir salto de línea */
+  word-break: break-word !important;
+  text-overflow: unset !important;
+  overflow: visible !important;
+}
+
+.fila-dato {
+  transition: background-color 0.2s ease;
+  cursor: context-menu;
+  
+  &:hover {
+    background-color: #f1f5f9 !important;
+  }
+}
+
+.empty-row {
+  td {
+    font-size: 13px;
+    background-color: #fafafa;
+  }
+}
+
+.paginador-custom {
+  background-color: #f8fafc !important;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Estilos para el Menú Contextual Flotante */
+.menu-contextual {
+  position: fixed;
+  z-index: 9999;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 0;
+  min-width: 150px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  animation: scaleIn 0.12s cubic-bezier(0, 0, 0.2, 1);
+  transform-origin: top left;
+  display: flex;
+  flex-direction: column;
+
+  .menu-item {
+    background: none;
+    border: none;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #334155;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.15s ease;
+
+    .icono {
+      font-size: 13px;
+    }
+
+    &:hover {
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+
+    &.eliminar {
+      color: #dc2626;
+
+      &:hover {
+        background-color: #fef2f2;
+        color: #b91c1c;
+      }
+    }
+  }
+}
+
+/* Fondo invisible para capturar clics fuera y cerrar el menú */
+.menu-contextual-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 9998;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

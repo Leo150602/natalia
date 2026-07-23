@@ -1,0 +1,187 @@
+<div class="container p-4" style="max-width: 800px;">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white p-3">
+      <h2 class="mb-0">{{ modoEdicion ? 'Actualizar Incidencia' : 'Registrar Nueva Incidencia' }}</h2>
+      <small>{{ modoEdicion ? 'Modifique los campos necesarios' : 'Complete el formulario para dar de alta una incidencia en la promoción activa' }}</small>
+    </div>
+
+    <div class="card-body p-4">
+      <form (ngSubmit)="guardar()" #incidenciaForm="ngForm">
+        
+        <!-- Primera Fila: Número y Piso -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="numeroIncidencia" class="form-label font-weight-bold">Número de Incidencia *</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="numeroIncidencia" 
+              name="numeroIncidencia" 
+              [(ngModel)]="nuevaIncidencia.numeroIncidencia" 
+              required 
+              placeholder="Ej. INC-001" />
+          </div>
+
+          <div class="col-md-6">
+            <label for="idPiso" class="form-label font-weight-bold">Piso Relacionado *</label>
+            <select 
+              class="form-select" 
+              id="idPiso" 
+              name="idPiso" 
+              [(ngModel)]="nuevaIncidencia.idPiso" 
+              required>
+              <option [value]="null" disabled selected>Seleccione un piso...</option>
+              <option value="nuevo">-- Crear Nuevo Piso --</option>
+              <option *ngFor="let p of pisos" [value]="p.idPiso">
+                {{ p.piso }} (Prop: {{ p.propietario || 'Sin Propietario' }})
+              </option>
+            </select>
+
+            <div class="mt-2" *ngIf="nuevaIncidencia.idPiso === 'nuevo'">
+              <label for="nuevoPisoNombre" class="form-label small text-warning font-weight-bold">Nombre del Nuevo Piso *</label>
+              <input 
+                type="text" 
+                class="form-control form-control-sm" 
+                id="nuevoPisoNombre" 
+                name="nuevoPisoNombre" 
+                [(ngModel)]="nuevoPisoNombre" 
+                placeholder="Ej. DUPLEX C (se creará en mayúsculas)" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Segunda Fila: Categoría, Estado y Horas -->
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label for="categoriaIncidencia" class="form-label">Categoría</label>
+            <select 
+              class="form-select" 
+              id="categoriaIncidencia" 
+              name="categoriaIncidencia" 
+              [(ngModel)]="nuevaIncidencia.categoriaIncidencia">
+              <option value="">Ninguna...</option>
+              <option *ngFor="let cat of categorias" [value]="cat.value">
+                {{ cat.descripcion }}
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label for="estadoIncidencia" class="form-label">Estado de Incidencia</label>
+            <select 
+              class="form-select" 
+              id="estadoIncidencia" 
+              name="estadoIncidencia" 
+              [(ngModel)]="nuevaIncidencia.estadoIncidencia">
+              <option value="">Ninguno...</option>
+              <option *ngFor="let est of estados" [value]="est.value">
+                {{ est.descripcion }}
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label for="horasTrabajadas" class="form-label">Horas Trabajadas</label>
+            <select 
+              class="form-select" 
+              id="horasTrabajadas" 
+              name="horasTrabajadas" 
+              [(ngModel)]="nuevaIncidencia.horasTrabajadas">
+              <option value="">Ninguna...</option>
+              <option *ngFor="let h of horasLista" [value]="h.value">
+                {{ h.descripcion }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Tercera Fila: Materiales, Presupuesto, Proforma y Fecha -->
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <label for="materialesRequeridos" class="form-label">Materiales Requeridos</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="materialesRequeridos" 
+              name="materialesRequeridos" 
+              [(ngModel)]="nuevaIncidencia.materialesRequeridos" 
+              placeholder="Ej. Pintura, silicona" />
+          </div>
+
+          <div class="col-md-3">
+            <label for="presupuesto" class="form-label">Presupuesto</label>
+            <select 
+              class="form-select" 
+              id="presupuesto" 
+              name="presupuesto" 
+              [(ngModel)]="nuevaIncidencia.presupuesto">
+              <option value="">Ninguno...</option>
+              <option *ngFor="let opt of respuestasSNN" [value]="opt.value">
+                {{ opt.descripcion }}
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label for="proforma" class="form-label">Proforma</label>
+            <select 
+              class="form-select" 
+              id="proforma" 
+              name="proforma" 
+              [(ngModel)]="nuevaIncidencia.proforma">
+              <option value="">Ninguna...</option>
+              <option *ngFor="let opt of respuestasSNN" [value]="opt.value">
+                {{ opt.descripcion }}
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label for="fechaIncidencia" class="form-label">Fecha Incidencia</label>
+            <input 
+              type="datetime-local" 
+              class="form-control" 
+              id="fechaIncidencia" 
+              name="fechaIncidencia" 
+              [(ngModel)]="nuevaIncidencia.fechaIncidencia" />
+          </div>
+        </div>
+
+        <!-- Cuarta Fila: Descripción y Observaciones -->
+        <div class="mb-3">
+          <label for="descripcionIncidencia" class="form-label">Descripción de la Incidencia</label>
+          <textarea 
+            class="form-control" 
+            id="descripcionIncidencia" 
+            name="descripcionIncidencia" 
+            rows="3" 
+            [(ngModel)]="nuevaIncidencia.descripcionIncidencia" 
+            placeholder="Detalles sobre el problema..."></textarea>
+        </div>
+
+        <div class="mb-4">
+          <label for="observaciones" class="form-label">Observaciones Internas</label>
+          <textarea 
+            class="form-control" 
+            id="observaciones" 
+            name="observaciones" 
+            rows="2" 
+            [(ngModel)]="nuevaIncidencia.observaciones" 
+            placeholder="Anotaciones extra..."></textarea>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-outline-secondary" (click)="cancelar()" [disabled]="cargando">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!incidenciaForm.form.valid || cargando">
+            <span *ngIf="!cargando">Guardar Registro</span>
+            <span *ngIf="cargando">Registrando...</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>

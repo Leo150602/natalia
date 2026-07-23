@@ -1,0 +1,215 @@
+.navbar-wrapper-container {
+  height: 60px;
+  width: 100%;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1060; /* Higher than sidebar (1050) to overlay dropdowns */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+}
+
+/* Left section styling */
+.toggle-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
+  }
+
+  .toggle-icon {
+    font-size: 1.1rem;
+    font-weight: bold;
+  }
+}
+
+.breadcrumbs-path {
+  .breadcrumb-link {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    
+    a {
+      color: #64748b !important;
+      transition: color 0.2s;
+
+      &:hover {
+        color: #10b981 !important;
+      }
+    }
+  }
+
+  .breadcrumb-active {
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+  }
+}
+
+.tickets-badge-button {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #475569;
+
+  .ticket-icon {
+    font-size: 0.9rem;
+  }
+
+  .ticket-counter-badge {
+    background-color: #10b981; /* Green color matching screenshot badge */
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 20px;
+  }
+}
+
+/* Right section styling */
+.select-promocion-group {
+  .select-label {
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+
+  .mat-select-custom {
+    width: 180px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1.5px solid #cbd5e1;
+    padding: 0 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    background-color: #f8fafc;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+  }
+}
+
+.navbar-bell-container {
+  font-size: 1.25rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+  }
+
+  .bell-dot-alert {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 7px;
+    height: 7px;
+    background-color: #10b981; /* Green notification badge dot */
+    border: 1.5px solid #ffffff;
+    border-radius: 50%;
+  }
+}
+
+.navbar-profile-box {
+  background-color: #f8fafc;
+  border: 1px solid #f1f5f9;
+
+  .profile-circle-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #1e293b; /* Dark avatar background matching screenshot */
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .profile-details-lbl {
+    display: flex;
+    flex-direction: column;
+
+    .user-name-lbl {
+      font-size: 0.8rem;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+
+    .user-role-lbl {
+      font-size: 0.68rem;
+      color: #64748b;
+      line-height: 1.1;
+    }
+  }
+}
+
+.btn-logout-action {
+  border: none;
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+  }
+}
+
+/* User dropdown popup menu */
+.navbar-user-dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 45px;
+  z-index: 1100;
+  width: 220px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 16px -6px rgba(0, 0, 0, 0.05);
+  animation: dropdownFadeIn 0.15s ease-out;
+
+  .select-label-mobile {
+    font-size: 0.76rem;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-chevron {
+  font-size: 0.6rem;
+  color: #94a3b8;
+  transition: transform 0.2s;
+}

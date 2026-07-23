@@ -132,6 +132,7 @@ public class ServicioIncidencias {
             sb.append("SELECT i FROM Incidencias i ");
             sb.append("JOIN FETCH i.piso p ");
             sb.append("JOIN FETCH p.promocion prom ");
+            sb.append("JOIN FETCH prom.promotora pr ");
             sb.append("LEFT JOIN FETCH p.propietario prop ");
             sb.append("WHERE 1=1 ");
 
@@ -425,6 +426,7 @@ public class ServicioIncidencias {
                     .idPiso(inc.getPiso().getIdPiso())
                     .piso(inc.getPiso().getPiso())
                     .promocion(inc.getPiso().getPromocion() != null ? inc.getPiso().getPromocion().getPromocion() : null)
+                    .promotora(inc.getPiso().getPromocion() != null && inc.getPiso().getPromocion().getPromotora() != null ? inc.getPiso().getPromocion().getPromotora().getPromotora() : null)
                     .propietario(inc.getPiso().getPropietario() != null ? inc.getPiso().getPropietario().getNombre() : null)
                     .telefonoPropietario(inc.getPiso().getPropietario() != null ? inc.getPiso().getPropietario().getTelefono() : null)
                     .build();

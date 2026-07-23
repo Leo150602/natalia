@@ -239,6 +239,7 @@ public class ServicioPisos {
                 .idPiso(piso.getIdPiso())
                 .piso(piso.getPiso())
                 .promocion(piso.getPromocion() != null ? piso.getPromocion().getPromocion() : null)
+                .promotora(piso.getPromocion() != null && piso.getPromocion().getPromotora() != null ? piso.getPromocion().getPromotora().getPromotora() : null)
                 .propietario(piso.getPropietario() != null ? piso.getPropietario().getNombre() : null)
                 .telefonoPropietario(piso.getPropietario() != null ? piso.getPropietario().getTelefono() : null)
                 .build();

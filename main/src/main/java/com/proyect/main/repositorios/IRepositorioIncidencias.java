@@ -14,10 +14,10 @@ import java.util.Optional;
 @Repository
 public interface IRepositorioIncidencias extends JpaRepository<Incidencias, String> {
 
-    @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion LEFT JOIN FETCH p.propietario")
+    @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion prom JOIN FETCH prom.promotora LEFT JOIN FETCH p.propietario")
     List<Incidencias> findAllWithDetails();
 
-    @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion LEFT JOIN FETCH p.propietario WHERE i.numeroIncidencia = :id")
+    @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion prom JOIN FETCH prom.promotora LEFT JOIN FETCH p.propietario WHERE i.numeroIncidencia = :id")
     Optional<Incidencias> findByIdWithDetails(@Param("id") String id);
 
     @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion prom JOIN FETCH p.propietario prop " +
@@ -38,7 +38,7 @@ public interface IRepositorioIncidencias extends JpaRepository<Incidencias, Stri
         @Param("categoriaIncidencia") CategoriaIncidencia categoriaIncidencia
     );
 
-    @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion prom LEFT JOIN FETCH p.propietario prop WHERE prom.idPromocion = :idPromocion")
+    @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion prom JOIN FETCH prom.promotora LEFT JOIN FETCH p.propietario prop WHERE prom.idPromocion = :idPromocion")
     List<Incidencias> findByPromocionId(@Param("idPromocion") int idPromocion);
 
     @Query("SELECT COUNT(i) FROM Incidencias i WHERE i.piso.promocion.idPromocion = :idPromocion")

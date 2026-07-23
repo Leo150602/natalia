@@ -1,0 +1,423 @@
+<div class="dashboard-container">
+  
+  <!-- 1. KPI Cards Row (Grid configured to 2x3 on desktop) -->
+  <div class="kpi-grid-container p-4 pb-0">
+    <div class="kpi-row-2x3">
+      
+      <!-- Card 1: Viviendas -->
+      <div class="kpi-box shadow-xs">
+        <span class="status-dot"></span>
+        <div class="d-flex align-items-center">
+          <div class="kpi-badge-icon bg-light-green">🔑</div>
+          <div class="kpi-text-block">
+            <span class="kpi-title-lbl">Viviendas</span>
+            <h3 class="kpi-number-val">{{ totalPisos }}</h3>
+            <span class="kpi-desc-lbl">Viviendas en sistema</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Promociones -->
+      <div class="kpi-box shadow-xs">
+        <span class="status-dot"></span>
+        <div class="d-flex align-items-center">
+          <div class="kpi-badge-icon bg-light-teal">🏢</div>
+          <div class="kpi-text-block">
+            <span class="kpi-title-lbl">Promociones</span>
+            <h3 class="kpi-number-val">{{ totalPromociones }}</h3>
+            <span class="kpi-desc-lbl">Promociones activas</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Incidencias Abiertas -->
+      <div class="kpi-box shadow-xs">
+        <span class="status-dot warning"></span>
+        <div class="d-flex align-items-center">
+          <div class="kpi-badge-icon bg-light-red">⚠️</div>
+          <div class="kpi-text-block">
+            <span class="kpi-title-lbl">Incidencias Abiertas</span>
+            <h3 class="kpi-number-val text-danger">{{ totalAbiertas }}</h3>
+            <span class="kpi-desc-lbl">Pendientes de cierre</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Última Semana -->
+      <div class="kpi-box shadow-xs">
+        <span class="status-dot danger"></span>
+        <div class="d-flex align-items-center">
+          <div class="kpi-badge-icon bg-light-yellow">📅</div>
+          <div class="kpi-text-block">
+            <span class="kpi-title-lbl">Última Semana</span>
+            <h3 class="kpi-number-val text-warning">{{ totalUltimaSemana }}</h3>
+            <span class="kpi-desc-lbl">Nuevas esta semana</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 5: SLA Cumplimiento -->
+      <div class="kpi-box shadow-xs">
+        <span class="status-dot"></span>
+        <div class="d-flex align-items-center">
+          <div class="kpi-badge-icon bg-light-indigo">📊</div>
+          <div class="kpi-text-block">
+            <span class="kpi-title-lbl">Plazos Cumplidos</span>
+            <h3 class="kpi-number-val text-indigo">{{ tasaResolucion }}%</h3>
+            <span class="kpi-desc-lbl">Últimos 30 días</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 6: Resueltos este mes -->
+      <div class="kpi-box shadow-xs">
+        <span class="status-dot"></span>
+        <div class="d-flex align-items-center">
+          <div class="kpi-badge-icon bg-light-emerald">✅</div>
+          <div class="kpi-text-block">
+            <span class="kpi-title-lbl">Resueltos Mes</span>
+            <h3 class="kpi-number-val text-success">{{ resueltasEsteMes }}</h3>
+            <span class="kpi-desc-lbl">Tickets cerrados en el mes</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2. Tabs Selector & Support Info -->
+  <div class="subheader-bar px-4 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div class="tab-button-group shadow-xs">
+      <button 
+        type="button" 
+        class="tab-btn" 
+        [class.active]="pestanaActiva === 'operacion'" 
+        (click)="cambiarPestana('operacion')"
+      >
+        🟢 Operación
+      </button>
+      <button 
+        type="button" 
+        class="tab-btn" 
+        [class.active]="pestanaActiva === 'graficos'" 
+        (click)="cambiarPestana('graficos')"
+      >
+        📈 Gráficos y Evolución
+      </button>
+    </div>
+
+    <div class="text-end support-info">
+      <span class="small-text font-weight-bold text-dark d-block">Operación general de soporte</span>
+      <span class="smaller-text text-muted">Actualizado hace unos instantes</span>
+    </div>
+  </div>
+
+  <!-- 3. Main Workspace Area -->
+  <div class="workspace px-4 pb-4">
+    <div class="row g-4">
+      
+      <!-- Left Column (75% Width) -->
+      <div class="col-lg-9">
+        
+        <!-- A. Filters Area -->
+        <div class="card border-0 shadow-sm p-4 mb-4 filter-container">
+          <div class="row g-3 align-items-center">
+            <div class="col-md-5">
+              <label for="p-promotora" class="form-label select-lbl">Promotora</label>
+              <select 
+                id="p-promotora" 
+                [(ngModel)]="promotoraSeleccionada" 
+                (change)="onPromotoraChange()" 
+                class="form-select select-box"
+              >
+                <option value="TODAS">Todas las Promotoras</option>
+                <option *ngFor="let p of listaPromotoras" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            
+            <div class="col-md-5">
+              <label for="p-promocion" class="form-label select-lbl">Promoción</label>
+              <select 
+                id="p-promocion" 
+                [(ngModel)]="promocionSeleccionada" 
+                (change)="onPromocionChange()" 
+                class="form-select select-box"
+                [disabled]="listaPromociones.length === 0"
+              >
+                <option value="TODAS">Todas las Promociones</option>
+                <option *ngFor="let promo of listaPromociones" [value]="promo.idPromocion">{{ promo.nombre }}</option>
+              </select>
+            </div>
+
+            <div class="col-md-2 pt-4">
+              <button 
+                type="button" 
+                class="btn-reset w-100" 
+                (click)="promotoraSeleccionada = 'TODAS'; onPromotoraChange()"
+              >
+                Limpiar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- B. Main Tab Content: OPERACIÓN (Table layout) -->
+        <div *ngIf="pestanaActiva === 'operacion'" class="card border-0 shadow-sm content-box-card">
+          <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <h5 class="mb-1 card-box-title">📂 Cola operativa de incidencias</h5>
+              <p class="text-muted small-text mb-0">Resumen visual agregado por categoría de obra. Se muestran los indicadores consolidados.</p>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn-action outline">📥 Exportar</button>
+              <button type="button" class="btn-action primary">🛠️ Mesa de Control</button>
+            </div>
+          </div>
+
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table custom-table align-middle">
+                <thead>
+                  <tr>
+                    <th scope="col" class="text-center">#</th>
+                    <th scope="col">CATEGORÍA</th>
+                    <th scope="col" class="text-center">CASOS TOTALES</th>
+                    <th scope="col" class="text-center">RESUELTAS</th>
+                    <th scope="col" class="text-center">PENDIENTES</th>
+                    <th scope="col">TASA RESOLUCIÓN</th>
+                    <th scope="col" class="text-center">PLAZO ATENCIÓN</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let cat of listaCategoriasResumen">
+                    <td class="text-center num-col">#{{ cat.numero }}</td>
+                    <td class="cat-col font-weight-bold text-dark">{{ cat.nombre }}</td>
+                    <td class="text-center count-col font-weight-bold">{{ cat.total }}</td>
+                    <td class="text-center count-col text-success">{{ cat.resueltas }}</td>
+                    <td class="text-center count-col text-danger">{{ cat.abiertas }}</td>
+                    <td class="progress-col">
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="progress flex-grow-1" style="height: 6px; background-color: #e2e8f0; border-radius: 4px;">
+                          <div class="progress-bar bg-primary" role="progressbar" [style.width.%]="cat.tasa" style="border-radius: 4px;"></div>
+                        </div>
+                        <span class="small-text font-weight-bold text-dark">{{ cat.tasa }}%</span>
+                      </div>
+                    </td>
+                    <td class="text-center status-col">
+                      <span class="badge-sla" [class]="cat.estadoSla">
+                        {{ cat.estadoSla === 'verde' ? 'Cumplido' : (cat.estadoSla === 'naranja' ? 'Advertencia' : 'Crítico') }}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr *ngIf="listaCategoriasResumen.length === 0">
+                    <td colspan="7" class="text-center py-5 text-muted">
+                      No hay incidencias para mostrar bajo los filtros seleccionados.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- C. Main Tab Content: GRÁFICOS (Charts layout showing both metrics) -->
+        <div *ngIf="pestanaActiva === 'graficos'" class="row g-4">
+          
+          <!-- Month Bar Chart Card (Total vs Resolved) -->
+          <div class="col-md-6">
+            <div class="card border-0 shadow-sm p-4 h-100 chart-item-card">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <h5 class="card-box-title">📊 Comparativa Mensual</h5>
+                <span class="small text-muted">Total vs Resueltas</span>
+              </div>
+              <p class="text-muted small-text mb-3">Relación de incidencias creadas frente a las resueltas en cada periodo.</p>
+              
+              <!-- Custom Legends -->
+              <div class="chart-legend d-flex gap-3 mb-4">
+                <div class="d-flex align-items-center gap-1">
+                  <span class="legend-color-dot" style="background-color: #3b82f6;"></span>
+                  <span class="smaller-text text-muted">Casos Totales</span>
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                  <span class="legend-color-dot" style="background-color: #10b981;"></span>
+                  <span class="smaller-text text-muted">Resueltas</span>
+                </div>
+              </div>
+
+              <!-- Bar SVG (Shows 4 bars total: Total & Resolved for both months) -->
+              <div class="svg-container py-2">
+                <svg viewBox="0 0 300 160" width="100%" height="150">
+                  <line x1="30" y1="20" x2="270" y2="20" stroke="#f1f5f9" stroke-width="1"></line>
+                  <line x1="30" y1="80" x2="270" y2="80" stroke="#f1f5f9" stroke-width="1"></line>
+                  <line x1="30" y1="140" x2="270" y2="140" stroke="#cbd5e1" stroke-width="1.5"></line>
+
+                  <!-- Mes Anterior (Total y Resuelto) -->
+                  <!-- Total Bar (Blue) -->
+                  <rect x="55" [attr.y]="140 - svgBarraMesAnteriorTotalHeight" width="18" [attr.height]="svgBarraMesAnteriorTotalHeight" rx="3" fill="#3b82f6" class="chart-bar"></rect>
+                  <text x="64" [attr.y]="140 - svgBarraMesAnteriorTotalHeight - 5" text-anchor="middle" font-size="9" fill="#2563eb" font-weight="700">{{ Math.round(svgBarraMesAnteriorTotalHeight > 0 ? (svgBarraMesAnteriorTotalHeight * svgEvolucionMax / 120) : 0) }}</text>
+                  
+                  <!-- Resolved Bar (Green) -->
+                  <rect x="76" [attr.y]="140 - svgBarraMesAnteriorResueltasHeight" width="18" [attr.height]="svgBarraMesAnteriorResueltasHeight" rx="3" fill="#10b981" class="chart-bar"></rect>
+                  <text x="85" [attr.y]="140 - svgBarraMesAnteriorResueltasHeight - 5" text-anchor="middle" font-size="9" fill="#047857" font-weight="700">{{ resueltasMesAnterior }}</text>
+                  
+                  <text x="75" y="153" text-anchor="middle" font-size="9" fill="#64748b" font-weight="600">Mes Anterior</text>
+
+                  <!-- Este Mes (Total y Resuelto) -->
+                  <!-- Total Bar (Blue) -->
+                  <rect x="175" [attr.y]="140 - svgBarraEsteMesTotalHeight" width="18" [attr.height]="svgBarraEsteMesTotalHeight" rx="3" fill="#3b82f6" class="chart-bar animated"></rect>
+                  <text x="184" [attr.y]="140 - svgBarraEsteMesTotalHeight - 5" text-anchor="middle" font-size="9" fill="#2563eb" font-weight="700">{{ nuevasEsteMes }}</text>
+                  
+                  <!-- Resolved Bar (Green) -->
+                  <rect x="196" [attr.y]="140 - svgBarraEsteMesResueltasHeight" width="18" [attr.height]="svgBarraEsteMesResueltasHeight" rx="3" fill="#10b981" class="chart-bar animated"></rect>
+                  <text x="205" [attr.y]="140 - svgBarraEsteMesResueltasHeight - 5" text-anchor="middle" font-size="9" fill="#047857" font-weight="700">{{ resueltasEsteMes }}</text>
+                  
+                  <text x="195" y="153" text-anchor="middle" font-size="9" fill="#64748b" font-weight="600">Este Mes</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Volume Line Chart Card (Nuevas vs Resueltas) -->
+          <div class="col-md-6">
+            <div class="card border-0 shadow-sm p-4 h-100 chart-item-card">
+              <h5 class="card-box-title mb-1">📈 Evolución del Volumen</h5>
+              <p class="text-muted small-text mb-3">Flujo de trabajo semanal (nuevas creadas vs incidencias resueltas).</p>
+              
+              <!-- Custom Legends -->
+              <div class="chart-legend d-flex gap-3 mb-4">
+                <div class="d-flex align-items-center gap-1">
+                  <span class="legend-color-dot" style="background-color: #3b82f6;"></span>
+                  <span class="smaller-text text-muted">Ingresadas (Nuevas)</span>
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                  <span class="legend-color-dot" style="background-color: #10b981;"></span>
+                  <span class="smaller-text text-muted">Resueltas</span>
+                </div>
+              </div>
+
+              <!-- Line SVG (Shows two lines) -->
+              <div class="svg-container py-2">
+                <svg viewBox="0 0 300 160" width="100%" height="150">
+                  <defs>
+                    <linearGradient id="areaGradBlue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.18"></stop>
+                      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.00"></stop>
+                    </linearGradient>
+                    <linearGradient id="areaGradGreen" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#10b981" stop-opacity="0.18"></stop>
+                      <stop offset="100%" stop-color="#10b981" stop-opacity="0.00"></stop>
+                    </linearGradient>
+                  </defs>
+                  
+                  <line x1="40" y1="25" x2="260" y2="25" stroke="#f1f5f9" stroke-width="1"></line>
+                  <line x1="40" y1="80" x2="260" y2="80" stroke="#f1f5f9" stroke-width="1"></line>
+                  <line x1="40" y1="135" x2="260" y2="135" stroke="#cbd5e1" stroke-width="1.5"></line>
+
+                  <!-- 1. Creadas Area & Line (Blue) -->
+                  <path [attr.d]="svgEvolucionAreaNuevas" fill="url(#areaGradBlue)"></path>
+                  <path [attr.d]="svgEvolucionLineNuevas" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"></path>
+                  
+                  <!-- 2. Resueltas Area & Line (Green) -->
+                  <path [attr.d]="svgEvolucionAreaResueltas" fill="url(#areaGradGreen)"></path>
+                  <path [attr.d]="svgEvolucionLineResueltas" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"></path>
+
+                  <!-- Points Nuevas -->
+                  <g *ngFor="let pt of svgEvolucionPuntosNuevas">
+                    <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="3" fill="#3b82f6" stroke="#ffffff" stroke-width="1"></circle>
+                    <text [attr.x]="pt.x" [attr.y]="pt.y - 7" text-anchor="middle" font-size="8" font-weight="700" fill="#2563eb">{{ pt.valor }}</text>
+                  </g>
+
+                  <!-- Points Resueltas -->
+                  <g *ngFor="let pt of svgEvolucionPuntosResueltas">
+                    <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="3" fill="#10b981" stroke="#ffffff" stroke-width="1"></circle>
+                    <text [attr.x]="pt.x" [attr.y]="pt.y + 11" text-anchor="middle" font-size="8" font-weight="700" fill="#047857">{{ pt.valor }}</text>
+                  </g>
+
+                  <!-- X-Axis Labels (Weeks) -->
+                  <g *ngFor="let pt of svgEvolucionPuntosNuevas; let idx = index">
+                    <text [attr.x]="pt.x" y="148" text-anchor="middle" font-size="8" font-weight="600" fill="#64748b">S{{ idx + 1 }}</text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Right Column (25% Width) -->
+      <div class="col-lg-3">
+        <!-- A. Traffic Light Card -->
+        <div class="card border-0 shadow-sm p-4 traffic-light-box h-100">
+          <h5 class="card-box-title text-dark mb-3">Semáforo de Alertas</h5>
+          
+          <div class="text-center my-3">
+            <div class="glow-light-badge" [class]="semaforoColor">
+              <span class="pulse-ring-glow"></span>
+              <span class="light-bullet">
+                <span *ngIf="semaforoColor === 'verde'">🟢</span>
+                <span *ngIf="semaforoColor === 'naranja'">🟠</span>
+                <span *ngIf="semaforoColor === 'rojo'">🔴</span>
+              </span>
+            </div>
+            <h4 class="glow-light-title mt-3" [class]="semaforoColor">{{ semaforoTexto }}</h4>
+          </div>
+
+          <div class="glow-desc-box p-3 rounded">
+            <p class="mb-0 smaller-text text-muted text-center">{{ semaforoExplicacion }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- C. Latest Incidencias Full-Width Card (col-12) -->
+      <div class="col-12" *ngIf="pestanaActiva === 'operacion'">
+        <div class="card border-0 shadow-sm content-box-card">
+          <div class="card-header bg-white border-0 py-3 px-4 d-flex align-items-center gap-2">
+            <span class="bell-icon">📋</span>
+            <h5 class="mb-0 card-box-title text-dark">📂 Últimas Incidencias Registradas</h5>
+          </div>
+
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table custom-table align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col" class="text-center" style="width: 100px;">CÓDIGO</th>
+                    <th scope="col" style="width: 120px;">VIVIENDA</th>
+                    <th scope="col" style="width: 200px;">PROMOCIÓN / PROMOTORA</th>
+                    <th scope="col">DESCRIPCIÓN</th>
+                    <th scope="col" class="text-center" style="width: 150px;">FECHA CREACIÓN</th>
+                    <th scope="col" class="text-center" style="width: 120px;">ESTADO</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of listaUltimasIncidencias">
+                    <td class="text-center num-col font-weight-bold">#{{ item.numeroIncidencia }}</td>
+                    <td class="font-weight-bold text-dark">{{ item.piso }}</td>
+                    <td class="text-muted small-text">{{ item.promocion }} ({{ item.promotora }})</td>
+                    <td class="text-muted small-text text-truncate" style="max-width: 250px;" [title]="item.descripcion">
+                      {{ item.descripcion }}
+                    </td>
+                    <td class="text-center">{{ item.fechaFormateada }}</td>
+                    <td class="text-center">
+                      <span class="badge-sla" [class]="item.estado === 'Terminado' ? 'verde' : (item.estado === 'Pendiente' ? 'rojo' : 'naranja')">
+                        {{ item.estado }}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr *ngIf="listaUltimasIncidencias.length === 0">
+                    <td colspan="5" class="text-center py-5 text-muted">
+                      No hay incidencias registradas.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

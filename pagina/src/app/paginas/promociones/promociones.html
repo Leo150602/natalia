@@ -1,0 +1,43 @@
+<div class="container-fluid p-4">
+  <div class="mb-4">
+    <h1 class="mb-0">Promociones Inmobiliarias</h1>
+    <p class="text-muted mb-0">Listado de promociones vigentes agrupadas por promotora inmobiliaria</p>
+  </div>
+
+  <!-- Barra de Filtros Reactivos -->
+  <div class="card bg-dark border-secondary mb-4">
+    <div class="card-body p-3">
+      <div class="row g-3 align-items-center">
+        <div class="col-md-5">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-secondary text-white border-secondary">Promoción</span>
+            <input type="text" class="form-control bg-dark text-white border-secondary" [(ngModel)]="filtros.promocion" (ngModelChange)="aplicarFiltros()" placeholder="Buscar promoción...">
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-secondary text-white border-secondary">Promotora</span>
+            <input type="text" class="form-control bg-dark text-white border-secondary" [(ngModel)]="filtros.promotora" (ngModelChange)="aplicarFiltros()" placeholder="Buscar promotora...">
+          </div>
+        </div>
+        <div class="col-md-2 text-end">
+          <button class="btn btn-sm btn-outline-secondary w-100" (click)="limpiarFiltros()">Limpiar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <app-tabla-datos
+        [datos]="datosFiltrados"
+        [columnas]="config.columnas"
+        [mostrarId]="config.mostrarId"
+        [idCampo]="config.idCampo"
+        [idNombre]="config.idNombre"
+        (editar)="editarPromocion($event)"
+        (eliminar)="eliminarPromocion($event)">
+      </app-tabla-datos>
+    </div>
+  </div>
+</div>

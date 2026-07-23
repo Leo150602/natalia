@@ -13,15 +13,15 @@ import java.util.Optional;
 @Repository
 public interface IRepositorioPisos extends JpaRepository<Pisos, Integer> {
 
-    @Query("SELECT p FROM Pisos p JOIN FETCH p.promocion LEFT JOIN FETCH p.propietario")
+    @Query("SELECT p FROM Pisos p JOIN FETCH p.promocion prom JOIN FETCH prom.promotora LEFT JOIN FETCH p.propietario")
     List<Pisos> findAllPisos();
 
-    @Query("SELECT p FROM Pisos p JOIN FETCH p.promocion LEFT JOIN FETCH p.propietario WHERE p.idPiso = :id")
+    @Query("SELECT p FROM Pisos p JOIN FETCH p.promocion prom JOIN FETCH prom.promotora LEFT JOIN FETCH p.propietario WHERE p.idPiso = :id")
     Optional<Pisos> findByIdWithDetails(@Param("id") int id);
 
     Optional<Pisos> findByPisoAndPromocion_Promocion(String piso, String promocion);
 
-    @Query("SELECT p FROM Pisos p JOIN FETCH p.promocion LEFT JOIN FETCH p.propietario WHERE p.promocion.idPromocion = :idPromocion")
+    @Query("SELECT p FROM Pisos p JOIN FETCH p.promocion prom JOIN FETCH prom.promotora LEFT JOIN FETCH p.propietario WHERE prom.idPromocion = :idPromocion")
     List<Pisos> findByPromocionId(@Param("idPromocion") int idPromocion);
 
     @Query("SELECT p FROM Pisos p WHERE p.piso = :piso AND p.promocion.idPromocion = :idPromocion")

@@ -1,0 +1,51 @@
+<div class="container p-4" style="max-width: 600px;">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white p-3">
+      <h2 class="mb-0">{{ modoEdicion ? 'Actualizar Promoción' : 'Registrar Nueva Promoción' }}</h2>
+      <small>{{ modoEdicion ? 'Modifique los campos necesarios' : 'Complete los campos para registrar una nueva promoción y asociarla a su promotora inmobiliaria' }}</small>
+    </div>
+
+    <div class="card-body p-4">
+      <form (ngSubmit)="guardar()" #promoForm="ngForm">
+        
+        <!-- Nombre de la Promotora -->
+        <div class="mb-3">
+          <label for="promotora" class="form-label font-weight-bold">Nombre de la Promotora *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="promotora" 
+            name="promotora" 
+            [(ngModel)]="nuevaPromo.promotora" 
+            required 
+            placeholder="Ej. Promotora del Mediterráneo" />
+        </div>
+
+        <!-- Nombre de la Promoción -->
+        <div class="mb-4">
+          <label for="promocion" class="form-label font-weight-bold">Nombre de la Promoción *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="promocion" 
+            name="promocion" 
+            [(ngModel)]="nuevaPromo.promocion" 
+            required 
+            placeholder="Ej. Residencial Las Palmeras" />
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-outline-secondary" (click)="cancelar()" [disabled]="cargando">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!promoForm.form.valid || cargando">
+            <span *ngIf="!cargando">Guardar Registro</span>
+            <span *ngIf="cargando">Registrando...</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
