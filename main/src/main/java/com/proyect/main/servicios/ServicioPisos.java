@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.core.io.ByteArrayResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +28,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ServicioPisos {
 
+    private static final Logger log = LoggerFactory.getLogger(ServicioPisos.class);
+
     private final IRepositorioPisos repositorioPisos;
     private final IRepositorioPromociones repositorioPromociones;
     private final IRepositorioPersonas repositorioPersonas;
@@ -35,7 +39,12 @@ public class ServicioPisos {
             Promociones promocion = repositorioPromociones.findById(dto.getIdPromocion())
                     .orElseThrow(() -> new IllegalArgumentException("Promoción no encontrada con ID: " + dto.getIdPromocion()));
 
-            Personas propietario = obtenerOcrearPropietario(dto.getPropietarioNombre(), dto.getPropietarioTelefono());
+            Personas propietario = null;
+            if (dto.getIdPropietario() != null) {
+                propietario = repositorioPersonas.findById(dto.getIdPropietario()).orElse(null);
+            } else {
+                propietario = obtenerOcrearPropietario(dto.getPropietarioNombre(), dto.getPropietarioTelefono(), promocion);
+            }
 
             String pisoNombre = dto.getPiso() != null ? dto.getPiso().trim().toUpperCase() : "";
 
@@ -94,7 +103,12 @@ public class ServicioPisos {
             Promociones promocion = repositorioPromociones.findById(dto.getIdPromocion())
                     .orElseThrow(() -> new IllegalArgumentException("Promoción no encontrada con ID: " + dto.getIdPromocion()));
 
-            Personas propietario = obtenerOcrearPropietario(dto.getPropietarioNombre(), dto.getPropietarioTelefono());
+            Personas propietario = null;
+            if (dto.getIdPropietario() != null) {
+                propietario = repositorioPersonas.findById(dto.getIdPropietario()).orElse(null);
+            } else {
+                propietario = obtenerOcrearPropietario(dto.getPropietarioNombre(), dto.getPropietarioTelefono(), promocion);
+            }
 
             String pisoNombre = dto.getPiso() != null ? dto.getPiso().trim().toUpperCase() : "";
 
@@ -109,15 +123,24 @@ public class ServicioPisos {
     }
 
     public void importar(MultipartFile archivo, int idPromocion) throws IOException {
+        log.info("--- INICIO IMPORTACIÓN DE PISOS ---");
+        log.info("Archivo: {}", archivo.getOriginalFilename());
+        log.info("Promoción ID: {}", idPromocion);
+
+        int totalFilas = 0;
+        int subidosExito = 0;
+        int noSubidos = 0;
+
+        List<String> detallesExito = new java.util.ArrayList<>();
+        List<String> detallesFallo = new java.util.ArrayList<>();
+
         try (Workbook workbook = new XSSFWorkbook(archivo.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
 
-            // Verificar si la promoción existe
             if (!repositorioPromociones.existsById(idPromocion)) {
                 throw new IllegalArgumentException("La promoción con ID " + idPromocion + " no existe.");
             }
 
-            // Ignorar la primera fila (encabezado) e iterar desde la fila index 1
             for (int fila = 1; fila <= sheet.getLastRowNum(); fila++) {
                 Row row = sheet.getRow(fila);
 
@@ -125,25 +148,56 @@ public class ServicioPisos {
                     continue;
                 }
 
-                String nombrePiso = getString(row.getCell(0));
-                String propietarioNombre = getString(row.getCell(1));
-                String propietarioTelefono = getString(row.getCell(2));
+                totalFilas++;
+                String nombrePiso = "";
+                String propietarioNombre = "";
+                String propietarioTelefono = "";
+                try {
+                    nombrePiso = getString(row.getCell(0));
+                    propietarioNombre = getString(row.getCell(1));
+                    propietarioTelefono = getString(row.getCell(2));
 
-                if (nombrePiso.isEmpty()) {
-                    continue; // Saltar filas incompletas
+                    if (nombrePiso.isEmpty()) {
+                        detallesFallo.add("Fila " + fila + " -> No subido: Nombre de piso vacío.");
+                        noSubidos++;
+                        continue; 
+                    }
+
+                    PisosDto dto = PisosDto.builder()
+                            .piso(nombrePiso)
+                            .idPromocion(idPromocion)
+                            .propietarioNombre(propietarioNombre)
+                            .propietarioTelefono(propietarioTelefono)
+                            .build();
+
+                    this.insertar(dto);
+                    detallesExito.add("Fila " + fila + " [Piso: '" + nombrePiso + "', Propietario: '" + propietarioNombre + "'] -> Guardado exitosamente.");
+                    subidosExito++;
+                } catch (Exception e) {
+                    detallesFallo.add("Fila " + fila + " [Piso: '" + nombrePiso + "'] -> Error: " + e.getMessage());
+                    noSubidos++;
                 }
-
-                // Construir DTO y reutilizar el servicio de inserción
-                PisosDto dto = PisosDto.builder()
-                        .piso(nombrePiso)
-                        .idPromocion(idPromocion)
-                        .propietarioNombre(propietarioNombre)
-                        .propietarioTelefono(propietarioTelefono)
-                        .build();
-
-                this.insertar(dto);
             }
+
+            log.info("Registros subidos con éxito ({}):", subidosExito);
+            for (String msg : detallesExito) {
+                log.info("  {}", msg);
+            }
+
+            if (noSubidos > 0) {
+                log.warn("Registros NO subidos ({}):", noSubidos);
+                for (String msg : detallesFallo) {
+                    log.warn("  {}", msg);
+                }
+            } else {
+                log.info("Todos los registros se subieron con éxito.");
+            }
+
+            log.info("Resumen de importación: Total filas procesadas = {}, Éxitos = {}, Fallas = {}", totalFilas, subidosExito, noSubidos);
+            log.info("--- FIN IMPORTACIÓN DE PISOS ---");
+
         } catch (Exception e) {
+            log.error("Error crítico durante la importación de pisos desde Excel: {}", e.getMessage(), e);
             throw new RuntimeException("Error al importar pisos desde Excel: " + e.getMessage(), e);
         }
     }
@@ -155,7 +209,6 @@ public class ServicioPisos {
             Sheet sheet = workbook.createSheet("Pisos");
             int filaIndex = 0;
 
-            // Fila de Encabezados (sirve como plantilla)
             Row encabezado = sheet.createRow(filaIndex++);
             encabezado.createCell(0).setCellValue("Piso");
             encabezado.createCell(1).setCellValue("Propietario");
@@ -181,7 +234,7 @@ public class ServicioPisos {
         }
     }
 
-    private Personas obtenerOcrearPropietario(String nombre, String telefono) {
+    private Personas obtenerOcrearPropietario(String nombre, String telefono, Promociones promocion) {
         if (telefono == null || telefono.trim().isEmpty()) {
             return null;
         }
@@ -192,12 +245,17 @@ public class ServicioPisos {
                 throw new IllegalArgumentException("La persona con teléfono " + telefono + 
                         " existe pero no es del tipo PROPIETARIO. Tipo actual: " + persona.getTipoPersonas());
             }
+            if (persona.getPromotora() == null && promocion != null) {
+                persona.setPromotora(promocion.getPromotora());
+                repositorioPersonas.save(persona);
+            }
             return persona;
         } else {
             return repositorioPersonas.save(Personas.builder()
                     .nombre(nombre != null && !nombre.isEmpty() ? nombre : "Propietario S/N")
                     .telefono(telefono)
                     .tipoPersonas(TipoPersonas.PROPIETARIO)
+                    .promotora(promocion != null ? promocion.getPromotora() : null)
                     .build());
         }
     }
@@ -242,6 +300,7 @@ public class ServicioPisos {
                 .promotora(piso.getPromocion() != null && piso.getPromocion().getPromotora() != null ? piso.getPromocion().getPromotora().getPromotora() : null)
                 .propietario(piso.getPropietario() != null ? piso.getPropietario().getNombre() : null)
                 .telefonoPropietario(piso.getPropietario() != null ? piso.getPropietario().getTelefono() : null)
+                .idPropietario(piso.getPropietario() != null ? piso.getPropietario().getIdPersona() : null)
                 .build();
     }
 

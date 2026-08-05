@@ -25,6 +25,15 @@ public class ControladorIncidencias {
     @PostMapping
     public ResponseEntity<?> insertar(@RequestBody IncidenciasDto dto) {
         try {
+            com.proyect.main.modelos.Usuario actual = com.proyect.main.servicios.UserContext.getCurrentUsuario();
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                dto.setEstadoIncidencia(com.proyect.main.modelos.enums.EstadoIncidencia.SOLICITADO);
+            }
+            if (actual != null && com.proyect.main.modelos.enums.RolUsuario.CLIENTE.equals(actual.getRol())) {
+                dto.setHorasTrabajadas(null);
+                dto.setMaterialesRequeridos(null);
+                dto.setPresupuesto(null);
+            }
             IncidenciasRespuesta respuesta = servicioIncidencias.insertar(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
         } catch (Exception e) {
@@ -43,9 +52,11 @@ public class ControladorIncidencias {
     }
 
     @GetMapping("/promocion/{idPromocion}")
-    public ResponseEntity<?> obtenerPorPromocion(@PathVariable int idPromocion) {
+    public ResponseEntity<?> obtenerPorPromocion(
+            @PathVariable int idPromocion,
+            @RequestParam(required = false, defaultValue = "false") boolean incluirSolicitudes) {
         try {
-            List<IncidenciasRespuesta> respuesta = servicioIncidencias.obtenerPorPromocion(idPromocion);
+            List<IncidenciasRespuesta> respuesta = servicioIncidencias.obtenerPorPromocion(idPromocion, incluirSolicitudes);
             return ResponseEntity.ok(respuesta);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -53,7 +64,7 @@ public class ControladorIncidencias {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> obtenerPorId(@PathVariable String id) {
+    public ResponseEntity<?> obtenerPorId(@PathVariable int id) {
         try {
             return servicioIncidencias.obtenerPorId(id)
                     .<ResponseEntity<?>>map(ResponseEntity::ok)
@@ -64,8 +75,11 @@ public class ControladorIncidencias {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizar(@PathVariable String id, @RequestBody IncidenciasDto dto) {
+    public ResponseEntity<?> actualizar(@PathVariable int id, @RequestBody IncidenciasDto dto) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para actualizar incidencias");
+            }
             IncidenciasRespuesta respuesta = servicioIncidencias.actualizar(id, dto);
             return ResponseEntity.ok(respuesta);
         } catch (Exception e) {
@@ -86,6 +100,9 @@ public class ControladorIncidencias {
     @PostMapping("/importar/{idPromocion}")
     public ResponseEntity<?> importar(@RequestParam("archivo") MultipartFile archivo, @PathVariable int idPromocion) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para importar incidencias");
+            }
             servicioIncidencias.importar(archivo, idPromocion);
             return ResponseEntity.ok("Archivo Excel de Incidencias importado exitosamente.");
         } catch (Exception e) {
@@ -107,8 +124,11 @@ public class ControladorIncidencias {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminar(@PathVariable String id) {
+    public ResponseEntity<?> eliminar(@PathVariable int id) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para eliminar incidencias");
+            }
             servicioIncidencias.eliminar(id);
             return ResponseEntity.ok("Incidencia eliminada exitosamente.");
         } catch (Exception e) {

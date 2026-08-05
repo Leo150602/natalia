@@ -15,6 +15,7 @@ export interface IncidenciasDto {
 }
 
 export interface IncidenciasRespuesta {
+  idIncidencia: number;
   numeroIncidencia: string;
   estado: string;
   pisos: PisosRespuesta;
@@ -26,6 +27,8 @@ export interface IncidenciasRespuesta {
   proforma: string;
   horas: string;
   fechaIncidencia: string | Date;
+  fechaActualizacion?: string | Date | null;
+  solicitante?: string;
 }
 
 export interface IncidenciasFiltroDto {

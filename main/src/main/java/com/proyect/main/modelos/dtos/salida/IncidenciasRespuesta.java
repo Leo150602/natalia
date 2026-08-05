@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 public class IncidenciasRespuesta {
 
+    private int idIncidencia;
     private String numeroIncidencia;
     private String estado;
     private PisosRespuesta pisos;
@@ -22,6 +23,7 @@ public class IncidenciasRespuesta {
     private String proforma;
     private String horas;
     private LocalDateTime fechaIncidencia;
-
+    private LocalDateTime fechaActualizacion;
+    private String solicitante;
 
 }

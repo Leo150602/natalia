@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { PromocionesService } from '../../servicios/promociones-service';
 import { AlertaService } from '../../servicios/alerta-service';
 import { PromocionesDto } from '../../modelos/promociones.model';
+import { PermisosService } from '../../servicios/permisos.service';
 
 @Component({
   selector: 'app-importar-promociones',
@@ -17,13 +18,13 @@ export class ImportarPromocionesComponent implements OnInit {
 
   cargando = false;
 
-  // Control de Edición
   modoEdicion = false;
   idPromocionEdicion: number | null = null;
 
   nuevaPromo: any = {
     promotora: '',
-    promocion: ''
+    promocion: '',
+    direccion: ''
   };
 
   constructor(
@@ -31,11 +32,16 @@ export class ImportarPromocionesComponent implements OnInit {
     private alerta: AlertaService,
     private router: Router,
     private route: ActivatedRoute,
+    public permisosService: PermisosService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    // Comprobar si se ha pasado un ID para editar
+    if (!this.permisosService.puedeVerPromociones() || !this.permisosService.puedeInsertarEditar()) {
+      this.router.navigate(['/promociones']);
+      return;
+    }
+
     const id = this.route.snapshot.queryParamMap.get('id');
     if (id) {
       this.modoEdicion = true;
@@ -48,10 +54,10 @@ export class ImportarPromocionesComponent implements OnInit {
     if (this.idPromocionEdicion === null) return;
     this.promocionesService.obtenerPorId(this.idPromocionEdicion).subscribe({
       next: (res) => {
-        // Enlazar datos de la promoción y de su promotora
         this.nuevaPromo = {
           promocion: res.promocion && res.promocion.length > 0 ? res.promocion[0].nombre : '',
-          promotora: res.promotora
+          promotora: res.promotora,
+          direccion: res.promocion && res.promocion.length > 0 ? (res.promocion[0].direccion || '') : ''
         };
         this.cdr.detectChanges();
       },
@@ -68,8 +74,9 @@ export class ImportarPromocionesComponent implements OnInit {
     this.cargando = true;
 
     const dto: PromocionesDto = {
-      promotora: this.nuevaPromo.promotora,
-      promocion: this.nuevaPromo.promocion
+      promotora: this.nuevaPromo.promotora.toUpperCase(),
+      promocion: this.nuevaPromo.promocion.toUpperCase(),
+      direccion: this.nuevaPromo.direccion
     };
 
     const operacion = this.modoEdicion && this.idPromocionEdicion !== null
@@ -84,6 +91,7 @@ export class ImportarPromocionesComponent implements OnInit {
       },
       error: (err) => {
         this.cargando = false;
+        this.cdr.detectChanges();
         this.alerta.error("Error al guardar promoción: " + (err.error || err.message));
       }
     });

@@ -4,7 +4,9 @@ public enum EstadoIncidencia {
     VISITADO("Visitado"),
     NO_VISITADO("No visitado"),
     TERMINADO("Terminado"),
-    PENDIENTE_PRESUPUESTO("Pendiente de presupuesto");
+    PENDIENTE_PRESUPUESTO("Pendiente de presupuesto"),
+    SOLICITADO("Solicitado"),
+    RECHAZADO("Rechazado");
 
     private final String descripcion;
 

@@ -28,12 +28,20 @@ export class TablaDatosComponent implements OnChanges, AfterViewInit {
   @Input() idCampo: string = '';
   @Input() idNombre: string = 'ID';
   @Input() permitirAcciones: boolean = true; // Por defecto habilita editar/eliminar
+  @Input() cargando: boolean = false;
+  @Input() etiquetaEditar: string = 'Actualizar';
+  @Input() etiquetaEliminar: string = 'Eliminar';
+  @Input() iconoEditar: string = '✏️';
+  @Input() iconoEliminar: string = '🗑️';
+  @Input() seleccionable: boolean = false;
 
   @Output() editar = new EventEmitter<any>();
   @Output() eliminar = new EventEmitter<any>();
+  @Output() seleccionCambiada = new EventEmitter<any[]>();
 
   columnasVisibles: string[] = [];
   dataSource = new MatTableDataSource<any>([]);
+  elementosSeleccionados: any[] = [];
 
   // Estados del menú contextual
   menuContextualVisible = false;
@@ -46,8 +54,10 @@ export class TablaDatosComponent implements OnChanges, AfterViewInit {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['datos']) {
       this.dataSource.data = this.datos || [];
+      this.elementosSeleccionados = [];
+      this.seleccionCambiada.emit([]);
     }
-    if (changes['columnas'] || changes['mostrarId'] || changes['idCampo']) {
+    if (changes['columnas'] || changes['mostrarId'] || changes['idCampo'] || changes['seleccionable']) {
       this.actualizarColumnasVisibles();
     }
   }
@@ -69,6 +79,41 @@ export class TablaDatosComponent implements OnChanges, AfterViewInit {
     } else {
       this.columnasVisibles = campos.filter(c => c !== this.idCampo);
     }
+
+    if (this.seleccionable) {
+      this.columnasVisibles = ['seleccion', ...this.columnasVisibles];
+    }
+  }
+
+  columnasDinamicas(): string[] {
+    return this.columnasVisibles.filter(col => col !== 'seleccion');
+  }
+
+  estaSeleccionado(element: any): boolean {
+    return this.elementosSeleccionados.includes(element);
+  }
+
+  alternarSeleccion(element: any): void {
+    const idx = this.elementosSeleccionados.indexOf(element);
+    if (idx > -1) {
+      this.elementosSeleccionados.splice(idx, 1);
+    } else {
+      this.elementosSeleccionados.push(element);
+    }
+    this.seleccionCambiada.emit([...this.elementosSeleccionados]);
+  }
+
+  estaTodoSeleccionado(): boolean {
+    return this.datos && this.datos.length > 0 && this.elementosSeleccionados.length === this.datos.length;
+  }
+
+  alternarTodosSeleccionados(): void {
+    if (this.estaTodoSeleccionado()) {
+      this.elementosSeleccionados = [];
+    } else {
+      this.elementosSeleccionados = [...this.datos];
+    }
+    this.seleccionCambiada.emit([...this.elementosSeleccionados]);
   }
 
   obtenerNombreColumna(campo: string): string {

@@ -47,6 +47,8 @@
         [mostrarId]="config.mostrarId"
         [idCampo]="config.idCampo"
         [idNombre]="config.idNombre"
+        [permitirAcciones]="permisosService.puedeInsertarEditarIncidencias()"
+        [cargando]="cargando"
         (editar)="editarVisita($event)"
         (eliminar)="eliminarVisita($event)">
       </app-tabla-datos>

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,6 +10,7 @@ import { AlertaService } from '../../servicios/alerta-service';
 import { PisosRespuesta } from '../../modelos/pisos.model';
 import { TablaDatosComponent } from '../../utils/tabla-datos/tabla-datos';
 import { CONFIG_TABLA_PISOS } from '../../modelos/columnas-config';
+import { PermisosService } from '../../servicios/permisos.service';
 
 @Component({
   selector: 'app-pisos',
@@ -25,6 +26,7 @@ export class PisosComponent implements OnInit, OnDestroy {
   datos: PisosRespuesta[] = [];
   datosFiltrados: PisosRespuesta[] = [];
   config = CONFIG_TABLA_PISOS;
+  cargando = false;
   private promoSub?: Subscription;
 
   // Filtros reactivos locales
@@ -39,10 +41,17 @@ export class PisosComponent implements OnInit, OnDestroy {
     private pisosService: PisosService,
     private promocionesService: PromocionesService,
     private alerta: AlertaService,
-    private router: Router
+    private router: Router,
+    public permisosService: PermisosService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    if (!this.permisosService.puedeVerPisosYPropietarios()) {
+      this.router.navigate(['/']);
+      return;
+    }
+
     // Al abrir el componente, obtener el valor actual inmediatamente
     this.promocionId = this.estadoGlobal.getPromocion();
     if (this.promocionId !== null) {
@@ -71,13 +80,19 @@ export class PisosComponent implements OnInit, OnDestroy {
 
   cargarPisos(): void {
     if (this.promocionId === null) return;
+    this.cargando = true;
+    this.cdr.detectChanges();
     this.pisosService.obtenerPorPromocion(this.promocionId).subscribe({
       next: (res) => {
         this.datos = res;
+        this.cargando = false;
         this.aplicarFiltros();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error("Error al obtener pisos:", err);
+        this.cargando = false;
+        this.cdr.detectChanges();
       }
     });
 

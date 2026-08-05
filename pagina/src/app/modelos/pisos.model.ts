@@ -3,6 +3,7 @@ export interface PisosDto {
   idPromocion: number;
   propietarioNombre?: string | null;
   propietarioTelefono?: string | null;
+  idPropietario?: number | null;
 }
 
 export interface PisosRespuesta {
@@ -12,4 +13,5 @@ export interface PisosRespuesta {
   piso: string;
   propietario?: string | null;
   telefonoPropietario?: string | null;
+  idPropietario?: number | null;
 }

@@ -1,12 +1,19 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { forkJoin, Subscription } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { IncidenciasService } from '../../servicios/incidencias-service';
 import { PromocionesService } from '../../servicios/promociones-service';
 import { PisosService } from '../../servicios/pisos-service';
+import { VisitasService } from '../../servicios/visitas-service';
+import { AuthService } from '../../servicios/auth-service';
+import { EstadoGlobalService } from '../../servicios/global-service';
 import { IncidenciasRespuesta } from '../../modelos/incidencias.model';
 import { PromocionesRespuesta, PromocionItem } from '../../modelos/promociones.model';
 import { PisosRespuesta } from '../../modelos/pisos.model';
+import { VisitasRespuesta } from '../../modelos/visitas.model';
+import { PermisosService } from '../../servicios/permisos.service';
+import { SolicitudesService } from '../../servicios/solicitudes-service';
 
 interface GraficoPunto {
   x: number;
@@ -41,7 +48,7 @@ interface IncidenciaCritica {
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
-export class Home implements OnInit {
+export class Home implements OnInit, OnDestroy {
   Math = Math;
   
   todasLasIncidencias: IncidenciasRespuesta[] = [];
@@ -56,6 +63,27 @@ export class Home implements OnInit {
   promotoraSeleccionada = 'TODAS';
   promocionSeleccionada: number | 'TODAS' = 'TODAS';
 
+  promocionId: number | null = null;
+  private promoSub?: Subscription;
+
+  // Variables para Técnico
+  incidenciasTecnico: IncidenciasRespuesta[] = [];
+  incidenciasTecnicoFiltradas: IncidenciasRespuesta[] = [];
+  visitasTecnico: VisitasRespuesta[] = [];
+  visitasTecnicoFiltradas: VisitasRespuesta[] = [];
+
+  filtroIncidencias = {
+    numero: '',
+    piso: '',
+    estado: ''
+  };
+
+  filtroVisitas = {
+    numero: '',
+    piso: '',
+    estadoVisita: ''
+  };
+
   // Control de Pestañas
   pestanaActiva = 'operacion';
 
@@ -66,8 +94,10 @@ export class Home implements OnInit {
   tasaResolucion = 0;
   totalPisos = 0;
   totalPromociones = 0;
+  totalSolicitudesPendientes = 0;
   totalFueraDePlazo = 0;
   totalUltimaSemana = 0;
+  todasLasSolicitudes: IncidenciasRespuesta[] = [];
 
   // Comparativa Mensual
   resueltasEsteMes = 0;
@@ -108,15 +138,31 @@ export class Home implements OnInit {
   semaforoTexto = '';
   semaforoExplicacion = '';
 
+  cargando = false;
+
   constructor(
     private incidenciasService: IncidenciasService,
     private promocionesService: PromocionesService,
     private pisosService: PisosService,
+    private visitasService: VisitasService,
+    private authService: AuthService,
+    private estadoGlobalService: EstadoGlobalService,
+    public permisosService: PermisosService,
+    private solicitudesService: SolicitudesService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.cargarDatos();
+    this.promoSub = this.estadoGlobalService.promocion$.subscribe((id) => {
+      this.promocionId = id;
+      this.cargarDatos();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.promoSub) {
+      this.promoSub.unsubscribe();
+    }
   }
 
   formatearFecha(fechaStr: any): string {
@@ -128,36 +174,90 @@ export class Home implements OnInit {
   }
 
   cargarDatos(): void {
-    // 1. Obtener todas las promociones/promotoras agrupadas para los filtros
-    this.promocionesService.obtenerTodas().subscribe({
-      next: (data) => {
-        this.promocionesAgrupadas = data;
-        this.listaPromotoras = data.map(g => g.promotora);
-        this.actualizarListaPromociones();
-        this.cdr.detectChanges();
-      },
-      error: (err) => console.error("Error al cargar promociones:", err)
-    });
+    this.cargando = true;
+    this.cdr.detectChanges();
 
-    // 2. Obtener todos los pisos
-    this.pisosService.obtenerTodos().subscribe({
-      next: (data) => {
-        this.todasLasPisos = data;
-        this.calcularMetricas();
+    if (this.permisosService.esTecnico()) {
+      if (this.promocionId === null) {
+        this.incidenciasTecnico = [];
+        this.incidenciasTecnicoFiltradas = [];
+        this.visitasTecnico = [];
+        this.visitasTecnicoFiltradas = [];
+        this.cargando = false;
         this.cdr.detectChanges();
-      },
-      error: (err) => console.error("Error al obtener pisos:", err)
-    });
+        return;
+      }
 
-    // 3. Obtener todas las incidencias
-    this.incidenciasService.obtenerTodas().subscribe({
-      next: (data) => {
-        this.todasLasIncidencias = data;
-        this.calcularMetricas();
-        this.cdr.detectChanges();
-      },
-      error: (err) => console.error("Error al obtener incidencias:", err)
-    });
+      forkJoin({
+        incidencias: this.incidenciasService.obtenerPorPromocion(this.promocionId, true),
+        visitas: this.visitasService.obtenerPorPromocion(this.promocionId)
+      }).subscribe({
+        next: (res) => {
+          const user = this.authService.getCurrentUser();
+          const nombreTecnico = user?.nombre || user?.username || '';
+
+          // Incidencias no terminadas (incluyendo solicitadas y rechazadas)
+          this.incidenciasTecnico = res.incidencias.filter(inc => inc.estado !== 'Terminado');
+
+          // Visitas en las que el técnico es partícipe
+          this.visitasTecnico = res.visitas.filter(v => 
+            v.tecnicoNombre && nombreTecnico && 
+            v.tecnicoNombre.toLowerCase().trim() === nombreTecnico.toLowerCase().trim()
+          );
+
+          this.aplicarFiltrosTecnico();
+          this.cargando = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error("Error al cargar datos del dashboard técnico:", err);
+          this.cargando = false;
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      forkJoin({
+        promociones: this.promocionesService.obtenerTodas(),
+        pisos: this.pisosService.obtenerTodos(),
+        incidencias: this.incidenciasService.obtenerTodas(),
+        solicitudes: this.solicitudesService.obtenerSolicitudes()
+      }).subscribe({
+        next: (res) => {
+          // 1. Promociones
+          this.promocionesAgrupadas = this.permisosService.filtrarPromocionesAgrupadas(res.promociones);
+          this.listaPromotoras = this.promocionesAgrupadas.map(g => g.promotora);
+          this.actualizarListaPromociones();
+
+          // 2. Pisos y solicitudes
+          if (this.permisosService.esCliente()) {
+            const user = this.authService.getCurrentUser();
+            const nombrePromotora = user?.nombrePromotora;
+            if (nombrePromotora) {
+              this.todasLasPisos = res.pisos.filter(p => p.promotora && p.promotora.toLowerCase().trim() === nombrePromotora.toLowerCase().trim());
+              this.todasLasIncidencias = res.incidencias.filter(inc => inc.pisos?.promotora && inc.pisos.promotora.toLowerCase().trim() === nombrePromotora.toLowerCase().trim());
+              this.todasLasSolicitudes = res.solicitudes.filter(inc => inc.pisos?.promotora && inc.pisos.promotora.toLowerCase().trim() === nombrePromotora.toLowerCase().trim());
+            } else {
+              this.todasLasPisos = [];
+              this.todasLasIncidencias = [];
+              this.todasLasSolicitudes = [];
+            }
+          } else {
+            this.todasLasPisos = res.pisos;
+            this.todasLasIncidencias = res.incidencias;
+            this.todasLasSolicitudes = res.solicitudes;
+          }
+
+          this.calcularMetricas();
+          this.cargando = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error("Error al cargar datos del dashboard:", err);
+          this.cargando = false;
+          this.cdr.detectChanges();
+        }
+      });
+    }
   }
 
   actualizarListaPromociones(): void {
@@ -199,7 +299,7 @@ export class Home implements OnInit {
     const anioMesAnterior = ultimoDiaMesAnterior.getFullYear();
 
     const promoFiltroItem = this.promocionSeleccionada === 'TODAS' ? null : 
-      this.listaPromociones.find(p => p.idPromocion === this.promocionSeleccionada);
+      this.listaPromociones.find(p => String(p.idPromocion) === String(this.promocionSeleccionada));
 
     // 1. Filtrar pisos
     const pisosFiltrados = this.todasLasPisos.filter(p => {
@@ -221,6 +321,16 @@ export class Home implements OnInit {
       }
     }
 
+    // Calcular solicitudes pendientes
+    const solicitudesFiltradas = this.todasLasSolicitudes.filter(sol => {
+      const matchPromotora = this.promotoraSeleccionada === 'TODAS' || 
+                            (sol.pisos?.promotora === this.promotoraSeleccionada);
+      const matchPromocion = this.promocionSeleccionada === 'TODAS' || 
+                            (sol.pisos?.promocion === promoFiltroItem?.nombre);
+      return matchPromotora && matchPromocion;
+    });
+    this.totalSolicitudesPendientes = solicitudesFiltradas.length;
+
     // 2. Filtrar incidencias
     const incidenciasFiltradas = this.todasLasIncidencias.filter(inc => {
       const matchPromotora = this.promotoraSeleccionada === 'TODAS' || 
@@ -239,13 +349,15 @@ export class Home implements OnInit {
     // 4. Comparativa Mensual (Resueltas este mes vs mes anterior)
     this.resueltasEsteMes = incidenciasFiltradas.filter(i => {
       if (i.estado !== 'Terminado') return false;
-      const f = new Date(i.fechaIncidencia);
+      const dateToUse = i.fechaActualizacion ? i.fechaActualizacion : i.fechaIncidencia;
+      const f = new Date(dateToUse);
       return f.getMonth() === mesActual && f.getFullYear() === anioActual;
     }).length;
 
     this.resueltasMesAnterior = incidenciasFiltradas.filter(i => {
       if (i.estado !== 'Terminado') return false;
-      const f = new Date(i.fechaIncidencia);
+      const dateToUse = i.fechaActualizacion ? i.fechaActualizacion : i.fechaIncidencia;
+      const f = new Date(dateToUse);
       return f.getMonth() === mesAnterior && f.getFullYear() === anioMesAnterior;
     }).length;
 
@@ -312,18 +424,18 @@ export class Home implements OnInit {
       this.semaforoColor = 'verde';
       this.semaforoTexto = 'Sin incidencias';
       this.semaforoExplicacion = 'No hay incidencias registradas bajo los filtros seleccionados.';
-    } else if (openRate > 35 || this.totalFueraDePlazo > 0.15 * this.totalAbiertas || this.totalFueraDePlazo > 5) {
+    } else if (this.tasaResolucion < 25) {
       this.semaforoColor = 'rojo';
       this.semaforoTexto = 'Alerta Roja';
-      this.semaforoExplicacion = 'Acumulación crítica de incidencias abiertas o fuera de plazo. Requiere atención inmediata.';
-    } else if (openRate > 15 || this.totalFueraDePlazo > 0) {
-      this.semaforoColor = 'naranja';
-      this.semaforoTexto = 'Alerta Naranja';
-      this.semaforoExplicacion = 'Retraso moderado o volumen bajo control pero con incidencias en aumento o algunos vencimientos de SLA detectados.';
-    } else {
+      this.semaforoExplicacion = 'Tasa de resolución crítica (por debajo del 25%). Requiere atención inmediata.';
+    } else if (this.tasaResolucion > 75) {
       this.semaforoColor = 'verde';
       this.semaforoTexto = 'Alerta Verde';
-      this.semaforoExplicacion = 'Ritmo correcto de cierres. Pocas incidencias abiertas y todas gestionadas dentro de los plazos adecuados.';
+      this.semaforoExplicacion = 'Tasa de resolución óptima (por encima del 75%). Ritmo de cierre bajo control.';
+    } else {
+      this.semaforoColor = 'naranja';
+      this.semaforoTexto = 'Alerta Naranja';
+      this.semaforoExplicacion = 'Tasa de resolución intermedia (entre 25% y 75%). Se recomienda hacer seguimiento.';
     }
 
     // 7. Agrupar por Categorías para la Tabla Resumen
@@ -345,10 +457,11 @@ export class Home implements OnInit {
       const rate = tot > 0 ? Math.round((res / tot) * 100) : 0;
       
       let estSla: 'verde' | 'naranja' | 'rojo' = 'verde';
-      const openPct = (ab / tot) * 100;
-      if (openPct > 35) {
+      if (rate < 25) {
         estSla = 'rojo';
-      } else if (openPct > 15) {
+      } else if (rate > 75) {
+        estSla = 'verde';
+      } else {
         estSla = 'naranja';
       }
 
@@ -554,5 +667,33 @@ export class Home implements OnInit {
       areaPath += ` L ${pts[pts.length - 1].x} ${height - paddingY} Z`;
       this.svgEvolucionAreaResueltas = areaPath;
     }
+  }
+
+  aplicarFiltrosTecnico(): void {
+    // 1. Filtrar Incidencias
+    this.incidenciasTecnicoFiltradas = this.incidenciasTecnico.filter(inc => {
+      const matchNum = !this.filtroIncidencias.numero || (inc.numeroIncidencia && inc.numeroIncidencia.toLowerCase().includes(this.filtroIncidencias.numero.toLowerCase()));
+      const matchPiso = !this.filtroIncidencias.piso || (inc.pisos?.piso && inc.pisos.piso.toLowerCase().includes(this.filtroIncidencias.piso.toLowerCase()));
+      const matchEst = !this.filtroIncidencias.estado || (inc.estado && inc.estado.toLowerCase().includes(this.filtroIncidencias.estado.toLowerCase()));
+      return matchNum && matchPiso && matchEst;
+    });
+
+    // 2. Filtrar Visitas
+    this.visitasTecnicoFiltradas = this.visitasTecnico.filter(v => {
+      const matchNum = !this.filtroVisitas.numero || (v.numeroIncidencia && v.numeroIncidencia.toLowerCase().includes(this.filtroVisitas.numero.toLowerCase()));
+      const matchPiso = !this.filtroVisitas.piso || (v.piso && v.piso.toLowerCase().includes(this.filtroVisitas.piso.toLowerCase()));
+      const matchEst = !this.filtroVisitas.estadoVisita || (v.estadoVisita && v.estadoVisita.toLowerCase().includes(this.filtroVisitas.estadoVisita.toLowerCase()));
+      return matchNum && matchPiso && matchEst;
+    });
+  }
+
+  limpiarFiltrosIncidencias(): void {
+    this.filtroIncidencias = { numero: '', piso: '', estado: '' };
+    this.aplicarFiltrosTecnico();
+  }
+
+  limpiarFiltrosVisitas(): void {
+    this.filtroVisitas = { numero: '', piso: '', estadoVisita: '' };
+    this.aplicarFiltrosTecnico();
   }
 }

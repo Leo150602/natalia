@@ -13,5 +13,7 @@ public class PersonasRespuesta {
     private String nombre;
     private String telefono;
     private String tipoPersonas;
+    private Integer idPromotora;
+    private String nombrePromotora;
 
 }

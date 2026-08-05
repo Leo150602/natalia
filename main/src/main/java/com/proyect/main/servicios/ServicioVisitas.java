@@ -1,12 +1,12 @@
 package com.proyect.main.servicios;
 
-import com.proyect.main.modelos.Personas;
+import com.proyect.main.modelos.Usuario;
 import com.proyect.main.modelos.Incidencias;
 import com.proyect.main.modelos.Visitas;
-import com.proyect.main.modelos.enums.TipoPersonas;
+import com.proyect.main.modelos.enums.RolUsuario;
 import com.proyect.main.modelos.dtos.entrada.VisitasDto;
 import com.proyect.main.modelos.dtos.salida.VisitasRespuesta;
-import com.proyect.main.repositorios.IRepositorioPersonas;
+import com.proyect.main.repositorios.IRepositorioUsuario;
 import com.proyect.main.repositorios.IRepositorioIncidencias;
 import com.proyect.main.repositorios.IRepositorioVisitas;
 import lombok.RequiredArgsConstructor;
@@ -22,22 +22,22 @@ import java.util.stream.Collectors;
 public class ServicioVisitas {
 
     private final IRepositorioVisitas repositorioVisitas;
-    private final IRepositorioPersonas repositorioPersonas;
+    private final IRepositorioUsuario repositorioUsuario;
     private final IRepositorioIncidencias repositorioIncidencias;
 
     public VisitasRespuesta insertar(VisitasDto dto) {
         try {
-            Personas tecnico = repositorioPersonas.findById(dto.getIdTecnico())
+            Usuario tecnico = repositorioUsuario.findById(dto.getIdTecnico())
                     .orElseThrow(() -> new IllegalArgumentException("Técnico no encontrado con ID: " + dto.getIdTecnico()));
 
             // Validar que la persona sea un TECNICO
-            if (tecnico.getTipoPersonas() != TipoPersonas.TECNICO) {
-                throw new IllegalArgumentException("La persona asignada con ID " + dto.getIdTecnico() +
-                        " no es del tipo TECNICO. Tipo actual: " + tecnico.getTipoPersonas());
+            if (tecnico.getRol() != RolUsuario.TECNICO) {
+                throw new IllegalArgumentException("El usuario asignado con ID " + dto.getIdTecnico() +
+                        " no tiene el rol de TECNICO. Rol actual: " + tecnico.getRol());
             }
 
-            Incidencias incidencia = repositorioIncidencias.findById(dto.getNumeroIncidencia())
-                    .orElseThrow(() -> new IllegalArgumentException("Incidencia no encontrada con número: " + dto.getNumeroIncidencia()));
+            Incidencias incidencia = repositorioIncidencias.findById(dto.getIdIncidencia())
+                    .orElseThrow(() -> new IllegalArgumentException("Incidencia no encontrada con ID: " + dto.getIdIncidencia()));
 
             Visitas visita = Visitas.builder()
                     .observaciones(dto.getObservaciones())
@@ -76,17 +76,17 @@ public class ServicioVisitas {
             Visitas visita = repositorioVisitas.findByIdWithDetails(id)
                     .orElseThrow(() -> new IllegalArgumentException("Visita no encontrada con ID: " + id));
 
-            Personas tecnico = repositorioPersonas.findById(dto.getIdTecnico())
+            Usuario tecnico = repositorioUsuario.findById(dto.getIdTecnico())
                     .orElseThrow(() -> new IllegalArgumentException("Técnico no encontrado con ID: " + dto.getIdTecnico()));
 
             // Validar que la persona sea un TECNICO
-            if (tecnico.getTipoPersonas() != TipoPersonas.TECNICO) {
-                throw new IllegalArgumentException("La persona asignada con ID " + dto.getIdTecnico() +
-                        " no es del tipo TECNICO. Tipo actual: " + tecnico.getTipoPersonas());
+            if (tecnico.getRol() != RolUsuario.TECNICO) {
+                throw new IllegalArgumentException("El usuario asignado con ID " + dto.getIdTecnico() +
+                        " no tiene el rol de TECNICO. Rol actual: " + tecnico.getRol());
             }
 
-            Incidencias incidencia = repositorioIncidencias.findById(dto.getNumeroIncidencia())
-                    .orElseThrow(() -> new IllegalArgumentException("Incidencia no encontrada con número: " + dto.getNumeroIncidencia()));
+            Incidencias incidencia = repositorioIncidencias.findById(dto.getIdIncidencia())
+                    .orElseThrow(() -> new IllegalArgumentException("Incidencia no encontrada con ID: " + dto.getIdIncidencia()));
 
             visita.setObservaciones(dto.getObservaciones());
             visita.setDiaVisita(dto.getDiaVisita());
@@ -121,10 +121,16 @@ public class ServicioVisitas {
     private VisitasRespuesta mapear(Visitas visita) {
         String pisoNombre = null;
         String promocionNombre = null;
+        String propietarioNombre = null;
+        String propietarioTelefono = null;
         if (visita.getIncidencia() != null && visita.getIncidencia().getPiso() != null) {
             pisoNombre = visita.getIncidencia().getPiso().getPiso();
             if (visita.getIncidencia().getPiso().getPromocion() != null) {
                 promocionNombre = visita.getIncidencia().getPiso().getPromocion().getPromocion();
+            }
+            if (visita.getIncidencia().getPiso().getPropietario() != null) {
+                propietarioNombre = visita.getIncidencia().getPiso().getPropietario().getNombre();
+                propietarioTelefono = visita.getIncidencia().getPiso().getPropietario().getTelefono();
             }
         }
 
@@ -136,8 +142,11 @@ public class ServicioVisitas {
                 .tecnicoNombre(visita.getTecnico() != null ? visita.getTecnico().getNombre() : null)
                 .tecnicoTelefono(visita.getTecnico() != null ? visita.getTecnico().getTelefono() : null)
                 .numeroIncidencia(visita.getIncidencia() != null ? visita.getIncidencia().getNumeroIncidencia() : null)
+                .idIncidencia(visita.getIncidencia() != null ? visita.getIncidencia().getIdIncidencia() : 0)
                 .piso(pisoNombre)
                 .promocion(promocionNombre)
+                .propietario(propietarioNombre)
+                .telefonoPropietario(propietarioTelefono)
                 .build();
     }
 

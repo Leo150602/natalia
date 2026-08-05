@@ -22,7 +22,7 @@
         </div>
 
         <!-- Nombre de la Promoción -->
-        <div class="mb-4">
+        <div class="mb-3">
           <label for="promocion" class="form-label font-weight-bold">Nombre de la Promoción *</label>
           <input 
             type="text" 
@@ -32,6 +32,18 @@
             [(ngModel)]="nuevaPromo.promocion" 
             required 
             placeholder="Ej. Residencial Las Palmeras" />
+        </div>
+
+        <!-- Dirección -->
+        <div class="mb-4">
+          <label for="direccion" class="form-label font-weight-bold">Dirección</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="direccion" 
+            name="direccion" 
+            [(ngModel)]="nuevaPromo.direccion" 
+            placeholder="Ej. Calle de la Alameda, 12, Valencia" />
         </div>
 
         <!-- Botones de Acción -->

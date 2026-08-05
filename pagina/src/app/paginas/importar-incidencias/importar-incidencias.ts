@@ -9,6 +9,7 @@ import { EnumService } from '../../servicios/enum-service';
 import { AlertaService } from '../../servicios/alerta-service';
 import { PisosRespuesta } from '../../modelos/pisos.model';
 import { IncidenciasDto } from '../../modelos/incidencias.model';
+import { PermisosService } from '../../servicios/permisos.service';
 
 @Component({
   selector: 'app-importar-incidencias',
@@ -22,8 +23,8 @@ export class ImportarIncidenciasComponent implements OnInit {
   promocionId: number | null = null;
   pisos: PisosRespuesta[] = [];
   nuevoPisoNombre = '';
+  placeholderNumeroIncidencia = 'Ej. INC-001';
   
-  // Opciones de Enums
   categorias: any[] = [];
   estados: any[] = [];
   horasLista: any[] = [];
@@ -33,11 +34,9 @@ export class ImportarIncidenciasComponent implements OnInit {
     { value: 'NA', descripcion: 'N/A' }
   ];
 
-  // Control de Edición
   modoEdicion = false;
-  idIncidenciaEdicion: string | null = null;
+  idIncidenciaEdicion: number | null = null;
 
-  // Datos del Formulario
   nuevaIncidencia: any = {
     numeroIncidencia: '',
     idPiso: null,
@@ -62,21 +61,30 @@ export class ImportarIncidenciasComponent implements OnInit {
     private alerta: AlertaService,
     private router: Router,
     private route: ActivatedRoute,
+    public permisosService: PermisosService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    const idParam = this.route.snapshot.queryParamMap.get('id');
+    if (idParam) {
+      this.idIncidenciaEdicion = Number(idParam);
+      this.modoEdicion = true;
+    }
+
+    if (this.modoEdicion && !this.permisosService.puedeInsertarEditar()) {
+      this.router.navigate(['/incidencias']);
+      return;
+    }
+
     this.estadoGlobal.promocion$.subscribe((id) => {
       this.promocionId = id;
       if (id !== null) {
         this.cargarPisos();
+        this.cargarUltimoNumeroIncidencia();
       }
     });
 
-    this.idIncidenciaEdicion = this.route.snapshot.queryParamMap.get('id');
-    if (this.idIncidenciaEdicion) {
-      this.modoEdicion = true;
-    }
     this.cargarEnums();
   }
 
@@ -114,7 +122,7 @@ export class ImportarIncidenciasComponent implements OnInit {
     this.pisosService.obtenerPorPromocion(this.promocionId).subscribe({
       next: (res) => {
         this.pisos = res;
-        this.cdr.detectChanges(); // Forzar renderizado
+        this.cdr.detectChanges(); 
       },
       error: (err) => console.error("Error al cargar pisos:", err)
     });
@@ -124,15 +132,57 @@ export class ImportarIncidenciasComponent implements OnInit {
     this.enumService.obtenerTodosLosEnums().subscribe({
       next: (res) => {
         this.categorias = res.categorias || [];
-        this.estados = res.estadosIncidencia || [];
+        const rawEstados = res.estadosIncidencia || [];
+        this.estados = rawEstados.filter((e: any) => e.value !== 'SOLICITADO' && e.value !== 'RECHAZADO');
         this.horasLista = res.horasTrabajadas || [];
         
         if (this.modoEdicion) {
           this.cargarDatosIncidenciaEdicion();
         }
-        this.cdr.detectChanges(); // Forzar renderizado
+        this.cdr.detectChanges(); 
       },
       error: (err) => console.error("Error al cargar enums:", err)
+    });
+  }
+
+  cargarUltimoNumeroIncidencia(): void {
+    if (this.promocionId === null) {
+      this.placeholderNumeroIncidencia = 'Ej. INC-001';
+      return;
+    }
+    this.incidenciasService.obtenerPorPromocion(this.promocionId, true).subscribe({
+      next: (incidencias) => {
+        if (incidencias && incidencias.length > 0) {
+          let maxNum = -1;
+          let maxIncidenciaStr = '';
+          
+          incidencias.forEach(inc => {
+            if (inc.numeroIncidencia) {
+              const numPart = inc.numeroIncidencia.replace(/\D/g, '');
+              if (numPart) {
+                const numVal = parseInt(numPart, 10);
+                if (numVal > maxNum) {
+                  maxNum = numVal;
+                  maxIncidenciaStr = inc.numeroIncidencia;
+                }
+              }
+            }
+          });
+          
+          if (maxIncidenciaStr) {
+            this.placeholderNumeroIncidencia = `ultima incidencia: ${maxIncidenciaStr}`;
+          } else {
+            this.placeholderNumeroIncidencia = 'Ej. INC-001';
+          }
+        } else {
+          this.placeholderNumeroIncidencia = 'Ej. INC-001';
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error("Error al obtener incidencias para sugerencia:", err);
+        this.placeholderNumeroIncidencia = 'Ej. INC-001';
+      }
     });
   }
 
@@ -150,7 +200,6 @@ export class ImportarIncidenciasComponent implements OnInit {
         this.cargando = false;
         return;
       }
-      // Primero registrar el piso
       this.pisosService.insertar({
         piso: this.nuevoPisoNombre.trim().toUpperCase(),
         idPromocion: this.promocionId!,
@@ -162,6 +211,7 @@ export class ImportarIncidenciasComponent implements OnInit {
         },
         error: (err) => {
           this.cargando = false;
+          this.cdr.detectChanges();
           this.alerta.error("Error al crear el nuevo piso: " + (err.error || err.message));
         }
       });
@@ -171,7 +221,6 @@ export class ImportarIncidenciasComponent implements OnInit {
   }
 
   guardarConIdPiso(idPiso: number): void {
-    // Adaptar fecha al formato adecuado
     let fecha = null;
     if (this.nuevaIncidencia.fechaIncidencia) {
       fecha = new Date(this.nuevaIncidencia.fechaIncidencia).toISOString().split('.')[0];
@@ -191,6 +240,10 @@ export class ImportarIncidenciasComponent implements OnInit {
       fechaIncidencia: fecha
     };
 
+    if (!this.modoEdicion && !this.permisosService.puedeInsertarEditar()) {
+      dto.estadoIncidencia = 'SOLICITADO';
+    }
+
     const operacion = this.modoEdicion && this.idIncidenciaEdicion
       ? this.incidenciasService.actualizar(this.idIncidenciaEdicion, dto)
       : this.incidenciasService.insertar(dto);
@@ -199,10 +252,15 @@ export class ImportarIncidenciasComponent implements OnInit {
       next: () => {
         this.cargando = false;
         this.alerta.exito(this.modoEdicion ? "Incidencia actualizada con éxito." : "Incidencia registrada con éxito.");
-        this.router.navigate(['/incidencias']);
+        if (this.permisosService.esCliente() || this.permisosService.esTecnico()) {
+          this.router.navigate(['/']);
+        } else {
+          this.router.navigate(['/incidencias']);
+        }
       },
       error: (err) => {
         this.cargando = false;
+        this.cdr.detectChanges();
         this.alerta.error("Error al guardar la incidencia: " + (err.error || err.message));
       }
     });

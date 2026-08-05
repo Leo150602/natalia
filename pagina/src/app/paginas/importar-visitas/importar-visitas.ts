@@ -5,12 +5,12 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { EstadoGlobalService } from '../../servicios/global-service';
 import { VisitasService } from '../../servicios/visitas-service';
 import { IncidenciasService } from '../../servicios/incidencias-service';
-import { PersonasService } from '../../servicios/personas-service';
+import { AuthService, LoginRespuesta } from '../../servicios/auth-service';
 import { EnumService } from '../../servicios/enum-service';
 import { AlertaService } from '../../servicios/alerta-service';
 import { IncidenciasRespuesta } from '../../modelos/incidencias.model';
-import { PersonasRespuesta } from '../../modelos/personas.model';
 import { VisitasDto } from '../../modelos/visitas.model';
+import { PermisosService } from '../../servicios/permisos.service';
 
 @Component({
   selector: 'app-importar-visitas',
@@ -23,20 +23,15 @@ export class ImportarVisitasComponent implements OnInit {
 
   promocionId: number | null = null;
   incidencias: IncidenciasRespuesta[] = [];
-  tecnicos: PersonasRespuesta[] = [];
+  tecnicos: LoginRespuesta[] = [];
   estados: any[] = [];
   cargando = false;
 
-  // Campos para nuevo técnico inline
-  nuevoTecnicoNombre = '';
-  nuevoTecnicoTelefono = '';
-
-  // Control de Edición
   modoEdicion = false;
   idVisitaEdicion: number | null = null;
 
   nuevaVisita: any = {
-    numeroIncidencia: '',
+    idIncidencia: null,
     idTecnico: null,
     diaVisita: '',
     estadoVisita: '',
@@ -47,15 +42,21 @@ export class ImportarVisitasComponent implements OnInit {
     private estadoGlobal: EstadoGlobalService,
     private visitasService: VisitasService,
     private incidenciasService: IncidenciasService,
-    private personasService: PersonasService,
+    private authService: AuthService,
     private enumService: EnumService,
     private alerta: AlertaService,
     private router: Router,
     private route: ActivatedRoute,
+    public permisosService: PermisosService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    if (!this.permisosService.puedeInsertarEditarIncidencias()) {
+      this.router.navigate(['/visitas']);
+      return;
+    }
+
     this.estadoGlobal.promocion$.subscribe((id) => {
       this.promocionId = id;
       if (id !== null) {
@@ -66,7 +67,6 @@ export class ImportarVisitasComponent implements OnInit {
     this.cargarTecnicos();
     this.cargarEnums();
 
-    // Comprobar si se ha pasado un ID para editar
     const id = this.route.snapshot.queryParamMap.get('id');
     if (id) {
       this.modoEdicion = true;
@@ -91,14 +91,14 @@ export class ImportarVisitasComponent implements OnInit {
 
         let tecnicoId = null;
         if (res.tecnicoNombre) {
-          const matchT = this.tecnicos.find(t => t.nombre === res.tecnicoNombre);
+          const matchT = this.tecnicos.find(t => t.nombre === res.tecnicoNombre || t.username === res.tecnicoNombre);
           if (matchT) {
-            tecnicoId = matchT.idPersona;
+            tecnicoId = matchT.id;
           }
         }
 
         this.nuevaVisita = {
-          numeroIncidencia: res.numeroIncidencia || '',
+          idIncidencia: res.idIncidencia || null,
           idTecnico: tecnicoId,
           diaVisita: res.diaVisita ? new Date(res.diaVisita).toISOString().slice(0, 16) : '',
           estadoVisita: keyEstado,
@@ -115,19 +115,19 @@ export class ImportarVisitasComponent implements OnInit {
     this.incidenciasService.obtenerPorPromocion(this.promocionId).subscribe({
       next: (res) => {
         this.incidencias = res;
-        this.cdr.detectChanges(); // Forzar renderizado
+        this.cdr.detectChanges(); 
       },
       error: (err) => console.error("Error al cargar incidencias:", err)
     });
   }
 
   cargarTecnicos(): void {
-    this.personasService.obtenerTodas().subscribe({
+    this.authService.getTecnicos().subscribe({
       next: (res) => {
-        this.tecnicos = res.filter(p => p.tipoPersonas === 'TECNICO');
-        this.cdr.detectChanges(); // Forzar renderizado
+        this.tecnicos = res;
+        this.cdr.detectChanges(); 
         if (this.modoEdicion) {
-          this.cargarDatosVisitaEdicion(); // Re-cargar para asegurar que coincidan los técnicos
+          this.cargarDatosVisitaEdicion(); 
         }
       },
       error: (err) => console.error("Error al cargar técnicos:", err)
@@ -138,9 +138,9 @@ export class ImportarVisitasComponent implements OnInit {
     this.enumService.obtenerTodosLosEnums().subscribe({
       next: (res) => {
         this.estados = res.estadosVisita || [];
-        this.cdr.detectChanges(); // Forzar renderizado
+        this.cdr.detectChanges(); 
         if (this.modoEdicion) {
-          this.cargarDatosVisitaEdicion(); // Re-cargar para asegurar que coincidan los enums
+          this.cargarDatosVisitaEdicion(); 
         }
       },
       error: (err) => console.error("Error al cargar enums de visita:", err)
@@ -148,35 +148,13 @@ export class ImportarVisitasComponent implements OnInit {
   }
 
   guardar(): void {
-    if (!this.nuevaVisita.numeroIncidencia || !this.nuevaVisita.idTecnico || !this.nuevaVisita.diaVisita) {
+    if (!this.nuevaVisita.idIncidencia || !this.nuevaVisita.idTecnico || !this.nuevaVisita.diaVisita) {
       this.alerta.advertencia("Por favor complete los campos requeridos (Incidencia, Técnico y Fecha Visita).");
       return;
     }
 
     this.cargando = true;
-
-    if (this.nuevaVisita.idTecnico === 'nuevo') {
-      if (!this.nuevoTecnicoNombre || !this.nuevoTecnicoTelefono) {
-        this.alerta.advertencia("Por favor indique el nombre y teléfono del nuevo técnico.");
-        this.cargando = false;
-        return;
-      }
-      this.personasService.insertar({
-        nombre: this.nuevoTecnicoNombre.trim(),
-        telefono: this.nuevoTecnicoTelefono.trim(),
-        tipoPersonas: 'TECNICO'
-      }).subscribe({
-        next: (createdPersona) => {
-          this.guardarConIdTecnico(createdPersona.idPersona);
-        },
-        error: (err) => {
-          this.cargando = false;
-          this.alerta.error("Error al registrar el técnico: " + (err.error || err.message));
-        }
-      });
-    } else {
-      this.guardarConIdTecnico(Number(this.nuevaVisita.idTecnico));
-    }
+    this.guardarConIdTecnico(Number(this.nuevaVisita.idTecnico));
   }
 
   guardarConIdTecnico(idTecnico: number): void {
@@ -184,7 +162,7 @@ export class ImportarVisitasComponent implements OnInit {
 
     const dto: VisitasDto = {
       idTecnico: idTecnico,
-      numeroIncidencia: this.nuevaVisita.numeroIncidencia,
+      idIncidencia: Number(this.nuevaVisita.idIncidencia),
       diaVisita: fecha,
       estadoVisita: this.nuevaVisita.estadoVisita || null,
       observaciones: this.nuevaVisita.observaciones || null
@@ -202,6 +180,7 @@ export class ImportarVisitasComponent implements OnInit {
       },
       error: (err) => {
         this.cargando = false;
+        this.cdr.detectChanges();
         this.alerta.error("Error al guardar visita: " + (err.error || err.message));
       }
     });

@@ -1,11 +1,11 @@
 package com.proyect.main.modelos;
+
 import com.proyect.main.modelos.enums.TipoPersonas;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.util.List;
 
 @Entity
@@ -30,8 +30,9 @@ public class Personas {
     @Column(nullable = false)
     private TipoPersonas tipoPersonas;
 
-    @OneToMany(mappedBy = "tecnico", fetch = FetchType.LAZY)
-    private List<Visitas> visitas;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "idPromotora")
+    private Promotoras promotora;
 
     @OneToMany(mappedBy = "propietario", fetch = FetchType.LAZY)
     private List<Pisos> psios;

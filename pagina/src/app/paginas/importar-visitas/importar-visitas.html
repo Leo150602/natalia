@@ -10,15 +10,15 @@
         
         <!-- Incidencia Relacionada -->
         <div class="mb-3">
-          <label for="numeroIncidencia" class="form-label font-weight-bold">Incidencia Relacionada *</label>
+          <label for="idIncidencia" class="form-label font-weight-bold">Incidencia Relacionada *</label>
           <select 
             class="form-select" 
-            id="numeroIncidencia" 
-            name="numeroIncidencia" 
-            [(ngModel)]="nuevaVisita.numeroIncidencia" 
+            id="idIncidencia" 
+            name="idIncidencia" 
+            [(ngModel)]="nuevaVisita.idIncidencia" 
             required>
-            <option value="" disabled selected>Seleccione la incidencia...</option>
-            <option *ngFor="let inc of incidencias" [value]="inc.numeroIncidencia">
+            <option [ngValue]="null" disabled selected>Seleccione la incidencia...</option>
+            <option *ngFor="let inc of incidencias" [value]="inc.idIncidencia">
               {{ inc.numeroIncidencia }} - {{ inc.descripcion || 'Sin descripción' }} (Piso: {{ inc.pisos?.piso }})
             </option>
           </select>
@@ -34,36 +34,10 @@
             [(ngModel)]="nuevaVisita.idTecnico" 
             required>
             <option [value]="null" disabled selected>Seleccione un técnico...</option>
-            <option value="nuevo">-- Registrar Nuevo Técnico --</option>
-            <option *ngFor="let t of tecnicos" [value]="t.idPersona">
-              {{ t.nombre }} (Tel: {{ t.telefono }})
+            <option *ngFor="let t of tecnicos" [value]="t.id">
+              {{ t.nombre || t.username }}
             </option>
           </select>
-
-          <!-- Registrar nuevo técnico inline -->
-          <div *ngIf="nuevaVisita.idTecnico === 'nuevo'" class="card p-3 mt-2 border-dashed bg-transparent text-white">
-            <h6 class="small text-warning font-weight-bold mb-2">Datos del Nuevo Técnico</h6>
-            <div class="mb-2">
-              <label for="nuevoTecnicoNombre" class="form-label small mb-1">Nombre Completo *</label>
-              <input 
-                type="text" 
-                class="form-control form-control-sm" 
-                id="nuevoTecnicoNombre" 
-                name="nuevoTecnicoNombre" 
-                [(ngModel)]="nuevoTecnicoNombre" 
-                placeholder="Ej. Juan Pérez" />
-            </div>
-            <div>
-              <label for="nuevoTecnicoTelefono" class="form-label small mb-1">Teléfono *</label>
-              <input 
-                type="text" 
-                class="form-control form-control-sm" 
-                id="nuevoTecnicoTelefono" 
-                name="nuevoTecnicoTelefono" 
-                [(ngModel)]="nuevoTecnicoTelefono" 
-                placeholder="Ej. 600123456" />
-            </div>
-          </div>
         </div>
 
         <!-- Fecha de la Visita -->

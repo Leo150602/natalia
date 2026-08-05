@@ -20,6 +20,9 @@ public class ControladorPromotoras {
     @PostMapping
     public ResponseEntity<?> insertar(@RequestBody PromotorasDto dto) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para crear promotoras");
+            }
             PromotorasRespuesta respuesta = servicioPromotoras.insertar(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
         } catch (Exception e) {
@@ -51,6 +54,9 @@ public class ControladorPromotoras {
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizar(@PathVariable int id, @RequestBody PromotorasDto dto) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para actualizar promotoras");
+            }
             PromotorasRespuesta respuesta = servicioPromotoras.actualizar(id, dto);
             return ResponseEntity.ok(respuesta);
         } catch (Exception e) {

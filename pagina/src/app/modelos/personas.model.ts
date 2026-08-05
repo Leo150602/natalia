@@ -2,6 +2,7 @@ export interface PersonasDto {
   nombre: string;
   telefono: string;
   tipoPersonas: string;
+  idPromotora?: number;
 }
 
 export interface PersonasRespuesta {
@@ -9,4 +10,6 @@ export interface PersonasRespuesta {
   nombre: string;
   telefono: string;
   tipoPersonas: string;
+  idPromotora?: number;
+  nombrePromotora?: string;
 }

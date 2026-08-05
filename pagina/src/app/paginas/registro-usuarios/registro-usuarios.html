@@ -1,0 +1,153 @@
+<div class="container p-4" style="max-width: 800px;">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white p-3">
+      <h2 class="mb-0">{{ modoEdicion ? 'Editar Usuario' : 'Registrar Nuevo Usuario' }}</h2>
+      <small>{{ modoEdicion ? 'Actualice la información de la cuenta seleccionada' : 'Cree una cuenta para un nuevo integrante del equipo configurando sus accesos y rol' }}</small>
+    </div>
+    
+    <div class="card-body p-4">
+      <form (ngSubmit)="registrarUsuario()" #regForm="ngForm" class="d-flex flex-column gap-3">
+        
+        <div class="form-group-custom">
+          <label for="username">Nombre de usuario (Login) <span class="text-danger" *ngIf="!modoEdicion">*</span></label>
+          <input 
+            type="text" 
+            id="username" 
+            name="username" 
+            [(ngModel)]="username" 
+            required 
+            placeholder="Ingrese el usuario para inicio de sesión" 
+            autocomplete="off"
+            [disabled]="cargando || modoEdicion"
+          />
+        </div>
+
+        <div class="form-group-custom">
+          <label for="password">Contraseña <span class="text-danger" *ngIf="!modoEdicion">*</span></label>
+          <div style="position: relative; width: 100%;">
+            <input 
+              [type]="verPassword ? 'text' : 'password'" 
+              id="password" 
+              name="password" 
+              [(ngModel)]="password" 
+              [required]="!modoEdicion" 
+              [placeholder]="modoEdicion ? 'Dejar en blanco para mantener la actual' : 'Mínimo 4 caracteres'" 
+              autocomplete="new-password"
+              [disabled]="cargando"
+              style="padding-right: 45px; width: 100%;"
+            />
+            <button 
+              type="button" 
+              (click)="verPassword = !verPassword"
+              style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #a0aec0; z-index: 10; padding: 0;"
+              [title]="verPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              {{ verPassword ? '👁️' : '🙈' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group-custom">
+          <label for="nombre">Nombre Completo <span class="text-danger">*</span></label>
+          <input 
+            type="text" 
+            id="nombre" 
+            name="nombre" 
+            [(ngModel)]="nombre" 
+            required 
+            placeholder="Ingrese nombre y apellidos" 
+            [disabled]="cargando"
+          />
+        </div>
+
+        <div class="form-group-custom">
+          <label for="correo">Correo Electrónico</label>
+          <input 
+            type="email" 
+            id="correo" 
+            name="correo" 
+            [(ngModel)]="correo" 
+            placeholder="ejemplo@correo.com" 
+            [disabled]="cargando"
+          />
+        </div>
+
+        <div class="form-group-custom">
+          <label for="telefono">Teléfono / Número</label>
+          <input 
+            type="text" 
+            id="telefono" 
+            name="telefono" 
+            [(ngModel)]="telefono" 
+            placeholder="Ingrese el número de teléfono" 
+            [disabled]="cargando"
+          />
+        </div>
+
+        <div class="form-group-custom">
+          <label for="rol">Rol del Usuario <span class="text-danger">*</span></label>
+          <select 
+            id="rol" 
+            name="rol" 
+            [(ngModel)]="rol" 
+            required 
+            class="form-select bg-white text-dark border-secondary-subtle custom-select-light"
+            [disabled]="cargando"
+          >
+            <option value="" disabled selected>Seleccione un rol</option>
+            <option *ngFor="let r of rolesDisponibles" [value]="r.value">{{ r.label }}</option>
+          </select>
+        </div>
+
+        <!-- Promotora (Solo visible si el rol es CLIENTE) -->
+        <div class="form-group-custom animate__animated animate__fadeIn" *ngIf="rol === 'CLIENTE'">
+          <label for="idPromotora">Promotora asociada <span class="text-danger">*</span></label>
+          <select 
+            id="idPromotora" 
+            name="idPromotora" 
+            [(ngModel)]="idPromotora" 
+            required 
+            class="form-select bg-white text-dark border-secondary-subtle custom-select-light"
+            [disabled]="cargando"
+          >
+            <option [ngValue]="null" disabled selected>Seleccione una promotora</option>
+            <option *ngFor="let p of promotorasList" [value]="p.idPromotora">{{ p.promotora }}</option>
+          </select>
+        </div>
+
+        <div class="form-check-custom d-flex align-items-center gap-2 mt-2">
+          <input 
+            type="checkbox" 
+            id="activo" 
+            name="activo" 
+            [(ngModel)]="activo" 
+            class="custom-checkbox"
+            [disabled]="cargando"
+          />
+          <label for="activo" class="text-dark cursor-pointer select-none font-weight-bold">Habilitar Usuario (Activo)</label>
+        </div>
+
+        <div class="d-flex justify-content-end gap-3 border-top border-secondary-subtle pt-3 mt-2">
+          <button 
+            type="button" 
+            class="btn btn-outline-secondary px-4 py-2" 
+            (click)="cancelar()" 
+            [disabled]="cargando"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-primary px-4 py-2 d-flex align-items-center justify-content-center gap-2" 
+            style="min-width: 140px; background-color: #10b981; border-color: #10b981;" 
+            [disabled]="!regForm.form.valid || cargando"
+          >
+            <span *ngIf="!cargando">{{ modoEdicion ? 'Guardar Cambios' : 'Crear Usuario' }}</span>
+            <div *ngIf="cargando" class="mini-spinner"></div>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>

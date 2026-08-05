@@ -10,4 +10,6 @@ import lombok.*;
 public class PromocionItem {
     private Integer idPromocion;
     private String nombre;
+    private String direccion;
+    private String coordenadas;
 }

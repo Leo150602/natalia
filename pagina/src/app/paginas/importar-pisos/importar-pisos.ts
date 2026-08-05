@@ -4,8 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { EstadoGlobalService } from '../../servicios/global-service';
 import { PisosService } from '../../servicios/pisos-service';
+import { PersonasService } from '../../servicios/personas-service';
 import { AlertaService } from '../../servicios/alerta-service';
+import { PermisosService } from '../../servicios/permisos.service';
 import { PisosDto } from '../../modelos/pisos.model';
+import { PersonasRespuesta } from '../../modelos/personas.model';
 
 @Component({
   selector: 'app-importar-pisos',
@@ -19,37 +22,59 @@ export class ImportarPisosComponent implements OnInit {
   promocionId: number | null = null;
   cargando = false;
 
-  // Control de Edición
   modoEdicion = false;
   idPisoEdicion: number | null = null;
 
   nuevoPiso: any = {
     piso: '',
-    propietarioNombre: '',
-    propietarioTelefono: ''
+    idPropietario: null
   };
 
+  propietarios: PersonasRespuesta[] = [];
+
   constructor(
-    private estadoGlobal: EstadoGlobalService,
+    private globalService: EstadoGlobalService,
     private pisosService: PisosService,
+    private personasService: PersonasService,
     private alerta: AlertaService,
     private router: Router,
     private route: ActivatedRoute,
+    public permisosService: PermisosService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.estadoGlobal.promocion$.subscribe((id) => {
+    if (!this.permisosService.puedeInsertarEditarPisosYPropietarios()) {
+      this.router.navigate(['/pisos']);
+      return;
+    }
+
+    this.globalService.promocion$.subscribe((id) => {
       this.promocionId = id;
+      if (id !== null) {
+        this.cargarPropietarios();
+      }
     });
 
-    // Comprobar si se ha pasado un ID para editar
     const id = this.route.snapshot.queryParamMap.get('id');
     if (id) {
       this.modoEdicion = true;
       this.idPisoEdicion = Number(id);
-      this.cargarDatosPisoEdicion();
     }
+  }
+
+  cargarPropietarios(): void {
+    if (this.promocionId === null) return;
+    this.personasService.obtenerPropietariosPorPromocion(this.promocionId).subscribe({
+      next: (res) => {
+        this.propietarios = res;
+        this.cdr.detectChanges();
+        if (this.modoEdicion) {
+          this.cargarDatosPisoEdicion();
+        }
+      },
+      error: (err) => console.error("Error al cargar propietarios:", err)
+    });
   }
 
   cargarDatosPisoEdicion(): void {
@@ -58,8 +83,7 @@ export class ImportarPisosComponent implements OnInit {
       next: (res) => {
         this.nuevoPiso = {
           piso: res.piso,
-          propietarioNombre: res.propietario || '',
-          propietarioTelefono: res.telefonoPropietario || ''
+          idPropietario: res.idPropietario || null
         };
         this.cdr.detectChanges();
       },
@@ -82,8 +106,7 @@ export class ImportarPisosComponent implements OnInit {
     const dto: PisosDto = {
       piso: this.nuevoPiso.piso,
       idPromocion: this.promocionId,
-      propietarioNombre: this.nuevoPiso.propietarioNombre || null,
-      propietarioTelefono: this.nuevoPiso.propietarioTelefono || null
+      idPropietario: this.nuevoPiso.idPropietario || null
     };
 
     const operacion = this.modoEdicion && this.idPisoEdicion !== null
@@ -98,6 +121,7 @@ export class ImportarPisosComponent implements OnInit {
       },
       error: (err) => {
         this.cargando = false;
+        this.cdr.detectChanges();
         this.alerta.error("Error al guardar piso: " + (err.error || err.message));
       }
     });

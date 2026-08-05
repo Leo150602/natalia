@@ -5,6 +5,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { PersonasService } from '../../servicios/personas-service';
 import { EnumService } from '../../servicios/enum-service';
 import { AlertaService } from '../../servicios/alerta-service';
+import { PermisosService } from '../../servicios/permisos.service';
+import { PromotorasService } from '../../servicios/promotoras-service';
 import { PersonasDto } from '../../modelos/personas.model';
 
 @Component({
@@ -19,7 +21,6 @@ export class ImportarPersonasComponent implements OnInit {
   cargando = false;
   roles: any[] = [];
 
-  // Control de Edición
   modoEdicion = false;
   idPersonaEdicion: number | null = null;
 
@@ -29,19 +30,29 @@ export class ImportarPersonasComponent implements OnInit {
     tipoPersonas: ''
   };
 
+  promotorasList: any[] = [];
+  idPromotora: number | null = null;
+
   constructor(
     private personasService: PersonasService,
     private enumService: EnumService,
     private alerta: AlertaService,
     private router: Router,
     private route: ActivatedRoute,
+    public permisosService: PermisosService,
+    private promotorasService: PromotorasService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.cargarRoles();
+    if (!this.permisosService.puedeInsertarEditarPisosYPropietarios()) {
+      this.router.navigate(['/personas']);
+      return;
+    }
 
-    // Comprobar si se ha pasado un ID para editar
+    this.nuevaPersona.tipoPersonas = 'PROPIETARIO';
+    this.cargarPromotoras();
+
     const id = this.route.snapshot.queryParamMap.get('id');
     if (id) {
       this.modoEdicion = true;
@@ -54,25 +65,12 @@ export class ImportarPersonasComponent implements OnInit {
     if (this.idPersonaEdicion === null) return;
     this.personasService.obtenerPorId(this.idPersonaEdicion).subscribe({
       next: (res) => {
-        // Enlazar los datos del DTO al formulario
-        // Res.tipoPersonas es la descripción mapeada por el DTO.
-        // Buscamos el key del enum que coincida en this.roles
-        let keyRol = '';
-        if (res.tipoPersonas) {
-          const match = this.roles.find(r => r.descripcion === res.tipoPersonas);
-          if (match) {
-            keyRol = match.value;
-          } else {
-            // fallback
-            keyRol = res.tipoPersonas;
-          }
-        }
-
         this.nuevaPersona = {
           nombre: res.nombre,
           telefono: res.telefono,
-          tipoPersonas: keyRol
+          tipoPersonas: 'PROPIETARIO'
         };
+        this.idPromotora = res.idPromotora || null;
         this.cdr.detectChanges();
       },
       error: (err) => console.error("Error al cargar persona para edición:", err)
@@ -80,16 +78,22 @@ export class ImportarPersonasComponent implements OnInit {
   }
 
   cargarRoles(): void {
-    this.enumService.obtenerTodosLosEnums().subscribe({
+    // No longer loading roles dynamically
+  }
+
+  cargarPromotoras(): void {
+    this.promotorasService.obtenerTodas().subscribe({
       next: (res) => {
-        this.roles = res.tiposPersona || [];
-        this.cdr.detectChanges(); // Forzar renderizado
-        if (this.modoEdicion) {
-          this.cargarDatosPersonaEdicion(); // Re-cargar para asegurar que coincidan los roles
-        }
+        this.promotorasList = res;
+        this.cdr.detectChanges();
       },
-      error: (err) => console.error("Error al cargar roles:", err)
+      error: (err) => console.error("Error al cargar promotoras:", err)
     });
+  }
+
+  obtenerTituloForm(): string {
+    const etiq = this.permisosService.obtenerEtiquetaCrearPersonas();
+    return this.modoEdicion ? etiq.replace('Crear', 'Editar') : etiq;
   }
 
   guardar(): void {
@@ -103,7 +107,8 @@ export class ImportarPersonasComponent implements OnInit {
     const dto: PersonasDto = {
       nombre: this.nuevaPersona.nombre,
       telefono: this.nuevaPersona.telefono,
-      tipoPersonas: this.nuevaPersona.tipoPersonas
+      tipoPersonas: this.nuevaPersona.tipoPersonas,
+      idPromotora: this.idPromotora || undefined
     };
 
     const operacion = this.modoEdicion && this.idPersonaEdicion !== null
@@ -118,6 +123,7 @@ export class ImportarPersonasComponent implements OnInit {
       },
       error: (err) => {
         this.cargando = false;
+        this.cdr.detectChanges();
         this.alerta.error("Error al guardar persona: " + (err.error || err.message));
       }
     });

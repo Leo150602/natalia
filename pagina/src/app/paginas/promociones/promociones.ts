@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,6 +6,7 @@ import { PromocionesService } from '../../servicios/promociones-service';
 import { AlertaService } from '../../servicios/alerta-service';
 import { TablaDatosComponent } from '../../utils/tabla-datos/tabla-datos';
 import { CONFIG_TABLA_PROMOCIONES } from '../../modelos/columnas-config';
+import { PermisosService } from '../../servicios/permisos.service';
 
 @Component({
   selector: 'app-promociones',
@@ -19,6 +20,7 @@ export class PromocionesComponent implements OnInit {
   datos: any[] = [];
   datosFiltrados: any[] = [];
   config = CONFIG_TABLA_PROMOCIONES;
+  cargando = false;
 
   // Filtros reactivos locales
   filtros = {
@@ -29,14 +31,22 @@ export class PromocionesComponent implements OnInit {
   constructor(
     private promocionesService: PromocionesService,
     private alerta: AlertaService,
-    private router: Router
+    private router: Router,
+    public permisosService: PermisosService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    if (!this.permisosService.puedeVerPromociones()) {
+      this.router.navigate(['/']);
+      return;
+    }
     this.cargarPromociones();
   }
 
   cargarPromociones(): void {
+    this.cargando = true;
+    this.cdr.detectChanges();
     this.promocionesService.obtenerTodas().subscribe({
       next: (res) => {
         const flatList: any[] = [];
@@ -45,15 +55,20 @@ export class PromocionesComponent implements OnInit {
             flatList.push({
               idPromocion: promo.idPromocion,
               promocion: promo.nombre,
-              promotora: group.promotora
+              promotora: group.promotora,
+              direccion: promo.direccion
             });
           });
         });
         this.datos = flatList;
+        this.cargando = false;
         this.aplicarFiltros();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error("Error al obtener promociones:", err);
+        this.cargando = false;
+        this.cdr.detectChanges();
       }
     });
   }

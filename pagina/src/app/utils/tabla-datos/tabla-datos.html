@@ -1,9 +1,25 @@
-<div class="mat-elevation-z4 tabla-wrapper">
-  <div class="tabla-scrollable">
+<div class="mat-elevation-z4 tabla-wrapper" style="position: relative;">
+  <!-- Spinner de Carga -->
+  <div *ngIf="cargando" class="tabla-loading-overlay animate__animated animate__fadeIn">
+    <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+    <span>Cargando datos...</span>
+  </div>
+
+  <div class="tabla-scrollable" [class.opacity-50]="cargando">
     <table mat-table [dataSource]="dataSource" matSort class="w-100 table-custom">
 
+      <!-- Columna de Selección Múltiple -->
+      <ng-container matColumnDef="seleccion">
+        <th mat-header-cell *matHeaderCellDef class="cabecera-celda text-center" style="width: 50px;">
+          <input type="checkbox" [checked]="estaTodoSeleccionado()" (change)="alternarTodosSeleccionados()">
+        </th>
+        <td mat-cell *matCellDef="let element" class="dato-celda text-center" style="width: 50px;">
+          <input type="checkbox" [checked]="estaSeleccionado(element)" (change)="alternarSeleccion(element)">
+        </td>
+      </ng-container>
+
       <!-- Columnas Dinámicas -->
-      <ng-container *ngFor="let col of columnasVisibles" [matColumnDef]="col">
+      <ng-container *ngFor="let col of columnasDinamicas()" [matColumnDef]="col">
         <th mat-header-cell *matHeaderCellDef mat-sort-header class="cabecera-celda">
           {{ obtenerNombreColumna(col) }}
         </th>
@@ -42,10 +58,10 @@
        class="menu-contextual shadow-lg"
        [ngStyle]="{ 'top': menuContextualPosicion.y, 'left': menuContextualPosicion.x }">
     <button (click)="onEditar()" class="menu-item">
-      <span class="icono">✏️</span> Actualizar
+      <span class="icono">{{ iconoEditar }}</span> {{ etiquetaEditar }}
     </button>
     <button (click)="onEliminar()" class="menu-item eliminar">
-      <span class="icono">🗑️</span> Eliminar
+      <span class="icono">{{ iconoEliminar }}</span> {{ etiquetaEliminar }}
     </button>
   </div>
 

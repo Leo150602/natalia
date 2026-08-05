@@ -24,6 +24,9 @@ public class ControladorPisos {
     @PostMapping
     public ResponseEntity<?> insertar(@RequestBody PisosDto dto) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para crear pisos");
+            }
             PisosRespuesta respuesta = servicioPisos.insertar(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
         } catch (Exception e) {
@@ -65,6 +68,9 @@ public class ControladorPisos {
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizar(@PathVariable int id, @RequestBody PisosDto dto) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para actualizar pisos");
+            }
             PisosRespuesta respuesta = servicioPisos.actualizar(id, dto);
             return ResponseEntity.ok(respuesta);
         } catch (Exception e) {
@@ -75,6 +81,9 @@ public class ControladorPisos {
     @PostMapping("/importar/{idPromocion}")
     public ResponseEntity<?> importar(@RequestParam("archivo") MultipartFile archivo, @PathVariable int idPromocion) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para importar pisos");
+            }
             servicioPisos.importar(archivo, idPromocion);
             return ResponseEntity.ok("Archivo Excel de Pisos importado exitosamente.");
         } catch (Exception e) {
@@ -98,6 +107,9 @@ public class ControladorPisos {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable int id) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para eliminar pisos");
+            }
             servicioPisos.eliminar(id);
             return ResponseEntity.ok("Piso eliminado exitosamente.");
         } catch (Exception e) {

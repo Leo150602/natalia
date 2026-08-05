@@ -20,6 +20,9 @@ public class ControladorVisitas {
     @PostMapping
     public ResponseEntity<?> insertar(@RequestBody VisitasDto dto) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para crear visitas");
+            }
             VisitasRespuesta respuesta = servicioVisitas.insertar(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
         } catch (Exception e) {
@@ -51,6 +54,9 @@ public class ControladorVisitas {
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizar(@PathVariable int id, @RequestBody VisitasDto dto) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para actualizar visitas");
+            }
             VisitasRespuesta respuesta = servicioVisitas.actualizar(id, dto);
             return ResponseEntity.ok(respuesta);
         } catch (Exception e) {
@@ -61,6 +67,9 @@ public class ControladorVisitas {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable int id) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para eliminar visitas");
+            }
             servicioVisitas.eliminar(id);
             return ResponseEntity.ok("Visita eliminada exitosamente.");
         } catch (Exception e) {

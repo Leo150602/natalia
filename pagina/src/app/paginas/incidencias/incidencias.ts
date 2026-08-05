@@ -11,6 +11,7 @@ import { AlertaService } from '../../servicios/alerta-service';
 import { IncidenciasRespuesta, IncidenciasFiltroDto } from '../../modelos/incidencias.model';
 import { TablaDatosComponent } from '../../utils/tabla-datos/tabla-datos';
 import { CONFIG_TABLA_INCIDENCIAS } from '../../modelos/columnas-config';
+import { PermisosService } from '../../servicios/permisos.service';
 
 @Component({
   selector: 'app-incidencias',
@@ -26,6 +27,7 @@ export class IncidenciasComponent implements OnInit, OnDestroy {
   promotoraNombre: string | null = null;
   datos: IncidenciasRespuesta[] = [];
   config = CONFIG_TABLA_INCIDENCIAS;
+  cargando = false;
   private promoSub?: Subscription;
 
   // Control del Menú Flotante de Filtros
@@ -52,6 +54,7 @@ export class IncidenciasComponent implements OnInit, OnDestroy {
     private enumService: EnumService,
     private alerta: AlertaService,
     private router: Router,
+    public permisosService: PermisosService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -101,13 +104,18 @@ export class IncidenciasComponent implements OnInit, OnDestroy {
 
   cargarIncidencias(): void {
     if (this.promocionId === null) return;
+    this.cargando = true;
+    this.cdr.detectChanges();
     this.incidenciasService.obtenerPorPromocion(this.promocionId).subscribe({
       next: (res) => {
         this.datos = res;
+        this.cargando = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.error("Error al obtener incidencias:", err);
+        this.cargando = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -173,7 +181,7 @@ export class IncidenciasComponent implements OnInit, OnDestroy {
   }
 
   editarIncidencia(row: any): void {
-    this.router.navigate(['/importar-incidencias'], { queryParams: { id: row.numeroIncidencia } });
+    this.router.navigate(['/importar-incidencias'], { queryParams: { id: row.idIncidencia } });
   }
 
   eliminarIncidencia(row: any): void {
@@ -182,7 +190,7 @@ export class IncidenciasComponent implements OnInit, OnDestroy {
       `¿Está seguro de que desea eliminar la incidencia "${row.numeroIncidencia}"?`
     ).then((confirmado) => {
       if (confirmado) {
-        this.incidenciasService.eliminar(row.numeroIncidencia).subscribe({
+        this.incidenciasService.eliminar(row.idIncidencia).subscribe({
           next: () => {
             this.alerta.exito("Incidencia eliminada con éxito.");
             this.cargarIncidencias();

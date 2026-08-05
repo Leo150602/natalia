@@ -1,29 +1,21 @@
 .sidebar {
   width: 100%;
   height: 100%;
-  background: #0f172a; /* Slate 900 matching CODI screenshot */
+  background: #0f172a; 
   color: #f8fafc;
   overflow-y: auto;
 }
 
-/* Brand Logo Area styling */
 .sidebar-brand-box {
   background-color: #0b0f19;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
 
-  .brand-logo-circle {
+  .brand-logo-img {
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    border: 2px solid #84cc16; /* Lime Green matching Dito logo */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-    font-weight: 900;
-    color: #84cc16;
-    text-shadow: 0 0 8px rgba(132, 204, 22, 0.4);
-    box-shadow: 0 0 10px rgba(132, 204, 22, 0.2);
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
   }
 
@@ -54,7 +46,6 @@
   border-radius: 8px;
 }
 
-/* Sections & titles styling */
 .titulo-btn {
   background: transparent;
   border: none;
@@ -82,7 +73,6 @@
   padding: 0 8px;
 }
 
-/* Menu links items */
 .menu-link-item {
   color: #94a3b8;
   font-size: 0.84rem;
@@ -100,7 +90,7 @@
   }
 
   &.activo {
-    background-color: rgba(76, 112, 191, 0.15); /* Soft transparent blue-indigo matching active states */
+    background-color: rgba(76, 112, 191, 0.15); 
     color: #60a5fa !important;
     font-weight: 700;
     border-left: 3px solid #60a5fa;

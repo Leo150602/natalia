@@ -1,0 +1,132 @@
+<div class="container p-4" style="max-width: 800px;">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white p-3">
+      <h2 class="mb-0">{{ modoEdicion ? 'Editar Cliente' : 'Registrar Nuevo Cliente' }}</h2>
+      <small>{{ modoEdicion ? 'Actualice la información de la cuenta de cliente seleccionada' : 'Cree una cuenta para un nuevo cliente y configúrele una promotora' }}</small>
+    </div>
+    
+    <div class="card-body p-4">
+      <form (ngSubmit)="guardar()" #regForm="ngForm" class="d-flex flex-column gap-3">
+        
+        <div class="form-group-custom">
+          <label for="username" class="form-label text-dark font-weight-bold">Nombre de usuario (Login) <span class="text-danger" *ngIf="!modoEdicion">*</span></label>
+          <input 
+            type="text" 
+            id="username" 
+            name="username" 
+            class="form-control"
+            [(ngModel)]="username" 
+            required 
+            placeholder="Ingrese el usuario para inicio de sesión" 
+            autocomplete="off"
+            [disabled]="cargando || modoEdicion"
+          />
+        </div>
+
+        <div class="form-group-custom">
+          <label for="password" class="form-label text-dark font-weight-bold">Contraseña <span class="text-danger" *ngIf="!modoEdicion">*</span></label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form-control"
+            [(ngModel)]="password" 
+            [required]="!modoEdicion" 
+            [placeholder]="modoEdicion ? 'Dejar en blanco para mantener la actual' : 'Mínimo 4 caracteres'" 
+            autocomplete="new-password"
+            [disabled]="cargando"
+          />
+        </div>
+
+        <div class="form-group-custom">
+          <label for="nombre" class="form-label text-dark font-weight-bold">Nombre Completo <span class="text-danger">*</span></label>
+          <input 
+            type="text" 
+            id="nombre" 
+            name="nombre" 
+            class="form-control"
+            [(ngModel)]="nombre" 
+            required 
+            placeholder="Ingrese nombre y apellidos del cliente" 
+            [disabled]="cargando"
+          />
+        </div>
+
+        <div class="form-group-custom">
+          <label for="correo" class="form-label text-dark font-weight-bold">Correo Electrónico</label>
+          <input 
+            type="email" 
+            id="correo" 
+            name="correo" 
+            class="form-control"
+            [(ngModel)]="correo" 
+            placeholder="ejemplo@correo.com" 
+            [disabled]="cargando"
+          />
+        </div>
+
+        <div class="form-group-custom">
+          <label for="telefono" class="form-label text-dark font-weight-bold">Teléfono / Número</label>
+          <input 
+            type="text" 
+            id="telefono" 
+            name="telefono" 
+            class="form-control"
+            [(ngModel)]="telefono" 
+            placeholder="Ingrese el número de teléfono" 
+            [disabled]="cargando"
+          />
+        </div>
+
+        <!-- Promotora (Obligatoria para Clientes) -->
+        <div class="form-group-custom">
+          <label for="idPromotora" class="form-label text-dark font-weight-bold">Promotora asociada <span class="text-danger">*</span></label>
+          <select 
+            id="idPromotora" 
+            name="idPromotora" 
+            [(ngModel)]="idPromotora" 
+            required 
+            class="form-select bg-white text-dark border-secondary-subtle"
+            [disabled]="cargando"
+          >
+            <option [ngValue]="null" disabled selected>Seleccione una promotora</option>
+            <option *ngFor="let p of promotorasList" [value]="p.idPromotora">{{ p.promotora }}</option>
+          </select>
+        </div>
+
+        <div class="form-check d-flex align-items-center gap-2 mt-2">
+          <input 
+            type="checkbox" 
+            id="activo" 
+            name="activo" 
+            [(ngModel)]="activo" 
+            class="form-check-input"
+            [disabled]="cargando"
+          />
+          <label for="activo" class="form-check-label text-dark cursor-pointer select-none font-weight-bold">Habilitar Cliente (Activo)</label>
+        </div>
+
+        <div class="d-flex justify-content-end gap-3 border-top border-secondary-subtle pt-3 mt-2">
+          <button 
+            type="button" 
+            class="btn btn-outline-secondary px-4 py-2" 
+            (click)="cancelar()" 
+            [disabled]="cargando"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-success px-4 py-2 d-flex align-items-center justify-content-center gap-2" 
+            style="min-width: 140px;" 
+            [disabled]="!regForm.form.valid || cargando"
+          >
+            <span *ngIf="!cargando">{{ modoEdicion ? 'Guardar Cambios' : 'Crear Cliente' }}</span>
+            <div *ngIf="cargando" class="spinner-border spinner-border-sm" role="status"></div>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>

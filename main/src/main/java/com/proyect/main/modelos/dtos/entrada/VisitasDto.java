@@ -16,6 +16,6 @@ public class VisitasDto {
     private LocalDateTime diaVisita;
     private EstadoVisita estadoVisita;
     private int idTecnico;
-    private String numeroIncidencia;
+    private int idIncidencia;
 
 }

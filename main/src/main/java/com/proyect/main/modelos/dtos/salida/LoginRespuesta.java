@@ -10,10 +10,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class LoginRespuesta {
-    private boolean succes; // naming is "succes" to match plan's typo/spelling
+    private boolean succes; 
     private String mensaje;
     private Integer id;
     private String username;
     private String nombre;
     private String rol;
+    private String telefono;
+    private String correo;
+    private Boolean activo;
+    private Integer idPromotora;
+    private String nombrePromotora;
 }

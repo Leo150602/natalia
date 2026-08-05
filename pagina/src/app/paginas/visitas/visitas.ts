@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -9,6 +9,7 @@ import { AlertaService } from '../../servicios/alerta-service';
 import { VisitasRespuesta } from '../../modelos/visitas.model';
 import { TablaDatosComponent } from '../../utils/tabla-datos/tabla-datos';
 import { CONFIG_TABLA_VISITAS } from '../../modelos/columnas-config';
+import { PermisosService } from '../../servicios/permisos.service';
 
 @Component({
   selector: 'app-visitas',
@@ -23,6 +24,7 @@ export class VisitasComponent implements OnInit, OnDestroy {
   datos: VisitasRespuesta[] = [];
   datosFiltrados: VisitasRespuesta[] = [];
   config = CONFIG_TABLA_VISITAS;
+  cargando = false;
   private promoSub?: Subscription;
 
   // Filtros reactivos locales
@@ -37,7 +39,9 @@ export class VisitasComponent implements OnInit, OnDestroy {
     private visitasService: VisitasService,
     private estadoGlobal: EstadoGlobalService,
     private alerta: AlertaService,
-    private router: Router
+    private router: Router,
+    public permisosService: PermisosService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -68,13 +72,19 @@ export class VisitasComponent implements OnInit, OnDestroy {
 
   cargarVisitas(): void {
     if (this.promocionId === null) return;
+    this.cargando = true;
+    this.cdr.detectChanges();
     this.visitasService.obtenerPorPromocion(this.promocionId).subscribe({
       next: (res) => {
         this.datos = res;
+        this.cargando = false;
         this.aplicarFiltros();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error("Error al obtener visitas por promoción:", err);
+        this.cargando = false;
+        this.cdr.detectChanges();
       }
     });
   }

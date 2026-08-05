@@ -3,6 +3,7 @@ package com.proyect.main.servicios;
 import com.proyect.main.modelos.Incidencias;
 import com.proyect.main.modelos.Pisos;
 import com.proyect.main.modelos.Promociones;
+import com.proyect.main.modelos.Usuario;
 import com.proyect.main.modelos.enums.CategoriaIncidencia;
 import com.proyect.main.modelos.enums.EstadoIncidencia;
 import com.proyect.main.modelos.enums.HorasTrabajadas;
@@ -18,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.core.io.ByteArrayResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,6 +42,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ServicioIncidencias {
 
+    private static final Logger log = LoggerFactory.getLogger(ServicioIncidencias.class);
+
     private final IRepositorioIncidencias repositorioIncidencias;
     private final IRepositorioPisos repositorioPisos;
     private final IRepositorioPromociones repositorioPromociones;
@@ -50,6 +55,23 @@ public class ServicioIncidencias {
         try {
             Pisos piso = repositorioPisos.findById(dto.getIdPiso())
                     .orElseThrow(() -> new IllegalArgumentException("Piso no encontrado con ID: " + dto.getIdPiso()));
+
+            // Validar unicidad del número de incidencia dentro de la misma promotora
+            if (piso.getPromocion() != null && piso.getPromocion().getPromotora() != null) {
+                int idPromotora = piso.getPromocion().getPromotora().getIdPromotora();
+                List<Incidencias> duplicadas = repositorioIncidencias
+                        .findByNumeroIncidenciaAndPromotoraId(dto.getNumeroIncidencia(), idPromotora);
+                if (!duplicadas.isEmpty()) {
+                    throw new IllegalArgumentException("Ya existe una incidencia con el número '" + 
+                            dto.getNumeroIncidencia() + "' para la promotora '" + 
+                            piso.getPromocion().getPromotora().getPromotora() + "'.");
+                }
+            }
+
+            Usuario usr = ServicioUsuario.getUsuarioLogeado();
+            if (usr == null) {
+                usr = entityManager.find(Usuario.class, 6); // default fallback user
+            }
 
             Incidencias incidencia = Incidencias.builder()
                     .numeroIncidencia(dto.getNumeroIncidencia())
@@ -63,6 +85,7 @@ public class ServicioIncidencias {
                     .proforma(dto.getProforma())
                     .piso(piso)
                     .fechaIncidencia(dto.getFechaIncidencia() != null ? dto.getFechaIncidencia() : LocalDateTime.now())
+                    .usuarioActualizo(usr)
                     .build();
 
             return mapear(repositorioIncidencias.save(incidencia));
@@ -82,8 +105,15 @@ public class ServicioIncidencias {
     }
 
     public List<IncidenciasRespuesta> obtenerPorPromocion(int idPromocion) {
+        return obtenerPorPromocion(idPromocion, false);
+    }
+
+    public List<IncidenciasRespuesta> obtenerPorPromocion(int idPromocion, boolean incluirSolicitudes) {
         try {
-            return repositorioIncidencias.findByPromocionId(idPromocion).stream()
+            List<Incidencias> lista = incluirSolicitudes 
+                    ? repositorioIncidencias.findByPromocionIdAllStates(idPromocion)
+                    : repositorioIncidencias.findByPromocionId(idPromocion);
+            return lista.stream()
                     .map(this::mapear)
                     .collect(Collectors.toList());
         } catch (Exception e) {
@@ -91,7 +121,7 @@ public class ServicioIncidencias {
         }
     }
 
-    public Optional<IncidenciasRespuesta> obtenerPorId(String id) {
+    public Optional<IncidenciasRespuesta> obtenerPorId(int id) {
         try {
             return repositorioIncidencias.findByIdWithDetails(id).map(this::mapear);
         } catch (Exception e) {
@@ -99,7 +129,7 @@ public class ServicioIncidencias {
         }
     }
 
-    public IncidenciasRespuesta actualizar(String id, IncidenciasDto dto) {
+    public IncidenciasRespuesta actualizar(int id, IncidenciasDto dto) {
         try {
             Incidencias incidencia = repositorioIncidencias.findByIdWithDetails(id)
                     .orElseThrow(() -> new IllegalArgumentException("Incidencia no encontrada con ID: " + id));
@@ -107,17 +137,70 @@ public class ServicioIncidencias {
             Pisos piso = repositorioPisos.findById(dto.getIdPiso())
                     .orElseThrow(() -> new IllegalArgumentException("Piso no encontrado con ID: " + dto.getIdPiso()));
 
-            incidencia.setCategoriaIncidencia(dto.getCategoriaIncidencia());
-            incidencia.setDescripcionIncidencia(dto.getDescripcionIncidencia());
-            incidencia.setObservaciones(dto.getObservaciones());
-            incidencia.setMaterialesRequeridos(dto.getMaterialesRequeridos());
-            incidencia.setEstadoIncidencia(dto.getEstadoIncidencia());
-            incidencia.setHorasTrabajadas(dto.getHorasTrabajadas());
-            incidencia.setPresupuesto(dto.getPresupuesto());
-            incidencia.setProforma(dto.getProforma());
-            incidencia.setPiso(piso);
-            if (dto.getFechaIncidencia() != null) {
+            // Validar unicidad del número de incidencia dentro de la misma promotora (excluyendo la actual)
+            if (piso.getPromocion() != null && piso.getPromocion().getPromotora() != null) {
+                int idPromotora = piso.getPromocion().getPromotora().getIdPromotora();
+                List<Incidencias> duplicadas = repositorioIncidencias
+                        .findByNumeroIncidenciaAndPromotoraId(dto.getNumeroIncidencia(), idPromotora);
+                boolean isDuplicate = duplicadas.stream().anyMatch(i -> i.getIdIncidencia() != id);
+                if (isDuplicate) {
+                    throw new IllegalArgumentException("Ya existe otra incidencia con el número '" + 
+                            dto.getNumeroIncidencia() + "' para la promotora '" + 
+                            piso.getPromocion().getPromotora().getPromotora() + "'.");
+                }
+            }
+
+            // Comparamos los campos para ver si hay cambios
+            boolean changed = false;
+
+            if (incidencia.getCategoriaIncidencia() != dto.getCategoriaIncidencia()) {
+                incidencia.setCategoriaIncidencia(dto.getCategoriaIncidencia());
+                changed = true;
+            }
+            if (!java.util.Objects.equals(incidencia.getDescripcionIncidencia(), dto.getDescripcionIncidencia())) {
+                incidencia.setDescripcionIncidencia(dto.getDescripcionIncidencia());
+                changed = true;
+            }
+            if (!java.util.Objects.equals(incidencia.getObservaciones(), dto.getObservaciones())) {
+                incidencia.setObservaciones(dto.getObservaciones());
+                changed = true;
+            }
+            if (!java.util.Objects.equals(incidencia.getMaterialesRequeridos(), dto.getMaterialesRequeridos())) {
+                incidencia.setMaterialesRequeridos(dto.getMaterialesRequeridos());
+                changed = true;
+            }
+            if (incidencia.getEstadoIncidencia() != dto.getEstadoIncidencia()) {
+                incidencia.setEstadoIncidencia(dto.getEstadoIncidencia());
+                changed = true;
+            }
+            if (incidencia.getHorasTrabajadas() != dto.getHorasTrabajadas()) {
+                incidencia.setHorasTrabajadas(dto.getHorasTrabajadas());
+                changed = true;
+            }
+            if (incidencia.getPresupuesto() != dto.getPresupuesto()) {
+                incidencia.setPresupuesto(dto.getPresupuesto());
+                changed = true;
+            }
+            if (incidencia.getProforma() != dto.getProforma()) {
+                incidencia.setProforma(dto.getProforma());
+                changed = true;
+            }
+            if (incidencia.getPiso() == null || incidencia.getPiso().getIdPiso() != piso.getIdPiso()) {
+                incidencia.setPiso(piso);
+                changed = true;
+            }
+            if (dto.getFechaIncidencia() != null && !dto.getFechaIncidencia().equals(incidencia.getFechaIncidencia())) {
                 incidencia.setFechaIncidencia(dto.getFechaIncidencia());
+                changed = true;
+            }
+
+            if (changed) {
+                incidencia.setFechaActualizacion(LocalDateTime.now());
+                Usuario usr = ServicioUsuario.getUsuarioLogeado();
+                if (usr == null) {
+                    usr = entityManager.find(Usuario.class, 6); // default fallback user
+                }
+                incidencia.setUsuarioActualizo(usr);
             }
 
             return mapear(repositorioIncidencias.save(incidencia));
@@ -179,10 +262,22 @@ public class ServicioIncidencias {
     }
 
     public void importar(MultipartFile archivo, int idPromocion) throws IOException {
+        log.info("--- INICIO IMPORTACIÓN DE INCIDENCIAS ---");
+        log.info("Archivo: {}", archivo.getOriginalFilename());
+        log.info("Promoción ID: {}", idPromocion);
+
+        int totalFilas = 0;
+        int subidosExito = 0; // nuevos insertados
+        int actualizadosExito = 0; // actualizados con cambios
+        int sinCambiosExito = 0; // sin cambios
+        int noSubidos = 0;
+
+        List<String> detallesExito = new java.util.ArrayList<>();
+        List<String> detallesFallo = new java.util.ArrayList<>();
+
         try (Workbook workbook = new XSSFWorkbook(archivo.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
 
-            // Ignorar la primera fila (encabezado) e iterar desde la fila index 1
             for (int fila = 1; fila <= sheet.getLastRowNum(); fila++) {
                 Row row = sheet.getRow(fila);
 
@@ -190,65 +285,124 @@ public class ServicioIncidencias {
                     continue;
                 }
 
-                String numeroIncidencia = getString(row.getCell(0)).trim();
-                String nombrePiso = getString(row.getCell(1)).trim().toUpperCase();
-                String categoriaStr = getString(row.getCell(2));
-                String descripcion = getString(row.getCell(3));
-                String observaciones = getString(row.getCell(4));
-                String materiales = getString(row.getCell(5));
-                String estadoStr = getString(row.getCell(6));
-                String horasStr = getString(row.getCell(7));                String presupuestoStr = getString(row.getCell(8));
-                String proformaStr = getString(row.getCell(9));
-                String fechaStr = getString(row.getCell(10));
+                totalFilas++;
+                String numeroIncidencia = "";
+                String nombrePiso = "";
+                String categoriaStr = "";
+                try {
+                    numeroIncidencia = getString(row.getCell(0)).trim();
+                    nombrePiso = getString(row.getCell(1)).trim().toUpperCase();
+                    categoriaStr = getString(row.getCell(2));
+                    String descripcion = getString(row.getCell(3));
+                    String observaciones = getString(row.getCell(4));
+                    String materiales = getString(row.getCell(5));
+                    String estadoStr = getString(row.getCell(6));
+                    String horasStr = getString(row.getCell(7));
+                    String presupuestoStr = getString(row.getCell(8));
+                    String proformaStr = getString(row.getCell(9));
+                    String fechaStr = getString(row.getCell(10));
 
-                CategoriaIncidencia categoria = parseCategoria(categoriaStr);
+                    CategoriaIncidencia categoria = parseCategoria(categoriaStr);
 
-                if (numeroIncidencia.isEmpty() || nombrePiso.isEmpty() || categoriaStr.trim().isEmpty() || categoria == null) {
-                    continue; // Requeridos: Número, Piso/piso y Categoría
-                }
+                    if (numeroIncidencia.isEmpty() || nombrePiso.isEmpty() || categoriaStr.trim().isEmpty() || categoria == null) {
+                        StringBuilder reason = new StringBuilder("Campos requeridos faltantes o inválidos:");
+                        if (numeroIncidencia.isEmpty()) reason.append(" Número de incidencia vacío.");
+                        if (nombrePiso.isEmpty()) reason.append(" Nombre de piso vacío.");
+                        if (categoriaStr.trim().isEmpty()) reason.append(" Categoría vacía.");
+                        else if (categoria == null) reason.append(" Categoría '").append(categoriaStr).append("' no válida.");
+                        
+                        detallesFallo.add("Fila " + fila + " [Incidencia: '" + numeroIncidencia + "', Piso: '" + nombrePiso + "'] -> No subido: " + reason.toString());
+                        noSubidos++;
+                        continue;
+                    }
 
-                // Buscar el piso asociado por nombre y promoción. Si no existe, se crea automáticamente.
-                Pisos piso = repositorioPisos.findByPisoAndPromocionId(nombrePiso, idPromocion)
-                        .orElseGet(() -> {
-                            Promociones prom = repositorioPromociones.findById(idPromocion).orElse(null);
-                            Pisos nuevoPiso = Pisos.builder()
-                                    .piso(nombrePiso)
-                                    .promocion(prom)
-                                    .propietario(null)
-                                    .build();
-                            return repositorioPisos.save(nuevoPiso);
-                        });
-                EstadoIncidencia estado = parseEstado(estadoStr);
-                HorasTrabajadas horas = parseHoras(horasStr);
+                    final String finalNombrePiso = nombrePiso;
+                    Pisos piso = repositorioPisos.findByPisoAndPromocionId(nombrePiso, idPromocion)
+                            .orElseGet(() -> {
+                                Promociones prom = repositorioPromociones.findById(idPromocion).orElse(null);
+                                Pisos nuevoPiso = Pisos.builder()
+                                        .piso(finalNombrePiso)
+                                        .promocion(prom)
+                                        .propietario(null)
+                                        .build();
+                                return repositorioPisos.save(nuevoPiso);
+                            });
+                    EstadoIncidencia estado = parseEstado(estadoStr);
+                    HorasTrabajadas horas = parseHoras(horasStr);
 
-                RespuestaSNN presupuesto = parseRespuestaSNN(presupuestoStr);
-                RespuestaSNN proforma = parseRespuestaSNN(proformaStr);
+                    RespuestaSNN presupuesto = parseRespuestaSNN(presupuestoStr);
+                    RespuestaSNN proforma = parseRespuestaSNN(proformaStr);
 
-                LocalDateTime fechaIncidencia = parseFecha(fechaStr);
+                    LocalDateTime fechaIncidencia = parseFecha(fechaStr);
 
-                // Construir DTO
-                IncidenciasDto dto = IncidenciasDto.builder()
-                        .numeroIncidencia(numeroIncidencia)
-                        .categoriaIncidencia(categoria)
-                        .descripcionIncidencia(descripcion)
-                        .observaciones(observaciones)
-                        .materialesRequeridos(materiales)
-                        .estadoIncidencia(estado)
-                        .horasTrabajadas(horas)
-                        .presupuesto(presupuesto)
-                        .proforma(proforma)
-                        .idPiso(piso.getIdPiso())
-                        .fechaIncidencia(fechaIncidencia)
-                        .build();
+                    IncidenciasDto dto = IncidenciasDto.builder()
+                            .numeroIncidencia(numeroIncidencia)
+                            .categoriaIncidencia(categoria)
+                            .descripcionIncidencia(descripcion)
+                            .observaciones(observaciones)
+                            .materialesRequeridos(materiales)
+                            .estadoIncidencia(estado)
+                            .horasTrabajadas(horas)
+                            .presupuesto(presupuesto)
+                            .proforma(proforma)
+                            .idPiso(piso.getIdPiso())
+                            .fechaIncidencia(fechaIncidencia)
+                            .build();
 
-                // Reutilizar métodos existentes para insertar o actualizar
-                if (repositorioIncidencias.existsById(numeroIncidencia)) {
-                    this.actualizar(numeroIncidencia, dto);
-                } else {
-                    this.insertar(dto);
+                    String accion;
+                    Optional<Incidencias> existenteOpt = repositorioIncidencias.findByNumeroIncidenciaAndPromocionId(numeroIncidencia, idPromocion);
+                    if (existenteOpt.isPresent()) {
+                        Incidencias exc = existenteOpt.get();
+                        boolean hasChanges = false;
+
+                        if (exc.getCategoriaIncidencia() != dto.getCategoriaIncidencia()) hasChanges = true;
+                        if (!java.util.Objects.equals(exc.getDescripcionIncidencia(), dto.getDescripcionIncidencia())) hasChanges = true;
+                        if (!java.util.Objects.equals(exc.getObservaciones(), dto.getObservaciones())) hasChanges = true;
+                        if (!java.util.Objects.equals(exc.getMaterialesRequeridos(), dto.getMaterialesRequeridos())) hasChanges = true;
+                        if (exc.getEstadoIncidencia() != dto.getEstadoIncidencia()) hasChanges = true;
+                        if (exc.getHorasTrabajadas() != dto.getHorasTrabajadas()) hasChanges = true;
+                        if (exc.getPresupuesto() != dto.getPresupuesto()) hasChanges = true;
+                        if (exc.getProforma() != dto.getProforma()) hasChanges = true;
+                        if (exc.getPiso() == null || exc.getPiso().getIdPiso() != dto.getIdPiso()) hasChanges = true;
+                        if (dto.getFechaIncidencia() != null && !dto.getFechaIncidencia().equals(exc.getFechaIncidencia())) hasChanges = true;
+
+                        if (hasChanges) {
+                            this.actualizar(exc.getIdIncidencia(), dto);
+                            accion = "Actualizada";
+                            actualizadosExito++;
+                        } else {
+                            accion = "Queda igual (sin cambios)";
+                            sinCambiosExito++;
+                        }
+                    } else {
+                        this.insertar(dto);
+                        accion = "Insertada";
+                        subidosExito++;
+                    }
+                    detallesExito.add("Fila " + fila + " [Incidencia: '" + numeroIncidencia + "', Piso: '" + nombrePiso + "'] -> " + accion + " exitosamente.");
+                } catch (Exception e) {
+                    detallesFallo.add("Fila " + fila + " [Incidencia: '" + numeroIncidencia + "', Piso: '" + nombrePiso + "'] -> Error: " + e.getMessage());
+                    noSubidos++;
                 }
             }
+
+            log.info("Procesamiento de registros completado. Detalles:");
+            for (String msg : detallesExito) {
+                log.info("  {}", msg);
+            }
+
+            if (noSubidos > 0) {
+                log.warn("Registros NO subidos por error ({}):", noSubidos);
+                for (String msg : detallesFallo) {
+                    log.warn("  {}", msg);
+                }
+            }
+
+            log.info("Resumen de importación: Total filas procesadas = {}, Insertadas = {}, Actualizadas = {}, Sin cambios = {}, Fallas = {}", 
+                    totalFilas, subidosExito, actualizadosExito, sinCambiosExito, noSubidos);
+            log.info("--- FIN IMPORTACIÓN DE INCIDENCIAS ---");
         } catch (Exception e) {
+            log.error("Error crítico durante la importación de incidencias desde Excel: {}", e.getMessage(), e);
             throw new RuntimeException("Error al importar incidencias desde Excel: " + e.getMessage(), e);
         }
     }
@@ -260,7 +414,6 @@ public class ServicioIncidencias {
             Sheet sheet = workbook.createSheet("Incidencias");
             int filaIndex = 0;
 
-            // Fila de Encabezados (sirve como plantilla)
             Row encabezado = sheet.createRow(filaIndex++);
             encabezado.createCell(0).setCellValue("Número Incidencia");
             encabezado.createCell(1).setCellValue("Piso");
@@ -372,7 +525,7 @@ public class ServicioIncidencias {
         };
     }
 
-    public void eliminar(String id) {
+    public void eliminar(int id) {
         try {
             repositorioIncidencias.deleteById(id);
         } catch (Exception e) {
@@ -386,32 +539,26 @@ public class ServicioIncidencias {
         }
         String text = fechaStr.trim();
 
-        // 1. dd/MM/yyyy HH:mm:ss
         try {
             return LocalDateTime.parse(text, DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
         } catch (Exception ignored) {}
 
-        // 2. dd/MM/yyyy HH:mm
         try {
             return LocalDateTime.parse(text, DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
         } catch (Exception ignored) {}
 
-        // 3. dd/MM/yyyy
         try {
             return LocalDate.parse(text, DateTimeFormatter.ofPattern("dd/MM/yyyy")).atStartOfDay();
         } catch (Exception ignored) {}
 
-        // 4. yyyy-MM-dd HH:mm:ss
         try {
             return LocalDateTime.parse(text, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         } catch (Exception ignored) {}
 
-        // 5. yyyy-MM-dd
         try {
             return LocalDate.parse(text, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay();
         } catch (Exception ignored) {}
 
-        // 6. ISO_LOCAL_DATE_TIME
         try {
             return LocalDateTime.parse(text, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         } catch (Exception ignored) {}
@@ -419,7 +566,7 @@ public class ServicioIncidencias {
         return null;
     }
 
-    private IncidenciasRespuesta mapear(Incidencias inc) {
+    IncidenciasRespuesta mapear(Incidencias inc) {
         PisosRespuesta pisoResp = null;
         if (inc.getPiso() != null) {
             pisoResp = PisosRespuesta.builder()
@@ -433,6 +580,7 @@ public class ServicioIncidencias {
         }
 
         return IncidenciasRespuesta.builder()
+                .idIncidencia(inc.getIdIncidencia())
                 .numeroIncidencia(inc.getNumeroIncidencia())
                 .estado(inc.getEstadoIncidencia() != null ? inc.getEstadoIncidencia().getDescripcion() : null)
                 .pisos(pisoResp)
@@ -444,6 +592,10 @@ public class ServicioIncidencias {
                 .proforma(inc.getProforma() != null ? inc.getProforma().getDescripcion() : null)
                 .horas(inc.getHorasTrabajadas() != null ? inc.getHorasTrabajadas().getDescripcion() : null)
                 .fechaIncidencia(inc.getFechaIncidencia())
+                .fechaActualizacion(inc.getFechaActualizacion())
+                .solicitante(inc.getUsuarioActualizo() != null ? 
+                    (inc.getUsuarioActualizo().getNombre() != null && !inc.getUsuarioActualizo().getNombre().isEmpty() ? 
+                        inc.getUsuarioActualizo().getNombre() : inc.getUsuarioActualizo().getUsername()) : null)
                 .build();
     }
 

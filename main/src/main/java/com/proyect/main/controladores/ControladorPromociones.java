@@ -20,6 +20,9 @@ public class ControladorPromociones {
     @PostMapping
     public ResponseEntity<?> insertar(@RequestBody PromocionesDto dto) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para crear promociones");
+            }
             PromocionesRespuesta respuesta = servicioPromociones.insertar(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
         } catch (Exception e) {
@@ -51,6 +54,9 @@ public class ControladorPromociones {
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizar(@PathVariable int id, @RequestBody PromocionesDto dto) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para actualizar promociones");
+            }
             PromocionesRespuesta respuesta = servicioPromociones.actualizar(id, dto);
             return ResponseEntity.ok(respuesta);
         } catch (Exception e) {
@@ -61,6 +67,9 @@ public class ControladorPromociones {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable int id) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para eliminar promociones");
+            }
             servicioPromociones.eliminar(id);
             return ResponseEntity.ok("Promoción eliminada exitosamente.");
         } catch (Exception e) {

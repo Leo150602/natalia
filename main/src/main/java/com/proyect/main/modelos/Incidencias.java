@@ -22,6 +22,11 @@ import java.util.List;
 public class Incidencias {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_incidencia")
+    private int idIncidencia;
+
+    @Column(name = "numero_incidencia", nullable = false)
     private String numeroIncidencia;
 
     @Enumerated(EnumType.STRING)
@@ -62,5 +67,12 @@ public class Incidencias {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idPiso", nullable = false)
     private Pisos piso;
+
+    @Column(name = "fecha_actualizacion")
+    private LocalDateTime fechaActualizacion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_actualizo_id", nullable = true)
+    private Usuario usuarioActualizo;
 
 }

@@ -21,28 +21,20 @@
             placeholder="Ej. 1º A, Ático B" />
         </div>
 
-        <!-- Nombre del Propietario -->
-        <div class="mb-3">
-          <label for="propietarioNombre" class="form-label">Nombre del Propietario</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="propietarioNombre" 
-            name="propietarioNombre" 
-            [(ngModel)]="nuevoPiso.propietarioNombre" 
-            placeholder="Nombre completo" />
-        </div>
-
-        <!-- Teléfono del Propietario -->
+        <!-- Propietario -->
         <div class="mb-4">
-          <label for="propietarioTelefono" class="form-label">Teléfono del Propietario</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="propietarioTelefono" 
-            name="propietarioTelefono" 
-            [(ngModel)]="nuevoPiso.propietarioTelefono" 
-            placeholder="Teléfono único (para rol PROPIETARIO)" />
+          <label for="idPropietario" class="form-label font-weight-bold">Propietario Asignado</label>
+          <select 
+            class="form-select" 
+            id="idPropietario" 
+            name="idPropietario" 
+            [(ngModel)]="nuevoPiso.idPropietario"
+            [disabled]="cargando">
+            <option [ngValue]="null">Sin propietario asignado</option>
+            <option *ngFor="let p of propietarios" [value]="p.idPersona">
+              {{ p.nombre }} (Tel: {{ p.telefono }})
+            </option>
+          </select>
         </div>
 
         <!-- Botones de Acción -->

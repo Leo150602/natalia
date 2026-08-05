@@ -13,5 +13,6 @@ public class PisosDto {
     private int idPromocion;
     private String propietarioNombre;
     private String propietarioTelefono;
+    private Integer idPropietario;
 
 }

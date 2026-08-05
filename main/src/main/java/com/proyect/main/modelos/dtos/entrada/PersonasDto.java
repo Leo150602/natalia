@@ -13,5 +13,6 @@ public class PersonasDto {
     private String nombre;
     private String telefono;
     private TipoPersonas tipoPersonas;
+    private Integer idPromotora;
 
 }

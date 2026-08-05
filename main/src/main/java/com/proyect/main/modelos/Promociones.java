@@ -29,4 +29,10 @@ public class Promociones {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idPromotora")
     private Promotoras promotora;
+
+    @Column(columnDefinition = "TEXT")
+    private String direccion;
+
+    @Column(columnDefinition = "TEXT")
+    private String coordenadas;
 }

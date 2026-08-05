@@ -23,6 +23,8 @@ public class Promotoras {
     private String promotora;
 
     @OneToMany(mappedBy = "promotora", fetch = FetchType.LAZY)
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
     private List<Promociones> promociones;
 
 }

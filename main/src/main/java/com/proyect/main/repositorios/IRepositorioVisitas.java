@@ -30,6 +30,6 @@ public interface IRepositorioVisitas extends JpaRepository<Visitas, Integer> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE Visitas v SET v.tecnico = null WHERE v.tecnico.idPersona = :idPersona")
-    void setTecnicoToNull(@Param("idPersona") int idPersona);
+    @Query("UPDATE Visitas v SET v.tecnico = null WHERE v.tecnico.id = :idUsuario")
+    void setTecnicoToNull(@Param("idUsuario") int idUsuario);
 }

@@ -63,6 +63,8 @@
         [mostrarId]="config.mostrarId"
         [idCampo]="config.idCampo"
         [idNombre]="config.idNombre"
+        [permitirAcciones]="permisosService.puedeInsertarEditarPisosYPropietarios()"
+        [cargando]="cargando"
         (editar)="editarPiso($event)"
         (eliminar)="eliminarPiso($event)">
       </app-tabla-datos>

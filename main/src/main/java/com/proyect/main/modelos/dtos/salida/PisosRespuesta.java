@@ -15,5 +15,6 @@ public class PisosRespuesta {
     private String piso;
     private String propietario;
     private String telefonoPropietario;
+    private Integer idPropietario;
 
 }

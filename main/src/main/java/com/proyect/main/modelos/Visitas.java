@@ -1,13 +1,12 @@
 package com.proyect.main.modelos;
+
 import com.proyect.main.modelos.enums.EstadoVisita;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
-
 
 @Entity
 @Data
@@ -32,8 +31,8 @@ public class Visitas {
     private EstadoVisita estadoVisita;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idPersona")
-    private Personas tecnico;
+    @JoinColumn(name = "idUsuario")
+    private Usuario tecnico;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idIncidencia")

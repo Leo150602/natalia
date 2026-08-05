@@ -1,8 +1,8 @@
 <div class="container p-4" style="max-width: 800px;">
   <div class="card shadow">
     <div class="card-header bg-primary text-white p-3">
-      <h2 class="mb-0">{{ modoEdicion ? 'Actualizar Incidencia' : 'Registrar Nueva Incidencia' }}</h2>
-      <small>{{ modoEdicion ? 'Modifique los campos necesarios' : 'Complete el formulario para dar de alta una incidencia en la promoción activa' }}</small>
+      <h2 class="mb-0">{{ modoEdicion ? 'Actualizar Incidencia' : (permisosService.esCliente() || permisosService.esTecnico() ? 'Solicitar Nueva Incidencia' : 'Registrar Nueva Incidencia') }}</h2>
+      <small>{{ modoEdicion ? 'Modifique los campos necesarios' : (permisosService.esCliente() || permisosService.esTecnico() ? 'Complete el formulario para solicitar la revisión de una incidencia' : 'Complete el formulario para dar de alta una incidencia en la promoción activa') }}</small>
     </div>
 
     <div class="card-body p-4">
@@ -19,7 +19,7 @@
               name="numeroIncidencia" 
               [(ngModel)]="nuevaIncidencia.numeroIncidencia" 
               required 
-              placeholder="Ej. INC-001" />
+              [placeholder]="placeholderNumeroIncidencia" />
           </div>
 
           <div class="col-md-6">
@@ -31,13 +31,13 @@
               [(ngModel)]="nuevaIncidencia.idPiso" 
               required>
               <option [value]="null" disabled selected>Seleccione un piso...</option>
-              <option value="nuevo">-- Crear Nuevo Piso --</option>
+              <option value="nuevo" *ngIf="!permisosService.esTecnico()">-- Crear Nuevo Piso --</option>
               <option *ngFor="let p of pisos" [value]="p.idPiso">
                 {{ p.piso }} (Prop: {{ p.propietario || 'Sin Propietario' }})
               </option>
             </select>
 
-            <div class="mt-2" *ngIf="nuevaIncidencia.idPiso === 'nuevo'">
+            <div class="mt-2" *ngIf="nuevaIncidencia.idPiso === 'nuevo' && !permisosService.esTecnico()">
               <label for="nuevoPisoNombre" class="form-label small text-warning font-weight-bold">Nombre del Nuevo Piso *</label>
               <input 
                 type="text" 
@@ -66,7 +66,7 @@
             </select>
           </div>
 
-          <div class="col-md-4">
+          <div class="col-md-4" *ngIf="permisosService.esAdminODev() || permisosService.esEmpleado()">
             <label for="estadoIncidencia" class="form-label">Estado de Incidencia</label>
             <select 
               class="form-select" 
@@ -80,7 +80,7 @@
             </select>
           </div>
 
-          <div class="col-md-4">
+          <div class="col-md-4" *ngIf="!permisosService.esCliente()">
             <label for="horasTrabajadas" class="form-label">Horas Trabajadas</label>
             <select 
               class="form-select" 
@@ -97,7 +97,7 @@
 
         <!-- Tercera Fila: Materiales, Presupuesto, Proforma y Fecha -->
         <div class="row mb-3">
-          <div class="col-md-3">
+          <div class="col-md-3" *ngIf="!permisosService.esCliente()">
             <label for="materialesRequeridos" class="form-label">Materiales Requeridos</label>
             <input 
               type="text" 
@@ -108,7 +108,7 @@
               placeholder="Ej. Pintura, silicona" />
           </div>
 
-          <div class="col-md-3">
+          <div class="col-md-3" *ngIf="!permisosService.esCliente()">
             <label for="presupuesto" class="form-label">Presupuesto</label>
             <select 
               class="form-select" 
@@ -122,7 +122,7 @@
             </select>
           </div>
 
-          <div class="col-md-3">
+          <div class="col-md-3" *ngIf="permisosService.esAdminODev() || permisosService.esEmpleado()">
             <label for="proforma" class="form-label">Proforma</label>
             <select 
               class="form-select" 
@@ -136,7 +136,7 @@
             </select>
           </div>
 
-          <div class="col-md-3">
+          <div class="col-md-3" *ngIf="permisosService.esAdminODev() || permisosService.esEmpleado()">
             <label for="fechaIncidencia" class="form-label">Fecha Incidencia</label>
             <input 
               type="datetime-local" 
@@ -159,7 +159,7 @@
             placeholder="Detalles sobre el problema..."></textarea>
         </div>
 
-        <div class="mb-4">
+        <div class="mb-4" *ngIf="permisosService.esAdminODev() || permisosService.esEmpleado()">
           <label for="observaciones" class="form-label">Observaciones Internas</label>
           <textarea 
             class="form-control" 
@@ -176,8 +176,8 @@
             Cancelar
           </button>
           <button type="submit" class="btn btn-primary" [disabled]="!incidenciaForm.form.valid || cargando">
-            <span *ngIf="!cargando">Guardar Registro</span>
-            <span *ngIf="cargando">Registrando...</span>
+            <span *ngIf="!cargando">{{ (permisosService.esCliente() || permisosService.esTecnico()) ? 'Enviar Solicitud' : 'Guardar Registro' }}</span>
+            <span *ngIf="cargando">Guardando...</span>
           </button>
         </div>
 

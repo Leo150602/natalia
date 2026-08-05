@@ -14,11 +14,11 @@ export class IncidenciasService {
     return this.http.get<IncidenciasRespuesta[]>(`${API_URL}/incidencias`);
   }
 
-  obtenerPorPromocion(idPromocion: number): Observable<IncidenciasRespuesta[]> {
-    return this.http.get<IncidenciasRespuesta[]>(`${API_URL}/incidencias/promocion/${idPromocion}`);
+  obtenerPorPromocion(idPromocion: number, incluirSolicitudes: boolean = false): Observable<IncidenciasRespuesta[]> {
+    return this.http.get<IncidenciasRespuesta[]>(`${API_URL}/incidencias/promocion/${idPromocion}?incluirSolicitudes=${incluirSolicitudes}`);
   }
 
-  obtenerPorId(id: string): Observable<IncidenciasRespuesta> {
+  obtenerPorId(id: number): Observable<IncidenciasRespuesta> {
     return this.http.get<IncidenciasRespuesta>(`${API_URL}/incidencias/${id}`);
   }
 
@@ -26,7 +26,7 @@ export class IncidenciasService {
     return this.http.post<IncidenciasRespuesta>(`${API_URL}/incidencias`, dto);
   }
 
-  actualizar(id: string, dto: IncidenciasDto): Observable<IncidenciasRespuesta> {
+  actualizar(id: number, dto: IncidenciasDto): Observable<IncidenciasRespuesta> {
     return this.http.put<IncidenciasRespuesta>(`${API_URL}/incidencias/${id}`, dto);
   }
 
@@ -44,7 +44,7 @@ export class IncidenciasService {
     return this.http.get(`${API_URL}/incidencias/exportar/${idPromocion}`, { responseType: 'blob' });
   }
 
-  eliminar(id: string): Observable<string> {
+  eliminar(id: number): Observable<string> {
     return this.http.delete(`${API_URL}/incidencias/${id}`, { responseType: 'text' });
   }
 

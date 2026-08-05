@@ -40,6 +40,8 @@ public class ServicioPromociones {
             Promociones promocion = Promociones.builder()
                     .promocion(dto.getPromocion())
                     .promotora(promotora)
+                    .direccion(dto.getDireccion())
+                    .coordenadas(dto.getCoordenadas())
                     .build();
 
             return mapearIndividual(repositorioPromociones.save(promocion));
@@ -60,6 +62,8 @@ public class ServicioPromociones {
                                     p -> PromocionItem.builder()
                                             .idPromocion(p.getIdPromocion())
                                             .nombre(p.getPromocion())
+                                            .direccion(p.getDireccion())
+                                            .coordenadas(p.getCoordenadas())
                                             .build(),
                                     Collectors.toList()
                             )
@@ -99,6 +103,8 @@ public class ServicioPromociones {
             }
 
             promocion.setPromocion(dto.getPromocion());
+            promocion.setDireccion(dto.getDireccion());
+            promocion.setCoordenadas(dto.getCoordenadas());
             return mapearIndividual(repositorioPromociones.save(promocion));
         } catch (Exception e) {
             throw new RuntimeException("Error al actualizar promoción: " + e.getMessage(), e);
@@ -120,6 +126,8 @@ public class ServicioPromociones {
                         PromocionItem.builder()
                                 .idPromocion(promocion.getIdPromocion())
                                 .nombre(promocion.getPromocion())
+                                .direccion(promocion.getDireccion())
+                                .coordenadas(promocion.getCoordenadas())
                                 .build()
                 ))
                 .build();

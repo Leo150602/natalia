@@ -12,13 +12,23 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface IRepositorioIncidencias extends JpaRepository<Incidencias, String> {
+public interface IRepositorioIncidencias extends JpaRepository<Incidencias, Integer> {
 
-    @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion prom JOIN FETCH prom.promotora LEFT JOIN FETCH p.propietario")
+    @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion prom JOIN FETCH prom.promotora LEFT JOIN FETCH p.propietario WHERE i.estadoIncidencia IS NULL OR (i.estadoIncidencia <> com.proyect.main.modelos.enums.EstadoIncidencia.SOLICITADO AND i.estadoIncidencia <> com.proyect.main.modelos.enums.EstadoIncidencia.RECHAZADO)")
     List<Incidencias> findAllWithDetails();
 
-    @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion prom JOIN FETCH prom.promotora LEFT JOIN FETCH p.propietario WHERE i.numeroIncidencia = :id")
-    Optional<Incidencias> findByIdWithDetails(@Param("id") String id);
+    @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion prom JOIN FETCH prom.promotora LEFT JOIN FETCH p.propietario WHERE i.idIncidencia = :id")
+    Optional<Incidencias> findByIdWithDetails(@Param("id") int id);
+
+    @Query("SELECT i FROM Incidencias i JOIN i.piso p WHERE i.numeroIncidencia = :numeroIncidencia AND p.promocion.idPromocion = :idPromocion")
+    Optional<Incidencias> findByNumeroIncidenciaAndPromocionId(@Param("numeroIncidencia") String numeroIncidencia, @Param("idPromocion") int idPromocion);
+
+    @Query("SELECT i FROM Incidencias i JOIN i.piso p JOIN p.promocion prom JOIN prom.promotora promo " +
+           "WHERE i.numeroIncidencia = :numeroIncidencia AND promo.idPromotora = :idPromotora")
+    List<Incidencias> findByNumeroIncidenciaAndPromotoraId(
+        @Param("numeroIncidencia") String numeroIncidencia, 
+        @Param("idPromotora") int idPromotora
+    );
 
     @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion prom JOIN FETCH p.propietario prop " +
            "WHERE (:numeroIncidencia IS NULL OR :numeroIncidencia = '' OR i.numeroIncidencia = :numeroIncidencia) " +
@@ -27,7 +37,8 @@ public interface IRepositorioIncidencias extends JpaRepository<Incidencias, Stri
            "AND (:fechaInicial IS NULL OR i.fechaIncidencia >= :fechaInicial) " +
            "AND (:fechaFinal IS NULL OR i.fechaIncidencia <= :fechaFinal) " +
            "AND (:estadoIncidencia IS NULL OR i.estadoIncidencia = :estadoIncidencia) " +
-           "AND (:categoriaIncidencia IS NULL OR i.categoriaIncidencia = :categoriaIncidencia)")
+           "AND (:categoriaIncidencia IS NULL OR i.categoriaIncidencia = :categoriaIncidencia) " +
+           "AND (i.estadoIncidencia IS NULL OR (i.estadoIncidencia <> com.proyect.main.modelos.enums.EstadoIncidencia.SOLICITADO AND i.estadoIncidencia <> com.proyect.main.modelos.enums.EstadoIncidencia.RECHAZADO))")
     List<Incidencias> filtrarIncidencias(
         @Param("numeroIncidencia") String numeroIncidencia,
         @Param("piso") String piso,
@@ -38,9 +49,15 @@ public interface IRepositorioIncidencias extends JpaRepository<Incidencias, Stri
         @Param("categoriaIncidencia") CategoriaIncidencia categoriaIncidencia
     );
 
-    @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion prom JOIN FETCH prom.promotora LEFT JOIN FETCH p.propietario prop WHERE prom.idPromocion = :idPromocion")
+    @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion prom JOIN FETCH prom.promotora LEFT JOIN FETCH p.propietario prop WHERE prom.idPromocion = :idPromocion AND (i.estadoIncidencia IS NULL OR (i.estadoIncidencia <> com.proyect.main.modelos.enums.EstadoIncidencia.SOLICITADO AND i.estadoIncidencia <> com.proyect.main.modelos.enums.EstadoIncidencia.RECHAZADO))")
     List<Incidencias> findByPromocionId(@Param("idPromocion") int idPromocion);
 
-    @Query("SELECT COUNT(i) FROM Incidencias i WHERE i.piso.promocion.idPromocion = :idPromocion")
+    @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion prom JOIN FETCH prom.promotora LEFT JOIN FETCH p.propietario prop WHERE prom.idPromocion = :idPromocion")
+    List<Incidencias> findByPromocionIdAllStates(@Param("idPromocion") int idPromocion);
+
+    @Query("SELECT COUNT(i) FROM Incidencias i WHERE i.piso.promocion.idPromocion = :idPromocion AND (i.estadoIncidencia IS NULL OR (i.estadoIncidencia <> com.proyect.main.modelos.enums.EstadoIncidencia.SOLICITADO AND i.estadoIncidencia <> com.proyect.main.modelos.enums.EstadoIncidencia.RECHAZADO))")
     long countByPromocionId(@Param("idPromocion") int idPromocion);
+
+    @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion prom JOIN FETCH prom.promotora LEFT JOIN FETCH i.usuarioActualizo LEFT JOIN FETCH p.propietario WHERE i.estadoIncidencia = com.proyect.main.modelos.enums.EstadoIncidencia.SOLICITADO AND (:idPromocion IS NULL OR prom.idPromocion = :idPromocion)")
+    List<Incidencias> findSolicitudes(@Param("idPromocion") Integer idPromocion);
 }

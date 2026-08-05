@@ -1,7 +1,7 @@
 <div class="container-fluid p-4">
   <div class="mb-4">
-    <h1 class="mb-0">Propietarios y Técnicos</h1>
-    <p class="text-muted mb-0">Listado de personas registradas en el sistema y sus roles asociados</p>
+    <h1 class="mb-0">{{ permisosService.obtenerEtiquetaPersonas() }}</h1>
+    <p class="text-muted mb-0">{{ obtenerSubtitulo() }}</p>
   </div>
 
   <!-- Barra de Filtros Reactivos -->
@@ -14,19 +14,13 @@
             <input type="text" class="form-control bg-dark text-white border-secondary" [(ngModel)]="filtros.nombre" (ngModelChange)="aplicarFiltros()" placeholder="Buscar nombre...">
           </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
           <div class="input-group input-group-sm">
             <span class="input-group-text bg-secondary text-white border-secondary">Teléfono</span>
             <input type="text" class="form-control bg-dark text-white border-secondary" [(ngModel)]="filtros.telefono" (ngModelChange)="aplicarFiltros()" placeholder="Buscar teléfono...">
           </div>
         </div>
-        <div class="col-md-3">
-          <div class="input-group input-group-sm">
-            <span class="input-group-text bg-secondary text-white border-secondary">Rol / Tipo</span>
-            <input type="text" class="form-control bg-dark text-white border-secondary" [(ngModel)]="filtros.rol" (ngModelChange)="aplicarFiltros()" placeholder="Buscar rol...">
-          </div>
-        </div>
-        <div class="col-md-2 text-end">
+        <div class="col-md-4 text-end">
           <button class="btn btn-sm btn-outline-secondary w-100" (click)="limpiarFiltros()">Limpiar</button>
         </div>
       </div>
@@ -41,6 +35,8 @@
         [mostrarId]="config.mostrarId"
         [idCampo]="config.idCampo"
         [idNombre]="config.idNombre"
+        [permitirAcciones]="permisosService.puedeInsertarEditarPisosYPropietarios()"
+        [cargando]="cargando"
         (editar)="editarPersona($event)"
         (eliminar)="eliminarPersona($event)">
       </app-tabla-datos>

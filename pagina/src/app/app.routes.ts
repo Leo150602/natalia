@@ -11,6 +11,11 @@ import { ImportarVisitasComponent } from './paginas/importar-visitas/importar-vi
 import { ImportarPromocionesComponent } from './paginas/importar-promociones/importar-promociones';
 import { ImportarPersonasComponent } from './paginas/importar-personas/importar-personas';
 import { LoginComponent } from './paginas/login/login';
+import { UsuariosComponent } from './paginas/usuarios/usuarios';
+import { RegistroUsuariosComponent } from './paginas/registro-usuarios/registro-usuarios';
+import { SolicitudesComponent } from './paginas/solicitudes/solicitudes';
+import { ClientesComponent } from './paginas/clientes/clientes';
+import { ImportarClientesComponent } from './paginas/importar-clientes/importar-clientes';
 import { authGuard } from './servicios/auth-guard';
 
 export const routes: Routes = [
@@ -31,6 +36,21 @@ export const routes: Routes = [
     {
         path: 'visitas',
         component: VisitasComponent,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'solicitudes',
+        component: SolicitudesComponent,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'clientes',
+        component: ClientesComponent,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'importar-clientes',
+        component: ImportarClientesComponent,
         canActivate: [authGuard]
     },
     {
@@ -71,6 +91,16 @@ export const routes: Routes = [
     {
         path: 'importar-personas',
         component: ImportarPersonasComponent,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'usuarios',
+        component: UsuariosComponent,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'registro-usuarios',
+        component: RegistroUsuariosComponent,
         canActivate: [authGuard]
     }
 ];

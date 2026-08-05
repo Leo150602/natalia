@@ -35,6 +35,8 @@
         [mostrarId]="config.mostrarId"
         [idCampo]="config.idCampo"
         [idNombre]="config.idNombre"
+        [permitirAcciones]="permisosService.puedeInsertarEditar()"
+        [cargando]="cargando"
         (editar)="editarPromocion($event)"
         (eliminar)="eliminarPromocion($event)">
       </app-tabla-datos>

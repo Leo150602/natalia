@@ -20,6 +20,9 @@ public class ControladorPersonas {
     @PostMapping
     public ResponseEntity<?> insertar(@RequestBody PersonasDto dto) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para crear propietarios");
+            }
             PersonasRespuesta respuesta = servicioPersonas.insertar(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
         } catch (Exception e) {
@@ -51,6 +54,9 @@ public class ControladorPersonas {
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizar(@PathVariable int id, @RequestBody PersonasDto dto) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para actualizar propietarios");
+            }
             PersonasRespuesta respuesta = servicioPersonas.actualizar(id, dto);
             return ResponseEntity.ok(respuesta);
         } catch (Exception e) {
@@ -61,6 +67,9 @@ public class ControladorPersonas {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable int id) {
         try {
+            if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos para eliminar propietarios");
+            }
             servicioPersonas.eliminar(id);
             return ResponseEntity.ok("Persona eliminada exitosamente.");
         } catch (Exception e) {

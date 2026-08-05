@@ -1,11 +1,13 @@
 package com.proyect.main.servicios;
 
 import com.proyect.main.modelos.Personas;
+import com.proyect.main.modelos.Promotoras;
 import com.proyect.main.modelos.dtos.entrada.PersonasDto;
 import com.proyect.main.modelos.dtos.salida.PersonasRespuesta;
 import com.proyect.main.repositorios.IRepositorioPersonas;
 import com.proyect.main.repositorios.IRepositorioPisos;
 import com.proyect.main.repositorios.IRepositorioVisitas;
+import com.proyect.main.repositorios.IRepositorioPromotoras;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,21 +22,29 @@ public class ServicioPersonas {
     private final IRepositorioPersonas repositorioPersonas;
     private final IRepositorioPisos repositorioPisos;
     private final IRepositorioVisitas repositorioVisitas;
+    private final IRepositorioPromotoras repositorioPromotoras;
 
     public PersonasRespuesta insertar(PersonasDto dto) {
         try {
             Optional<Personas> existente = repositorioPersonas.findByTelefono(dto.getTelefono());
             if (existente.isPresent()) {
                 Personas p = existente.get();
-                // Si existe pero cambió de nombre o tipo, lo actualizamos
                 p.setNombre(dto.getNombre());
                 p.setTipoPersonas(dto.getTipoPersonas());
+                if (dto.getIdPromotora() != null) {
+                    p.setPromotora(repositorioPromotoras.findById(dto.getIdPromotora()).orElse(null));
+                }
                 return mapear(repositorioPersonas.save(p));
+            }
+            Promotoras promotora = null;
+            if (dto.getIdPromotora() != null) {
+                promotora = repositorioPromotoras.findById(dto.getIdPromotora()).orElse(null);
             }
             Personas persona = Personas.builder()
                     .nombre(dto.getNombre())
                     .telefono(dto.getTelefono())
                     .tipoPersonas(dto.getTipoPersonas())
+                    .promotora(promotora)
                     .build();
             return mapear(repositorioPersonas.save(persona));
         } catch (Exception e) {
@@ -67,6 +77,11 @@ public class ServicioPersonas {
             persona.setNombre(dto.getNombre());
             persona.setTelefono(dto.getTelefono());
             persona.setTipoPersonas(dto.getTipoPersonas());
+            if (dto.getIdPromotora() != null) {
+                persona.setPromotora(repositorioPromotoras.findById(dto.getIdPromotora()).orElse(null));
+            } else {
+                persona.setPromotora(null);
+            }
             return mapear(repositorioPersonas.save(persona));
         } catch (Exception e) {
             throw new RuntimeException("Error al actualizar persona: " + e.getMessage(), e);
@@ -76,7 +91,6 @@ public class ServicioPersonas {
     public void eliminar(int id) {
         try {
             repositorioPisos.setPropietarioToNull(id);
-            repositorioVisitas.setTecnicoToNull(id);
             repositorioPersonas.deleteById(id);
         } catch (Exception e) {
             throw new RuntimeException("Error al eliminar persona: " + e.getMessage(), e);
@@ -99,6 +113,8 @@ public class ServicioPersonas {
                 .nombre(persona.getNombre())
                 .telefono(persona.getTelefono())
                 .tipoPersonas(persona.getTipoPersonas() != null ? persona.getTipoPersonas().getDescripcion() : null)
+                .idPromotora(persona.getPromotora() != null ? persona.getPromotora().getIdPromotora() : null)
+                .nombrePromotora(persona.getPromotora() != null ? persona.getPromotora().getPromotora() : null)
                 .build();
     }
 }

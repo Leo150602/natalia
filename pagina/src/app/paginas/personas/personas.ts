@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -9,6 +9,7 @@ import { AlertaService } from '../../servicios/alerta-service';
 import { PersonasRespuesta } from '../../modelos/personas.model';
 import { TablaDatosComponent } from '../../utils/tabla-datos/tabla-datos';
 import { CONFIG_TABLA_PROPIETARIOS } from '../../modelos/columnas-config';
+import { PermisosService } from '../../servicios/permisos.service';
 
 @Component({
   selector: 'app-personas',
@@ -23,23 +24,30 @@ export class PersonasComponent implements OnInit, OnDestroy {
   datos: PersonasRespuesta[] = [];
   datosFiltrados: PersonasRespuesta[] = [];
   config = CONFIG_TABLA_PROPIETARIOS;
+  cargando = false;
   private promoSub?: Subscription;
 
   // Filtros reactivos locales
   filtros = {
     nombre: '',
-    telefono: '',
-    rol: ''
+    telefono: ''
   };
 
   constructor(
     private personasService: PersonasService,
     private estadoGlobal: EstadoGlobalService,
     private alerta: AlertaService,
-    private router: Router
+    private router: Router,
+    public permisosService: PermisosService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    if (!this.permisosService.puedeVerPisosYPropietarios()) {
+      this.router.navigate(['/']);
+      return;
+    }
+
     // Al abrir el componente, obtener el valor actual inmediatamente
     this.promocionId = this.estadoGlobal.getPromocion();
     if (this.promocionId !== null) {
@@ -67,31 +75,39 @@ export class PersonasComponent implements OnInit, OnDestroy {
 
   cargarPersonas(): void {
     if (this.promocionId === null) return;
+    this.cargando = true;
+    this.cdr.detectChanges();
     this.personasService.obtenerPropietariosPorPromocion(this.promocionId).subscribe({
       next: (res) => {
         this.datos = res;
+        this.cargando = false;
         this.aplicarFiltros();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error("Error al obtener propietarios por promoción:", err);
+        this.cargando = false;
+        this.cdr.detectChanges();
       }
     });
+  }
+
+  obtenerSubtitulo(): string {
+    return 'Listado de propietarios asociados a la promoción';
   }
 
   aplicarFiltros(): void {
     this.datosFiltrados = this.datos.filter(row => {
       const matchNom = !this.filtros.nombre || (row.nombre && row.nombre.toLowerCase().includes(this.filtros.nombre.toLowerCase()));
       const matchTel = !this.filtros.telefono || (row.telefono && row.telefono.toLowerCase().includes(this.filtros.telefono.toLowerCase()));
-      const matchRol = !this.filtros.rol || (row.tipoPersonas && row.tipoPersonas.toLowerCase().includes(this.filtros.rol.toLowerCase()));
-      return matchNom && matchTel && matchRol;
+      return matchNom && matchTel;
     });
   }
 
   limpiarFiltros(): void {
     this.filtros = {
       nombre: '',
-      telefono: '',
-      rol: ''
+      telefono: ''
     };
     this.aplicarFiltros();
   }

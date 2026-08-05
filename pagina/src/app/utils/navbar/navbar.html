@@ -1,13 +1,10 @@
 <div class="navbar-wrapper-container px-3 d-flex justify-content-between align-items-center">
     
-    <!-- Left side: Hamburger & Breadcrumbs -->
     <div class="d-flex align-items-center left-section">
-        <!-- Toggle button -->
         <button class="toggle-btn me-3 d-flex align-items-center justify-content-center" (click)="toggleSidebar()">
             <span class="toggle-icon">☰</span>
         </button>
 
-        <!-- Breadcrumbs path -->
         <div class="breadcrumbs-path d-flex align-items-center me-3">
             <h2 *ngIf="!principal" class="mb-0 breadcrumb-link">
                 <a routerLink="/" class="text-decoration-none">Inicio</a> /&nbsp;
@@ -16,10 +13,8 @@
         </div>
     </div>
 
-    <!-- Right side: Promotion select & Profile Dropdown -->
     <div class="d-flex align-items-center right-section gap-3">
         
-        <!-- Promotion Select (Desktop only: d-none d-md-flex) -->
         <div class="d-none d-md-flex align-items-center select-promocion-group">
             <span class="select-label font-weight-bold me-2">Promoción:</span>
             <mat-select 
@@ -35,7 +30,6 @@
             </mat-select>
         </div>
 
-        <!-- Profile badge and dropdown container -->
         <div class="position-relative">
             <div class="navbar-profile-box d-flex align-items-center gap-2 px-2 py-1 rounded cursor-pointer" (click)="toggleMenuUsuario()">
                 <div class="profile-circle-avatar">{{ iniciales }}</div>
@@ -46,9 +40,7 @@
                 <span class="dropdown-chevron ms-1 d-none d-sm-inline">▼</span>
             </div>
 
-            <!-- Float Dropdown Menu (Visible on toggle) -->
             <div class="navbar-user-dropdown-menu shadow-lg p-3 rounded bg-white border" *ngIf="mostrarMenuUsuario">
-                <!-- Mobile only: Promotion select inside dropdown -->
                 <div class="d-md-none border-bottom pb-2 mb-2 select-promocion-group-mobile">
                     <span class="select-label-mobile font-weight-bold d-block mb-1">Promoción:</span>
                     <mat-select 
@@ -64,11 +56,132 @@
                     </mat-select>
                 </div>
                 
-                <!-- Logout Action Button inside dropdown for all/mobile -->
+                <button class="btn btn-profile-action w-100 d-flex align-items-center justify-content-center gap-2 mb-2" (click)="abrirModalUsuario(); toggleMenuUsuario()">
+                    👤 <span>Mi Perfil</span>
+                </button>
+
                 <button class="btn btn-logout-action w-100 d-flex align-items-center justify-content-center gap-2" (click)="cerrarSesion(); toggleMenuUsuario()">
                     🚪 <span>Cerrar Sesión</span>
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop-custom" *ngIf="mostrarModalUsuario">
+    <div class="modal-card-custom">
+        <div class="modal-header-custom">
+            <h3>👤 Perfil de Usuario</h3>
+            <button class="close-btn-custom" (click)="cerrarModalUsuario()">×</button>
+        </div>
+
+        <div class="modal-tabs-custom">
+            <button class="modal-tab-btn" [class.active]="pestanaModalActual === 'datos'" (click)="pestanaModalActual = 'datos'; modoEdicionUsuario = false">
+                👤 Datos Personales
+            </button>
+            <button class="modal-tab-btn" [class.active]="pestanaModalActual === 'seguridad'" (click)="pestanaModalActual = 'seguridad'; modoEdicionUsuario = false">
+                🔒 Seguridad
+            </button>
+        </div>
+        
+        <div class="modal-body-custom scrollable-modal-body">
+            <div class="profile-section-custom" *ngIf="pestanaModalActual === 'datos'">
+                <div class="section-header-custom d-flex justify-content-between align-items-center mb-4 p-0 border-0">
+                    <h4 class="section-title-custom m-0">Información de Cuenta</h4>
+                    <button *ngIf="!modoEdicionUsuario" class="btn btn-edit-toggle-custom" (click)="activarEdicionUsuario()">
+                        ✏️ Editar Perfil
+                    </button>
+                </div>
+
+                <div class="profile-details-list" *ngIf="!modoEdicionUsuario">
+                    <div class="profile-detail-row">
+                        <span class="detail-label">Nombre de usuario (Login)</span>
+                        <span class="detail-value-text">{{ usernameUsuario }}</span>
+                    </div>
+                    <div class="profile-detail-row">
+                        <span class="detail-label">Nombre Completo</span>
+                        <span class="detail-value-text">{{ nombreEditar || '(No asignado)' }}</span>
+                    </div>
+                    <div class="profile-detail-row">
+                        <span class="detail-label">Correo Electrónico</span>
+                        <span class="detail-value-text">{{ correoEditar || '(No asignado)' }}</span>
+                    </div>
+                    <div class="profile-detail-row">
+                        <span class="detail-label">Teléfono / Número</span>
+                        <span class="detail-value-text">{{ telefonoEditar || '(No asignado)' }}</span>
+                    </div>
+                    <div class="profile-detail-row">
+                        <span class="detail-label">Rol asignado</span>
+                        <span class="detail-value-text">{{ rolUsuario }}</span>
+                    </div>
+                </div>
+
+                <div class="profile-edit-form" *ngIf="modoEdicionUsuario">
+                    <div class="form-group-custom mb-3">
+                        <label>Nombre Completo</label>
+                        <input type="text" [(ngModel)]="nombreEditar" placeholder="Ingrese su nombre completo" />
+                    </div>
+                    <div class="form-group-custom mb-3">
+                        <label>Correo Electrónico</label>
+                        <input type="email" [(ngModel)]="correoEditar" placeholder="ejemplo@correo.com" />
+                    </div>
+                    <div class="form-group-custom mb-3">
+                        <label>Teléfono / Número</label>
+                        <input type="text" [(ngModel)]="telefonoEditar" placeholder="Ingrese su número de teléfono" />
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button class="btn btn-cancel-custom btn-sm" (click)="cancelarEdicionUsuario()">Cancelar</button>
+                        <button class="btn btn-save-custom btn-sm" (click)="guardarDatosUsuario()" [disabled]="cargandoUsuario">
+                            <span *ngIf="!cargandoUsuario">Guardar</span>
+                            <div *ngIf="cargandoUsuario" class="mini-spinner"></div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-section-custom" *ngIf="pestanaModalActual === 'seguridad'">
+                <h4 class="section-title-custom mb-4">Seguridad y Contraseña</h4>
+                
+                <div class="form-group-custom mb-3">
+                    <label>Contraseña Actual</label>
+                    <div style="position: relative; width: 100%;">
+                        <input [type]="verContrasenaActual ? 'text' : 'password'" [(ngModel)]="contrasenaActual" placeholder="Ingrese su contraseña actual" autocomplete="new-password" style="padding-right: 45px; width: 100%;" />
+                        <button type="button" (click)="verContrasenaActual = !verContrasenaActual" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #a0aec0; z-index: 10; padding: 0;">
+                            {{ verContrasenaActual ? '👁️' : '🙈' }}
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group-custom mb-3">
+                    <label>Nueva Contraseña</label>
+                    <div style="position: relative; width: 100%;">
+                        <input [type]="verNuevaContrasena ? 'text' : 'password'" [(ngModel)]="nuevaContrasena" placeholder="Nueva contraseña (mínimo 4 caracteres)" style="padding-right: 45px; width: 100%;" />
+                        <button type="button" (click)="verNuevaContrasena = !verNuevaContrasena" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #a0aec0; z-index: 10; padding: 0;">
+                            {{ verNuevaContrasena ? '👁️' : '🙈' }}
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group-custom mb-3">
+                    <label>Confirmar Nueva Contraseña</label>
+                    <div style="position: relative; width: 100%;">
+                        <input [type]="verConfirmarContrasena ? 'text' : 'password'" [(ngModel)]="confirmarContrasena" placeholder="Confirme nueva contraseña" style="padding-right: 45px; width: 100%;" />
+                        <button type="button" (click)="verConfirmarContrasena = !verConfirmarContrasena" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #a0aec0; z-index: 10; padding: 0;">
+                            {{ verConfirmarContrasena ? '👁️' : '🙈' }}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button class="btn btn-save-custom w-100" (click)="guardarNuevaPassword()" [disabled]="cargandoPassword">
+                        <span *ngIf="!cargandoPassword">Actualizar Contraseña</span>
+                        <div *ngIf="cargandoPassword" class="mini-spinner"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer-custom justify-content-center">
+            <button class="btn btn-cancel-custom w-100" (click)="cerrarModalUsuario()">Cerrar</button>
         </div>
     </div>
 </div>

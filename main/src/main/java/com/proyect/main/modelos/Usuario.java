@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.proyect.main.modelos.enums.RolUsuario;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -26,5 +28,19 @@ public class Usuario {
 
     private String nombre;
 
-    private String rol;
+    @Enumerated(EnumType.STRING)
+    private RolUsuario rol;
+
+    private String telefono;
+
+    private String correo;
+
+    @Builder.Default
+    private boolean activo = true;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_promotora", nullable = true)
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
+    private Promotoras promotora;
 }

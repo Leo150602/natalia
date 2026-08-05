@@ -13,6 +13,8 @@ export const CONFIG_TABLA_INCIDENCIAS: ConfiguracionTabla = {
   mostrarId: true, // Se muestra porque es el identificador de la incidencia
   columnas: [
     { campo: 'pisos.piso', nombre: 'Piso' },
+    { campo: 'pisos.propietario', nombre: 'Propietario' },
+    { campo: 'pisos.telefonoPropietario', nombre: 'Tel. Propietario' },
     { campo: 'categoria', nombre: 'Categoría' },
     { campo: 'descripcion', nombre: 'Descripción' },
     { campo: 'observacion', nombre: 'Observaciones' },
@@ -31,6 +33,8 @@ export const CONFIG_TABLA_VISITAS: ConfiguracionTabla = {
   columnas: [
     { campo: 'numeroIncidencia', nombre: 'Nº Incidencia' },
     { campo: 'piso', nombre: 'Piso' },
+    { campo: 'propietario', nombre: 'Propietario' },
+    { campo: 'telefonoPropietario', nombre: 'Tel. Propietario' },
     { campo: 'tecnicoNombre', nombre: 'Técnico' },
     { campo: 'tecnicoTelefono', nombre: 'Tel. Técnico' },
     { campo: 'diaVisita', nombre: 'Fecha Visita' },
@@ -44,17 +48,17 @@ export const CONFIG_TABLA_PROMOCIONES: ConfiguracionTabla = {
   mostrarId: false, // Oculto por ser ID surrogado
   columnas: [
     { campo: 'promocion', nombre: 'Promoción' },
-    { campo: 'promotora', nombre: 'Promotora' }
+    { campo: 'promotora', nombre: 'Promotora' },
+    { campo: 'direccion', nombre: 'Dirección' }
   ]
 };
 
 export const CONFIG_TABLA_PROPIETARIOS: ConfiguracionTabla = {
   idCampo: 'telefono',
   idNombre: 'Teléfono',
-  mostrarId: true, // Se muestra porque el teléfono actúa como ID natural para el usuario
+  mostrarId: true,
   columnas: [
-    { campo: 'nombre', nombre: 'Nombre Completo' },
-    { campo: 'tipoPersonas', nombre: 'Rol / Tipo' }
+    { campo: 'nombre', nombre: 'Nombre Completo' }
   ]
 };
 
