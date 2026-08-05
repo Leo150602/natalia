@@ -29,11 +29,6 @@ public class ControladorIncidencias {
             if (!com.proyect.main.servicios.UserContext.puedeInsertarEditar()) {
                 dto.setEstadoIncidencia(com.proyect.main.modelos.enums.EstadoIncidencia.SOLICITADO);
             }
-            if (actual != null && com.proyect.main.modelos.enums.RolUsuario.CLIENTE.equals(actual.getRol())) {
-                dto.setHorasTrabajadas(null);
-                dto.setMaterialesRequeridos(null);
-                dto.setPresupuesto(null);
-            }
             IncidenciasRespuesta respuesta = servicioIncidencias.insertar(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
         } catch (Exception e) {
