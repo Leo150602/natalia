@@ -519,7 +519,15 @@ public class ServicioIncidencias {
         }
         return switch (cell.getCellType()) {
             case STRING -> cell.getStringCellValue().trim();
-            case NUMERIC -> String.valueOf((long) cell.getNumericCellValue());
+            case NUMERIC -> {
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    java.util.Date date = cell.getDateCellValue();
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+                    yield sdf.format(date);
+                } else {
+                    yield String.valueOf((long) cell.getNumericCellValue());
+                }
+            }
             case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
             default -> "";
         };
@@ -539,6 +547,7 @@ public class ServicioIncidencias {
         }
         String text = fechaStr.trim();
 
+        // 4-digit year patterns
         try {
             return LocalDateTime.parse(text, DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
         } catch (Exception ignored) {}
@@ -551,6 +560,20 @@ public class ServicioIncidencias {
             return LocalDate.parse(text, DateTimeFormatter.ofPattern("dd/MM/yyyy")).atStartOfDay();
         } catch (Exception ignored) {}
 
+        // 2-digit year patterns (e.g. yy/MM/dd or dd/MM/yy)
+        try {
+            return LocalDateTime.parse(text, DateTimeFormatter.ofPattern("dd/MM/yy HH:mm:ss"));
+        } catch (Exception ignored) {}
+
+        try {
+            return LocalDateTime.parse(text, DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"));
+        } catch (Exception ignored) {}
+
+        try {
+            return LocalDate.parse(text, DateTimeFormatter.ofPattern("dd/MM/yy")).atStartOfDay();
+        } catch (Exception ignored) {}
+
+        // yyyy-MM-dd patterns
         try {
             return LocalDateTime.parse(text, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         } catch (Exception ignored) {}

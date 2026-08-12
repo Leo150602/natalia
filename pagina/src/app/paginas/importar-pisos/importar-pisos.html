@@ -18,23 +18,44 @@
             name="piso" 
             [(ngModel)]="nuevoPiso.piso" 
             required 
-            placeholder="Ej. 1º A, Ático B" />
+            [placeholder]="placeholderPiso" />
         </div>
 
         <!-- Propietario -->
-        <div class="mb-4">
-          <label for="idPropietario" class="form-label font-weight-bold">Propietario Asignado</label>
-          <select 
-            class="form-select" 
-            id="idPropietario" 
-            name="idPropietario" 
-            [(ngModel)]="nuevoPiso.idPropietario"
-            [disabled]="cargando">
-            <option [ngValue]="null">Sin propietario asignado</option>
-            <option *ngFor="let p of propietarios" [value]="p.idPersona">
-              {{ p.nombre }} (Tel: {{ p.telefono }})
-            </option>
-          </select>
+        <div class="mb-4 position-relative">
+          <label for="buscarPropietario" class="form-label font-weight-bold">Propietario Asignado</label>
+          <div class="input-group">
+            <input 
+              type="text" 
+              class="form-control" 
+              id="buscarPropietario"
+              name="buscarPropietario"
+              [(ngModel)]="terminoBusqueda" 
+              (input)="filtrarPropietarios()"
+              (focus)="mostrarOpciones = true"
+              (blur)="onBlur()"
+              [disabled]="cargando"
+              placeholder="Escriba nombre o teléfono (mín. 2 caracteres)..." 
+              autocomplete="off" />
+            <button *ngIf="nuevoPiso.idPropietario" type="button" class="btn btn-outline-secondary" (click)="limpiarPropietarioSeleccionado()">
+              ✕
+            </button>
+          </div>
+          
+          <!-- Lista de sugerencias descolgable -->
+          <ul class="dropdown-menu show w-100 search-results-dropdown" 
+              *ngIf="mostrarOpciones && terminoBusqueda.length >= 2 && propietariosFiltrados.length > 0"
+              style="max-height: 200px; overflow-y: auto; z-index: 1000; position: absolute; left: 0; right: 0;">
+            <li *ngFor="let p of propietariosFiltrados">
+              <button type="button" class="dropdown-item" (mousedown)="seleccionarPropietario(p)">
+                {{ p.nombre }} (Tel: {{ p.telefono }})
+              </button>
+            </li>
+          </ul>
+          
+          <div class="form-text text-success mt-2" *ngIf="propietarioSeleccionadoLabel">
+            Seleccionado: <strong>{{ propietarioSeleccionadoLabel }}</strong>
+          </div>
         </div>
 
         <!-- Botones de Acción -->

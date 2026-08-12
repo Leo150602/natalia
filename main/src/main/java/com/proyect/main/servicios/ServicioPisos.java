@@ -245,17 +245,13 @@ public class ServicioPisos {
                 throw new IllegalArgumentException("La persona con teléfono " + telefono + 
                         " existe pero no es del tipo PROPIETARIO. Tipo actual: " + persona.getTipoPersonas());
             }
-            if (persona.getPromotora() == null && promocion != null) {
-                persona.setPromotora(promocion.getPromotora());
-                repositorioPersonas.save(persona);
-            }
             return persona;
         } else {
             return repositorioPersonas.save(Personas.builder()
                     .nombre(nombre != null && !nombre.isEmpty() ? nombre : "Propietario S/N")
                     .telefono(telefono)
                     .tipoPersonas(TipoPersonas.PROPIETARIO)
-                    .promotora(promocion != null ? promocion.getPromotora() : null)
+                    .promotora(null)
                     .build());
         }
     }

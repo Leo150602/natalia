@@ -31,6 +31,11 @@ export class ImportarPisosComponent implements OnInit {
   };
 
   propietarios: PersonasRespuesta[] = [];
+  terminoBusqueda = '';
+  propietariosFiltrados: PersonasRespuesta[] = [];
+  mostrarOpciones = false;
+  propietarioSeleccionadoLabel = '';
+  placeholderPiso = 'Ej. 1º A, Ático B';
 
   constructor(
     private globalService: EstadoGlobalService,
@@ -53,6 +58,7 @@ export class ImportarPisosComponent implements OnInit {
       this.promocionId = id;
       if (id !== null) {
         this.cargarPropietarios();
+        this.cargarUltimoPiso();
       }
     });
 
@@ -64,8 +70,7 @@ export class ImportarPisosComponent implements OnInit {
   }
 
   cargarPropietarios(): void {
-    if (this.promocionId === null) return;
-    this.personasService.obtenerPropietariosPorPromocion(this.promocionId).subscribe({
+    this.personasService.obtenerTodas().subscribe({
       next: (res) => {
         this.propietarios = res;
         this.cdr.detectChanges();
@@ -77,6 +82,32 @@ export class ImportarPisosComponent implements OnInit {
     });
   }
 
+  cargarUltimoPiso(): void {
+    if (this.promocionId === null) {
+      this.placeholderPiso = 'Ej. 1º A, Ático B';
+      return;
+    }
+    this.pisosService.obtenerPorPromocion(this.promocionId).subscribe({
+      next: (pisos) => {
+        if (pisos && pisos.length > 0) {
+          const ultimo = pisos[pisos.length - 1];
+          if (ultimo && ultimo.piso) {
+            this.placeholderPiso = `Último registrado: ${ultimo.piso}`;
+          } else {
+            this.placeholderPiso = 'Ej. 1º A, Ático B';
+          }
+        } else {
+          this.placeholderPiso = 'Ej. 1º A, Ático B';
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error("Error al obtener pisos para sugerencia:", err);
+        this.placeholderPiso = 'Ej. 1º A, Ático B';
+      }
+    });
+  }
+
   cargarDatosPisoEdicion(): void {
     if (this.idPisoEdicion === null) return;
     this.pisosService.obtenerPorId(this.idPisoEdicion).subscribe({
@@ -85,10 +116,60 @@ export class ImportarPisosComponent implements OnInit {
           piso: res.piso,
           idPropietario: res.idPropietario || null
         };
+        if (res.idPropietario) {
+          const prop = this.propietarios.find(p => p.idPersona === res.idPropietario);
+          if (prop) {
+            const label = `${prop.nombre} (Tel: ${prop.telefono})`;
+            this.terminoBusqueda = label;
+            this.propietarioSeleccionadoLabel = label;
+          } else {
+            this.personasService.obtenerPorId(res.idPropietario).subscribe({
+              next: (p) => {
+                const label = `${p.nombre} (Tel: ${p.telefono})`;
+                this.terminoBusqueda = label;
+                this.propietarioSeleccionadoLabel = label;
+                this.cdr.detectChanges();
+              }
+            });
+          }
+        }
         this.cdr.detectChanges();
       },
       error: (err) => console.error("Error al cargar piso para edición:", err)
     });
+  }
+
+  filtrarPropietarios(): void {
+    const termino = this.terminoBusqueda.trim().toLowerCase();
+    if (termino.length >= 2) {
+      this.propietariosFiltrados = this.propietarios.filter(p =>
+        (p.nombre && p.nombre.toLowerCase().includes(termino)) ||
+        (p.telefono && p.telefono.includes(termino))
+      );
+    } else {
+      this.propietariosFiltrados = [];
+    }
+  }
+
+  seleccionarPropietario(p: PersonasRespuesta): void {
+    this.nuevoPiso.idPropietario = p.idPersona;
+    const label = `${p.nombre} (Tel: ${p.telefono})`;
+    this.terminoBusqueda = label;
+    this.propietarioSeleccionadoLabel = label;
+    this.mostrarOpciones = false;
+  }
+
+  limpiarPropietarioSeleccionado(): void {
+    this.nuevoPiso.idPropietario = null;
+    this.terminoBusqueda = '';
+    this.propietarioSeleccionadoLabel = '';
+    this.propietariosFiltrados = [];
+  }
+
+  onBlur(): void {
+    setTimeout(() => {
+      this.mostrarOpciones = false;
+    }, 200);
   }
 
   guardar(): void {

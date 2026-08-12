@@ -35,12 +35,10 @@ export class ImportarPersonasComponent implements OnInit {
 
   constructor(
     private personasService: PersonasService,
-    private enumService: EnumService,
     private alerta: AlertaService,
     private router: Router,
     private route: ActivatedRoute,
     public permisosService: PermisosService,
-    private promotorasService: PromotorasService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -51,7 +49,6 @@ export class ImportarPersonasComponent implements OnInit {
     }
 
     this.nuevaPersona.tipoPersonas = 'PROPIETARIO';
-    this.cargarPromotoras();
 
     const id = this.route.snapshot.queryParamMap.get('id');
     if (id) {
@@ -82,13 +79,7 @@ export class ImportarPersonasComponent implements OnInit {
   }
 
   cargarPromotoras(): void {
-    this.promotorasService.obtenerTodas().subscribe({
-      next: (res) => {
-        this.promotorasList = res;
-        this.cdr.detectChanges();
-      },
-      error: (err) => console.error("Error al cargar promotoras:", err)
-    });
+    // No-op: Promotoras no longer associated with personas
   }
 
   obtenerTituloForm(): string {
@@ -108,7 +99,7 @@ export class ImportarPersonasComponent implements OnInit {
       nombre: this.nuevaPersona.nombre,
       telefono: this.nuevaPersona.telefono,
       tipoPersonas: this.nuevaPersona.tipoPersonas,
-      idPromotora: this.idPromotora || undefined
+      idPromotora: undefined
     };
 
     const operacion = this.modoEdicion && this.idPersonaEdicion !== null

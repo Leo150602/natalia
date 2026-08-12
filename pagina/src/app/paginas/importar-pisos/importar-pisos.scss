@@ -1,1 +1,25 @@
 /* Estilos del formulario de importación de pisos */
+
+.search-results-dropdown {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.375rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff; /* White background */
+  color: #212529; /* Dark text */
+  margin-top: 2px;
+  
+  .dropdown-item {
+    color: #212529; /* Dark text */
+    padding: 0.5rem 1rem;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    background-color: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    
+    &:hover {
+      background-color: #f8f9fa; /* Light hover background */
+      color: #1e2125;
+    }
+  }
+}

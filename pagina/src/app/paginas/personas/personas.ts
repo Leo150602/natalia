@@ -47,37 +47,17 @@ export class PersonasComponent implements OnInit, OnDestroy {
       this.router.navigate(['/']);
       return;
     }
-
-    // Al abrir el componente, obtener el valor actual inmediatamente
-    this.promocionId = this.estadoGlobal.getPromocion();
-    if (this.promocionId !== null) {
-      this.cargarPersonas();
-    }
-
-    // Suscribirse a cambios futuros desvinculando al destruir
-    this.promoSub = this.estadoGlobal.promocion$.subscribe((id) => {
-      if (id !== null && id !== this.promocionId) {
-        this.promocionId = id;
-        this.cargarPersonas();
-      } else if (id === null) {
-        this.promocionId = null;
-        this.datos = [];
-        this.datosFiltrados = [];
-      }
-    });
+    this.cargarPersonas();
   }
 
   ngOnDestroy(): void {
-    if (this.promoSub) {
-      this.promoSub.unsubscribe();
-    }
+    // No longer subscribed to global promotion changes since list is general
   }
 
   cargarPersonas(): void {
-    if (this.promocionId === null) return;
     this.cargando = true;
     this.cdr.detectChanges();
-    this.personasService.obtenerPropietariosPorPromocion(this.promocionId).subscribe({
+    this.personasService.obtenerTodas().subscribe({
       next: (res) => {
         this.datos = res;
         this.cargando = false;
@@ -85,7 +65,7 @@ export class PersonasComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error("Error al obtener propietarios por promoción:", err);
+        console.error("Error al obtener propietarios:", err);
         this.cargando = false;
         this.cdr.detectChanges();
       }
@@ -93,7 +73,7 @@ export class PersonasComponent implements OnInit, OnDestroy {
   }
 
   obtenerSubtitulo(): string {
-    return 'Listado de propietarios asociados a la promoción';
+    return 'Listado general de propietarios registrados';
   }
 
   aplicarFiltros(): void {

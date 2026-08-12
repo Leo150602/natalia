@@ -34,22 +34,7 @@
             placeholder="Ej. 600123456" />
         </div>
 
-        <!-- Promotora Asociada * -->
-        <div class="mb-4">
-          <label for="idPromotora" class="form-label font-weight-bold">Promotora Asociada *</label>
-          <select 
-            class="form-select" 
-            id="idPromotora" 
-            name="idPromotora" 
-            [(ngModel)]="idPromotora" 
-            required
-            [disabled]="cargando">
-            <option [ngValue]="null" disabled selected>Seleccione una promotora...</option>
-            <option *ngFor="let p of promotorasList" [value]="p.idPromotora">
-              {{ p.promotora }}
-            </option>
-          </select>
-        </div>
+
 
 
 

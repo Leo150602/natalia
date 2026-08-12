@@ -65,6 +65,21 @@ export class TablaDatosComponent implements OnChanges, AfterViewInit {
   ngAfterViewInit(): void {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
+    
+    // Configurar accessor para soportar ordenamiento de propiedades anidadas (ej. 'pisos.piso')
+    this.dataSource.sortingDataAccessor = (item, property) => {
+      let value;
+      if (property.includes('.')) {
+        value = property.split('.').reduce((obj, key) => (obj && obj[key] !== undefined) ? obj[key] : '', item);
+      } else {
+        value = item[property];
+      }
+      
+      if (typeof value === 'string') {
+        return value.toLowerCase();
+      }
+      return value;
+    };
   }
 
   actualizarColumnasVisibles(): void {

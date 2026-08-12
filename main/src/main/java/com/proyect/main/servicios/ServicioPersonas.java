@@ -31,20 +31,14 @@ public class ServicioPersonas {
                 Personas p = existente.get();
                 p.setNombre(dto.getNombre());
                 p.setTipoPersonas(dto.getTipoPersonas());
-                if (dto.getIdPromotora() != null) {
-                    p.setPromotora(repositorioPromotoras.findById(dto.getIdPromotora()).orElse(null));
-                }
+                p.setPromotora(null);
                 return mapear(repositorioPersonas.save(p));
-            }
-            Promotoras promotora = null;
-            if (dto.getIdPromotora() != null) {
-                promotora = repositorioPromotoras.findById(dto.getIdPromotora()).orElse(null);
             }
             Personas persona = Personas.builder()
                     .nombre(dto.getNombre())
                     .telefono(dto.getTelefono())
                     .tipoPersonas(dto.getTipoPersonas())
-                    .promotora(promotora)
+                    .promotora(null)
                     .build();
             return mapear(repositorioPersonas.save(persona));
         } catch (Exception e) {
@@ -77,11 +71,7 @@ public class ServicioPersonas {
             persona.setNombre(dto.getNombre());
             persona.setTelefono(dto.getTelefono());
             persona.setTipoPersonas(dto.getTipoPersonas());
-            if (dto.getIdPromotora() != null) {
-                persona.setPromotora(repositorioPromotoras.findById(dto.getIdPromotora()).orElse(null));
-            } else {
-                persona.setPromotora(null);
-            }
+            persona.setPromotora(null);
             return mapear(repositorioPersonas.save(persona));
         } catch (Exception e) {
             throw new RuntimeException("Error al actualizar persona: " + e.getMessage(), e);
