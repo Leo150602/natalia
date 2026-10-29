@@ -1,0 +1,139 @@
+<div class="container-fluid p-4">
+  
+  <!-- Cabecera de Plantillas -->
+  <div class="table-page-header mb-4">
+    <!-- Top: Título y Subtítulo -->
+    <div class="header-title-box">
+      <h1 class="page-title">Plantillas de Documentos</h1>
+      <p class="page-subtitle">Administración de plantillas maestras del sistema. Haga clic derecho para ver detalles o presione Ver para previsualizar.</p>
+    </div>
+    
+    <!-- Separador -->
+    <div class="header-separator"></div>
+    
+    <!-- Bottom: Barra de menú de acciones integrada -->
+    <div class="header-menu-bar d-flex justify-content-between align-items-center">
+      <!-- Izquierda: Opciones de creación -->
+      <div class="menu-left-group d-flex align-items-center">
+        <a class="menu-action-item" routerLink="/plantillas/detalle/nuevo" *ngIf="permisosService.puedeInsertarEditar()">
+          <span>➕</span> Subir Plantilla
+        </a>
+      </div>
+      
+      <!-- Derecha: Filtrado -->
+      <div class="menu-right-group d-flex align-items-center">
+        <!-- Filtrado -->
+        <div class="position-relative menu-action-dropdown">
+          <button class="menu-action-item" (click)="toggleMenuFiltros()">
+            <span>🔍</span> Filtrado
+          </button>
+
+          <!-- Tarjeta de Filtros Flotante -->
+          <div *ngIf="mostrarMenuFiltros" class="card shadow-lg border border-light position-absolute end-0 mt-2 p-3 panel-filtros-flotante" style="width: 320px; z-index: 1080;">
+            <h6 class="mb-3 text-dark font-weight-bold">Filtros de Búsqueda</h6>
+            
+            <div class="row g-2">
+              <div class="col-12">
+                <label class="form-label field-label">Nombre</label>
+                <input type="text" class="form-control" [(ngModel)]="filtroNombre" (ngModelChange)="aplicarFiltros()" placeholder="Buscar por nombre...">
+              </div>
+              <div class="col-12">
+                <label class="form-label field-label">Formato</label>
+                <select class="form-select" [(ngModel)]="filtroFormato" (ngModelChange)="aplicarFiltros()">
+                  <option value="">Todos los formatos</option>
+                  <option *ngFor="let fmt of formatosDisponibles" [value]="fmt.value">{{ fmt.label }}</option>
+                </select>
+              </div>
+              
+              <div class="col-12 mt-3 d-flex gap-2">
+                <button class="btn btn-sm btn-primary flex-grow-1" (click)="toggleMenuFiltros()">Aceptar</button>
+                <button class="btn btn-sm btn-outline-secondary flex-grow-1" (click)="limpiarFiltros()">Limpiar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Backdrop invisible para cerrar el menú al hacer clic fuera -->
+          <div *ngIf="mostrarMenuFiltros" class="backdrop-filtros" (click)="toggleMenuFiltros()"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Resultados -->
+  <div class="row">
+    <div class="col-12">
+      <app-tabla-datos
+        [datos]="documentosFiltrados"
+        [columnas]="config.columnas"
+        [mostrarId]="config.mostrarId"
+        [idCampo]="config.idCampo"
+        [idNombre]="config.idNombre"
+        [permitirAcciones]="true"
+        [mostrarAccionesEdicion]="permisosService.puedeInsertarEditar()"
+        [cargando]="cargando"
+        etiquetaContextual="Detalle Plantilla"
+        (editar)="editarDocumento($event)"
+        (eliminar)="eliminarDocumento($event)"
+        (verDetalle)="irAlDetalle($event)"
+        (visualizar)="visualizarDocumento($event)">
+      </app-tabla-datos>
+    </div>
+  </div>
+
+  <!-- Cortina / Overlay de Previsualización Flotante -->
+  <div *ngIf="documentoEnVista" class="preview-overlay" (click)="cerrarPreview()">
+    <button class="btn-close-preview" (click)="cerrarPreview()" title="Cerrar vista previa">
+      &times;
+    </button>
+    <div class="preview-container" (click)="$event.stopPropagation()">
+      
+      <!-- Cuerpo del Visor -->
+      <div class="preview-body">
+        
+        <!-- Previsualizador de PDF -->
+        <iframe *ngIf="esPdf(documentoEnVista)" 
+                [src]="safePreviewUrl" 
+                class="iframe-preview">
+        </iframe>
+        
+        <!-- Previsualizador de Word / Excel (usando Office Web Viewer) -->
+        <div *ngIf="esOffice(documentoEnVista)" class="w-100 h-100 d-flex flex-column">
+          <div class="p-2 bg-dark text-white d-flex justify-content-between align-items-center" style="font-size: 0.8rem; border-bottom: 1px solid #333;">
+            <span>💡 Los archivos de Word/Excel pueden tardar en convertirse por Microsoft.</span>
+            <a [href]="documentoEnVista.ruta" target="_blank" class="btn btn-sm btn-primary py-0 px-2 font-weight-bold" style="font-size: 0.72rem;">
+              📥 Descargar Archivo
+            </a>
+          </div>
+          <iframe [src]="safePreviewUrl" 
+                  class="iframe-preview flex-grow-1" style="height: calc(100% - 37px);">
+          </iframe>
+        </div>
+        
+        <!-- Previsualizador de Imágenes -->
+        <img *ngIf="esImagen(documentoEnVista)" 
+             [src]="documentoEnVista.ruta" 
+             class="img-preview" 
+             alt="Previsualización de imagen" />
+        
+        <!-- Previsualizador de Video -->
+        <video *ngIf="esVideo(documentoEnVista)" 
+               [src]="documentoEnVista.ruta" 
+               controls 
+               class="video-preview">
+        </video>
+        
+        <!-- Si no es previsualizable o falló -->
+        <div *ngIf="!esPrevisualizable(documentoEnVista)" class="text-center p-5 text-white">
+          <span style="font-size: 3rem;">📁</span>
+          <h5 class="mt-3">El archivo "{{ documentoEnVista.nombre }}" no admite vista previa directa.</h5>
+          <p class="text-muted">Formato: {{ documentoEnVista.formato }}</p>
+          <a [href]="documentoEnVista.ruta" target="_blank" class="btn btn-primary mt-2 px-4">
+            Descargar Archivo
+          </a>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+</div>

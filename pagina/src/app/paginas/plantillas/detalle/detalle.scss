@@ -1,0 +1,54 @@
+.detail-card {
+  position: relative;
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 0.5px solid rgba(63, 78, 79, 0.25) !important;
+  box-shadow: 0 4px 20px rgba(44, 54, 57, 0.04) !important;
+}
+
+.detail-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(250, 248, 245, 0.7);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 16px;
+  backdrop-filter: blur(2px);
+  color: var(--color-slate-medium-base);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.field-label {
+  font-size: 0.72rem;
+  color: var(--color-slate-medium-base);
+  margin-bottom: 4px;
+}
+
+.upload-dropzone {
+  transition: background-color 0.2s, border-color 0.2s;
+  border-width: 2px !important;
+  border-color: rgba(162, 123, 92, 0.3) !important;
+  background-color: var(--color-soft-beige-light) !important;
+
+  &:hover {
+    background-color: rgba(162, 123, 92, 0.05) !important;
+    border-color: var(--color-accent-bronze-base) !important;
+  }
+}
+
+.upload-icon {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.form-control-plaintext {
+  font-size: 0.75rem;
+  word-break: break-all;
+}

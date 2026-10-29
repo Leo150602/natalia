@@ -1,0 +1,138 @@
+<div class="map-page-container d-flex flex-column h-100 p-4">
+  <!-- Cabecera de Página -->
+  <div class="table-page-header mb-3">
+    <div class="header-title-box">
+      <h1 class="page-title">🗺️ Mapa de Clientes</h1>
+      <p class="page-subtitle">Ubicación geográfica de las promociones inmobiliarias activas y accesos rápidos</p>
+    </div>
+    <div class="header-separator"></div>
+    
+    <!-- Barra de menú de acciones integrada (sólo visible en móvil) -->
+    <div class="header-menu-bar d-flex justify-content-end align-items-center d-md-none">
+      <div class="menu-right-group d-flex align-items-center">
+        <div class="position-relative menu-action-dropdown">
+          <button class="menu-action-item" (click)="toggleMenuFiltros()">
+            <span>🔍</span> Filtrar
+          </button>
+
+          <!-- Tarjeta de Filtros Flotante (móvil) -->
+          <div *ngIf="mostrarMenuFiltros" class="card shadow-lg border border-light position-absolute end-0 mt-2 p-3 panel-filtros-flotante" style="width: 290px; z-index: 1080;">
+            <h6 class="mb-3 text-dark font-weight-bold">Filtros de Búsqueda</h6>
+            
+            <div class="row g-2">
+              <!-- Promotora -->
+              <div class="col-12">
+                <label for="filtroPromotoraMovil" class="form-label field-label mb-1 text-muted text-uppercase" style="font-size: 0.72rem;">Promotora</label>
+                <select 
+                  id="filtroPromotoraMovil" 
+                  class="form-select form-select-sm text-uppercase" 
+                  [(ngModel)]="selectedPromotora"
+                  (change)="aplicarFiltros()">
+                  <option value="">TODAS...</option>
+                  <option *ngFor="let p of promotoras" [value]="p">{{ p }}</option>
+                </select>
+              </div>
+
+              <!-- Promoción -->
+              <div class="col-12">
+                <label for="filtroPromocionMovil" class="form-label field-label mb-1 text-muted text-uppercase" style="font-size: 0.72rem;">Promoción</label>
+                <input 
+                  type="text" 
+                  id="filtroPromocionMovil" 
+                  class="form-control form-control-sm text-uppercase" 
+                  [(ngModel)]="searchPromocion"
+                  (ngModelChange)="aplicarFiltros()"
+                  placeholder="Ej. EDIFICIO ALERCE" />
+              </div>
+
+              <!-- Dirección -->
+              <div class="col-12">
+                <label for="filtroDireccionMovil" class="form-label field-label mb-1 text-muted text-uppercase" style="font-size: 0.72rem;">Dirección</label>
+                <input 
+                  type="text" 
+                  id="filtroDireccionMovil" 
+                  class="form-control form-control-sm" 
+                  [(ngModel)]="searchDireccion"
+                  (ngModelChange)="aplicarFiltros()"
+                  placeholder="Calle, Ciudad..." />
+              </div>
+
+              <!-- Botones de Acción -->
+              <div class="col-12 mt-3 d-flex gap-2">
+                <button class="btn btn-sm btn-primary flex-grow-1" (click)="toggleMenuFiltros()">Aceptar</button>
+                <button class="btn btn-sm btn-outline-secondary flex-grow-1" (click)="limpiarFiltros()">Limpiar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Backdrop invisible para cerrar el menú al hacer clic fuera -->
+          <div *ngIf="mostrarMenuFiltros" class="backdrop-filtros" (click)="toggleMenuFiltros()"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de Filtros (Escritorio) -->
+  <div class="card shadow-sm border-0 mb-3 p-3 filter-panel bg-white d-none d-md-block">
+    <div class="row g-2 align-items-end">
+      
+      <!-- Promotora -->
+      <div class="col-md-3">
+        <label for="filtroPromotora" class="form-label small font-weight-bold mb-1 text-muted text-uppercase" style="font-size: 0.72rem;">Promotora</label>
+        <select 
+          id="filtroPromotora" 
+          class="form-select form-select-sm text-uppercase" 
+          [(ngModel)]="selectedPromotora"
+          (change)="aplicarFiltros()">
+          <option value="">TODAS...</option>
+          <option *ngFor="let p of promotoras" [value]="p">{{ p }}</option>
+        </select>
+      </div>
+
+      <!-- Promoción -->
+      <div class="col-md-3">
+        <label for="filtroPromocion" class="form-label small font-weight-bold mb-1 text-muted text-uppercase" style="font-size: 0.72rem;">Promoción</label>
+        <input 
+          type="text" 
+          id="filtroPromocion" 
+          class="form-control form-control-sm text-uppercase" 
+          [(ngModel)]="searchPromocion"
+          (ngModelChange)="aplicarFiltros()"
+          placeholder="Ej. EDIFICIO ALERCE" />
+      </div>
+
+      <!-- Dirección -->
+      <div class="col-md-3">
+        <label for="filtroDireccion" class="form-label small font-weight-bold mb-1 text-muted text-uppercase" style="font-size: 0.72rem;">Dirección</label>
+        <input 
+          type="text" 
+          id="filtroDireccion" 
+          class="form-control form-control-sm" 
+          [(ngModel)]="searchDireccion"
+          (ngModelChange)="aplicarFiltros()"
+          placeholder="Calle, Ciudad..." />
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="col-md-3 d-flex gap-2">
+        <button class="btn btn-primary btn-sm flex-grow-1 font-weight-semibold" (click)="aplicarFiltros()">
+          🔍 Filtrar
+        </button>
+        <button class="btn btn-outline-secondary btn-sm px-3" (click)="limpiarFiltros()">
+          Limpiar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Zona Central del Mapa -->
+  <div class="map-wrapper flex-grow-1 border rounded shadow-sm bg-light position-relative">
+    <div *ngIf="cargando" class="map-loading-overlay d-flex flex-column align-items-center justify-content-center">
+      <div class="spinner-border text-primary" role="status"></div>
+      <span class="mt-2 font-weight-semibold text-muted">Cargando ubicaciones...</span>
+    </div>
+    
+    <div id="mapa-clientes-leaflet" class="w-100 h-100" style="z-index: 1; min-height: 480px;"></div>
+  </div>
+</div>

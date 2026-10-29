@@ -15,6 +15,7 @@ import com.proyect.main.modelos.dtos.salida.PisosRespuesta;
 import com.proyect.main.repositorios.IRepositorioIncidencias;
 import com.proyect.main.repositorios.IRepositorioPisos;
 import com.proyect.main.repositorios.IRepositorioPromociones;
+import com.proyect.main.repositorios.IRepositorioVisitas;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -47,6 +48,8 @@ public class ServicioIncidencias {
     private final IRepositorioIncidencias repositorioIncidencias;
     private final IRepositorioPisos repositorioPisos;
     private final IRepositorioPromociones repositorioPromociones;
+    private final IRepositorioVisitas repositorioVisitas;
+    private final ServicioIncidenciaDocumento servicioIncidenciaDocumento;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -407,10 +410,11 @@ public class ServicioIncidencias {
         }
     }
 
-    public ByteArrayResource exportar(int idPromocion) throws IOException {
-        try (Workbook workbook = new XSSFWorkbook();
-             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-
+    public ByteArrayResource exportar(int idPromocion, com.proyect.main.modelos.dtos.entrada.IncidenciasFiltroDto filtro, boolean forzar) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        
+        try {
             Sheet sheet = workbook.createSheet("Incidencias");
             int filaIndex = 0;
 
@@ -427,7 +431,48 @@ public class ServicioIncidencias {
             encabezado.createCell(9).setCellValue("Proforma (SI, NO, NA)");
             encabezado.createCell(10).setCellValue("Fecha Incidencia");
 
-            List<Incidencias> lista = repositorioIncidencias.findByPromocionId(idPromocion);
+            // Construir consulta dinámica basada en filtros
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT i FROM Incidencias i ");
+            sb.append("JOIN FETCH i.piso p ");
+            sb.append("JOIN FETCH p.promocion prom ");
+            sb.append("WHERE prom.idPromocion = :idPromocion ");
+
+            Map<String, Object> params = new java.util.HashMap<>();
+            params.put("idPromocion", idPromocion);
+
+            if (filtro.getNumeroIncidencia() != null && !filtro.getNumeroIncidencia().trim().isEmpty()) {
+                sb.append("AND i.numeroIncidencia = :numeroIncidencia ");
+                params.put("numeroIncidencia", filtro.getNumeroIncidencia().trim());
+            }
+            if (filtro.getPiso() != null && !filtro.getPiso().trim().isEmpty()) {
+                sb.append("AND p.piso LIKE :piso ");
+                params.put("piso", "%" + filtro.getPiso().trim() + "%");
+            }
+            if (filtro.getFechaInicial() != null) {
+                sb.append("AND i.fechaIncidencia >= :fechaInicial ");
+                params.put("fechaInicial", filtro.getFechaInicial());
+            }
+            if (filtro.getFechaFinal() != null) {
+                sb.append("AND i.fechaIncidencia <= :fechaFinal ");
+                params.put("fechaFinal", filtro.getFechaFinal());
+            }
+            if (filtro.getEstadoIncidencia() != null) {
+                sb.append("AND i.estadoIncidencia = :estadoIncidencia ");
+                params.put("estadoIncidencia", filtro.getEstadoIncidencia());
+            }
+            if (filtro.getCategoriaIncidencia() != null) {
+                sb.append("AND i.categoriaIncidencia = :categoriaIncidencia ");
+                params.put("categoriaIncidencia", filtro.getCategoriaIncidencia());
+            }
+
+            var query = entityManager.createQuery(sb.toString(), Incidencias.class);
+            params.forEach(query::setParameter);
+
+            List<Incidencias> lista = query.getResultList();
+            if (lista.isEmpty() && !forzar) {
+                throw new IllegalArgumentException("No se encontraron registros para exportar con los filtros seleccionados.");
+            }
 
             for (Incidencias inc : lista) {
                 Row row = sheet.createRow(filaIndex++);
@@ -445,15 +490,27 @@ public class ServicioIncidencias {
                         ? inc.getFechaIncidencia().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
             }
 
-            for (int i = 0; i < 11; i++) {
-                sheet.autoSizeColumn(i);
+            if (!lista.isEmpty()) {
+                for (int i = 0; i < 11; i++) {
+                    sheet.autoSizeColumn(i);
+                }
             }
 
             workbook.write(output);
-            return new ByteArrayResource(output.toByteArray());
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Error al exportar incidencias a Excel: " + e.getMessage(), e);
+        } finally {
+            try {
+                workbook.close();
+            } catch (Exception ignored) {}
+            try {
+                output.close();
+            } catch (Exception ignored) {}
         }
+        
+        return new ByteArrayResource(output.toByteArray());
     }
 
     private CategoriaIncidencia parseCategoria(String value) {
@@ -535,6 +592,17 @@ public class ServicioIncidencias {
 
     public void eliminar(int id) {
         try {
+            // 1. Buscar y eliminar todas las relaciones de documentos de esta incidencia (incluye borrar de GCS)
+            List<com.proyect.main.modelos.IncidenciaDocumento> relaciones = 
+                servicioIncidenciaDocumento.listarPorIncidencia(id);
+            for (com.proyect.main.modelos.IncidenciaDocumento rel : relaciones) {
+                servicioIncidenciaDocumento.eliminarAsociacion(rel.getId());
+            }
+
+            // 1.5. Eliminar todas las visitas asociadas a la incidencia
+            repositorioVisitas.deleteByIncidenciaId(id);
+
+            // 2. Eliminar la incidencia de la base de datos
             repositorioIncidencias.deleteById(id);
         } catch (Exception e) {
             throw new RuntimeException("Error al eliminar incidencia: " + e.getMessage(), e);

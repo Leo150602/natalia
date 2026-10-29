@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { PersonasService } from '../../servicios/personas-service';
 import { EstadoGlobalService } from '../../servicios/global-service';
@@ -14,7 +14,7 @@ import { PermisosService } from '../../servicios/permisos.service';
 @Component({
   selector: 'app-personas',
   standalone: true,
-  imports: [CommonModule, TablaDatosComponent, FormsModule],
+  imports: [CommonModule, TablaDatosComponent, FormsModule, RouterLink],
   templateUrl: './personas.html',
   styleUrl: './personas.scss'
 })
@@ -25,6 +25,7 @@ export class PersonasComponent implements OnInit, OnDestroy {
   datosFiltrados: PersonasRespuesta[] = [];
   config = CONFIG_TABLA_PROPIETARIOS;
   cargando = false;
+  mostrarMenuFiltros = false;
   private promoSub?: Subscription;
 
   // Filtros reactivos locales
@@ -82,6 +83,12 @@ export class PersonasComponent implements OnInit, OnDestroy {
       const matchTel = !this.filtros.telefono || (row.telefono && row.telefono.toLowerCase().includes(this.filtros.telefono.toLowerCase()));
       return matchNom && matchTel;
     });
+    this.cdr.detectChanges();
+  }
+
+  toggleMenuFiltros(): void {
+    this.mostrarMenuFiltros = !this.mostrarMenuFiltros;
+    this.cdr.detectChanges();
   }
 
   limpiarFiltros(): void {
@@ -92,8 +99,12 @@ export class PersonasComponent implements OnInit, OnDestroy {
     this.aplicarFiltros();
   }
 
+  irAlDetalle(row: any): void {
+    this.router.navigate([`/personas/detalle/${row.idPersona}`]);
+  }
+
   editarPersona(row: any): void {
-    this.router.navigate(['/importar-personas'], { queryParams: { id: row.idPersona } });
+    this.router.navigate([`/personas/detalle/${row.idPersona}`]);
   }
 
   eliminarPersona(row: any): void {
@@ -102,12 +113,16 @@ export class PersonasComponent implements OnInit, OnDestroy {
       `¿Está seguro de que desea eliminar a "${row.nombre}"?`
     ).then((confirmado) => {
       if (confirmado) {
+        this.cargando = true;
+        this.cdr.detectChanges();
         this.personasService.eliminar(row.idPersona).subscribe({
           next: () => {
             this.alerta.exito("Persona eliminada con éxito.");
             this.cargarPersonas();
           },
           error: (err) => {
+            this.cargando = false;
+            this.cdr.detectChanges();
             this.alerta.error("Error al eliminar: " + (err.error || err.message));
           }
         });

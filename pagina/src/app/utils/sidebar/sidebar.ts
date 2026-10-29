@@ -49,14 +49,9 @@ export class Sidebar implements OnInit, OnDestroy {
     // 1. Sección de Reportes
     const hijosReportes: any[] = [];
     hijosReportes.push({ nombre: 'Incidencias', link: '/incidencias', requierePromo: true });
-    hijosReportes.push({ nombre: 'Visitas', link: '/visitas', requierePromo: true });
     
     if (this.permisosService.puedeVerSolicitudes()) {
       hijosReportes.push({ nombre: 'Solicitudes', link: '/solicitudes', requierePromo: true });
-    }
-    
-    if (this.permisosService.puedeVerPromociones()) {
-      hijosReportes.push({ nombre: 'Promociones', link: '/promociones', requierePromo: false });
     }
     
     if (this.permisosService.puedeVerPisosYPropietarios()) {
@@ -64,54 +59,63 @@ export class Sidebar implements OnInit, OnDestroy {
       hijosReportes.push({ nombre: 'Pisos', link: '/pisos', requierePromo: true });
     }
 
-    if (this.permisosService.puedeAdministrarClientes()) {
-      hijosReportes.push({ nombre: 'Clientes', link: '/clientes', requierePromo: false });
-    }
-
     list.push({
       nombre: 'Reportes',
-      abierta: true,
+      abierta: false,
       hijos: hijosReportes
     });
 
-    // 2. Sección de Crear Registros
-    const hijosCrear: any[] = [];
+    // 2. Sección de Planificación
+    const hijosPlanificacion: any[] = [];
+    hijosPlanificacion.push({ nombre: 'Visitas', link: '/visitas', requierePromo: true });
+    hijosPlanificacion.push({ nombre: 'Calendario', link: '/visitas/calendario', requierePromo: false });
+
+    list.push({
+      nombre: 'Planificación',
+      abierta: false,
+      hijos: hijosPlanificacion
+    });
+
+    // 3. Sección Comercial
+    const hijosComercial: any[] = [];
+    hijosComercial.push({ nombre: 'Mapa de clientes', link: '/mapa-clientes', requierePromo: false });
     
-    if (this.permisosService.puedeInsertarEditar()) {
-      hijosCrear.push({ nombre: 'Crear Incidencia', link: '/importar-incidencias', requierePromo: true });
-      hijosCrear.push({ nombre: 'Crear Visita', link: '/importar-visitas', requierePromo: true });
-      hijosCrear.push({ nombre: 'Crear Piso', link: '/importar-pisos', requierePromo: true });
-      hijosCrear.push({ nombre: this.permisosService.obtenerEtiquetaCrearPersonas(), link: '/importar-personas', requierePromo: false });
-      if (this.permisosService.puedeVerPromociones()) {
-        hijosCrear.push({ nombre: 'Crear Promoción', link: '/importar-promociones', requierePromo: false });
-      }
-      if (this.permisosService.puedeAdministrarClientes()) {
-        hijosCrear.push({ nombre: 'Crear Cliente', link: '/importar-clientes', requierePromo: false });
-      }
-    } else {
-      hijosCrear.push({ nombre: 'Solicitar Incidencia', link: '/importar-incidencias', requierePromo: true });
+    if (this.permisosService.puedeVerPromociones()) {
+      hijosComercial.push({ nombre: 'Promociones', link: '/promociones', requierePromo: false });
+    }
+    
+    if (this.permisosService.puedeAdministrarClientes()) {
+      hijosComercial.push({ nombre: 'Clientes', link: '/clientes', requierePromo: false });
     }
 
-    if (hijosCrear.length > 0) {
-      list.push({
-        nombre: 'Crear Registros',
-        abierta: true,
-        hijos: hijosCrear
-      });
-    }
+    list.push({
+      nombre: 'Comercial',
+      abierta: false,
+      hijos: hijosComercial
+    });
+
+
 
     // 3. Sección de Administración
     if (this.permisosService.puedeVerMenuAdministracion()) {
       const hijosAdmin = [
         { nombre: 'Usuarios', link: '/usuarios', requierePromo: false }
       ];
-      if (this.permisosService.puedeRegistrarUsuarios()) {
-        hijosAdmin.push({ nombre: 'Registrar Usuario', link: '/registro-usuarios', requierePromo: false });
-      }
       list.push({
         nombre: 'Administración',
-        abierta: true,
+        abierta: false,
         hijos: hijosAdmin
+      });
+    }
+
+    // 4. Sección de Documentos
+    if (this.permisosService.puedeVerPlantillas()) {
+      list.push({
+        nombre: 'Documentos',
+        abierta: false,
+        hijos: [
+          { nombre: 'Plantillas', link: '/plantillas', requierePromo: false }
+        ]
       });
     }
 

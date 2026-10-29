@@ -1,0 +1,39 @@
+// --- PALETA DE COLORES GLOBAL (VARIABLES SCSS) ---
+// Basada en la especificación del usuario, incluyendo variantes más claras y más oscuras para cada color.
+
+// 1. Primary Dark (#2C3639) - Gris/pizarra oscuro
+$color-primary-dark-base: #2C3639;
+$color-primary-dark-dark: #1A2022;
+$color-primary-dark-light: #425155;
+
+// 2. Slate Medium (#3F4E4F) - Gris pizarra medio
+$color-slate-medium-base: #3F4E4F;
+$color-slate-medium-dark: #2B3536;
+$color-slate-medium-light: #5A6F70;
+
+// 3. Accent Bronze (#A27B5C) - Ocre/bronce cálido
+$color-accent-bronze-base: #A27B5C;
+$color-accent-bronze-dark: #7D5F47;
+$color-accent-bronze-light: #C29F80;
+
+// 4. Soft Beige (#DCD7C9) - Crema/beige suave
+$color-soft-beige-base: #DCD7C9;
+$color-soft-beige-dark: #BFB9A8;
+$color-soft-beige-light: #FAF8F5;
+
+// --- ALIASES FUNCIONALES ---
+$color-bg-dark: $color-primary-dark-base;
+$color-bg-medium: $color-slate-medium-base;
+$color-accent: $color-accent-bronze-base;
+$color-bg-light: $color-soft-beige-base;
+
+// Colores de Texto
+$color-text-light: #ffffff;
+$color-text-dark: $color-primary-dark-base;
+$color-text-muted: $color-slate-medium-light;
+$color-text-beige: $color-soft-beige-base;
+
+// Estados
+$color-success: #6E856C; // Sage Green
+$color-warning: #D9A05B; // Warm Yellow/Orange
+$color-error: #B85C5C;   // Terracotta Red

@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Navbar } from './utils/navbar/navbar'; 
 import { Sidebar } from './utils/sidebar/sidebar';
@@ -9,7 +9,7 @@ import { AuthService } from './servicios/auth-service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, Navbar, Sidebar],
+  imports: [CommonModule, RouterOutlet, RouterLink, Navbar, Sidebar],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

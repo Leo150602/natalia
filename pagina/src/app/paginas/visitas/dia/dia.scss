@@ -1,0 +1,101 @@
+.visita-open-card {
+  border-bottom: 1.5px solid rgba(63, 78, 79, 0.08); // pocos bordes, muy abierto
+  padding: 18px 4px;
+  transition: background-color 0.2s ease-in-out;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: rgba(220, 215, 201, 0.06);
+  }
+}
+
+.info-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  justify-content: center;
+
+  .info-label {
+    font-size: 0.68rem;
+    font-weight: 700; // un poco más grueso sobre el texto
+    color: var(--color-slate-medium-base, #5c6b73);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .info-value {
+    font-size: 0.8rem;
+    color: var(--color-primary-dark-base, #2c3639);
+  }
+}
+
+.loading-overlay-custom {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--color-primary-dark-base);
+}
+
+.visita-actions-col {
+  button {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: none;
+    transition: all 0.2s ease-in-out;
+
+    &.btn-outline-primary {
+      border-color: rgba(162, 123, 92, 0.3) !important;
+      color: var(--color-accent-bronze-base, #a27b5c) !important;
+
+      &:hover {
+        background-color: var(--color-accent-bronze-base, #a27b5c) !important;
+        border-color: var(--color-accent-bronze-base, #a27b5c) !important;
+        color: #ffffff !important;
+      }
+    }
+
+    &.btn-outline-danger {
+      border-color: rgba(184, 92, 92, 0.3) !important;
+      color: var(--color-error, #b85c5c) !important;
+
+      &:hover {
+        background-color: var(--color-error, #b85c5c) !important;
+        border-color: var(--color-error, #b85c5c) !important;
+        color: #ffffff !important;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .visita-open-card {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 16px;
+  }
+
+  .visita-actions-col {
+    width: 100%;
+    justify-content: flex-end;
+    margin-left: 0 !important;
+    border-top: 0.5px solid rgba(63, 78, 79, 0.08);
+    padding-top: 12px;
+  }
+}

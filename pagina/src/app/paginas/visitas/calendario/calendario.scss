@@ -1,0 +1,82 @@
+.calendar-header-week {
+  grid-template-columns: repeat(7, 1fr);
+  background-color: var(--color-soft-beige-light, #fbfaf8);
+  border-bottom: 0.5px solid rgba(63, 78, 79, 0.15);
+}
+
+.calendar-grid-days {
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  height: 100%;
+}
+
+.calendar-day-cell {
+  background-color: #ffffff;
+  border-right: 0.5px solid rgba(63, 78, 79, 0.12);
+  border-bottom: 0.5px solid rgba(63, 78, 79, 0.12);
+  min-height: 70px;
+  transition: all 0.15s ease-in-out;
+
+  &:nth-child(7n) {
+    border-right: none;
+  }
+
+  &:hover {
+    background-color: rgba(220, 215, 201, 0.15);
+  }
+
+  &.other-month {
+    background-color: rgba(63, 78, 79, 0.03);
+    
+    .day-number {
+      color: var(--color-slate-medium-light, #a0aec0);
+    }
+  }
+
+  &.today {
+    background-color: rgba(162, 123, 92, 0.08);
+    
+    .day-number {
+      color: var(--color-accent-bronze-base, #a27b5c);
+      background-color: rgba(162, 123, 92, 0.12);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}
+
+.visit-dot-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.calendar-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-primary-dark-base);
+}
+
+.custom-select-option {
+  cursor: pointer;
+  
+  &:hover {
+    background-color: var(--color-soft-beige-light, #fbfaf8) !important;
+    color: var(--color-primary-dark-dark, #1c2224) !important;
+  }
+}

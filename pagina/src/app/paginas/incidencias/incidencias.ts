@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { EstadoGlobalService } from '../../servicios/global-service';
@@ -16,7 +16,7 @@ import { PermisosService } from '../../servicios/permisos.service';
 @Component({
   selector: 'app-incidencias',
   standalone: true,
-  imports: [CommonModule, TablaDatosComponent, FormsModule],
+  imports: [CommonModule, TablaDatosComponent, FormsModule, RouterLink],
   templateUrl: './incidencias.html',
   styleUrl: './incidencias.scss'
 })
@@ -46,6 +46,22 @@ export class IncidenciasComponent implements OnInit, OnDestroy {
   // Opciones de Enums
   categorias: any[] = [];
   estados: any[] = [];
+
+  // Exportación con Filtros y Switches
+  mostrarModalExportar = false;
+  habilitarFiltroNumero = false;
+  habilitarFiltroPiso = false;
+  habilitarFiltroCategoria = false;
+  habilitarFiltroEstado = false;
+  habilitarFiltroFechas = false;
+  filtrosExportar = {
+    numeroIncidencia: '',
+    piso: '',
+    categoriaIncidencia: '',
+    estadoIncidencia: '',
+    fechaInicial: '',
+    fechaFinal: ''
+  };
 
   constructor(
     private estadoGlobal: EstadoGlobalService,
@@ -133,6 +149,7 @@ export class IncidenciasComponent implements OnInit, OnDestroy {
 
   toggleMenuFiltros(): void {
     this.mostrarMenuFiltros = !this.mostrarMenuFiltros;
+    this.cdr.detectChanges();
   }
 
   aplicarFiltros(): void {
@@ -184,6 +201,10 @@ export class IncidenciasComponent implements OnInit, OnDestroy {
     this.router.navigate(['/importar-incidencias'], { queryParams: { id: row.idIncidencia } });
   }
 
+  irAlDetalle(row: any): void {
+    this.router.navigate(['/incidencias/detalle', row.idIncidencia]);
+  }
+
   eliminarIncidencia(row: any): void {
     this.alerta.confirmar(
       '¿Eliminar Incidencia?',
@@ -219,8 +240,62 @@ export class IncidenciasComponent implements OnInit, OnDestroy {
   }
 
   exportarExcel(): void {
+    this.abrirModalExportar();
+  }
+
+  abrirModalExportar(): void {
+    this.mostrarModalExportar = true;
+    this.habilitarFiltroNumero = false;
+    this.habilitarFiltroPiso = false;
+    this.habilitarFiltroCategoria = false;
+    this.habilitarFiltroEstado = false;
+    this.habilitarFiltroFechas = false;
+    this.filtrosExportar = {
+      numeroIncidencia: '',
+      piso: '',
+      categoriaIncidencia: '',
+      estadoIncidencia: '',
+      fechaInicial: '',
+      fechaFinal: ''
+    };
+    this.cdr.detectChanges();
+  }
+
+  cerrarModalExportar(): void {
+    this.mostrarModalExportar = false;
+    this.cdr.detectChanges();
+  }
+
+  ejecutarExportacionConFiltros(): void {
     if (this.promocionId === null) return;
-    this.incidenciasService.exportar(this.promocionId).subscribe({
+    
+    // Compilar los filtros activos
+    const reqFiltros: any = {};
+    if (this.habilitarFiltroNumero && this.filtrosExportar.numeroIncidencia) {
+      reqFiltros.numeroIncidencia = this.filtrosExportar.numeroIncidencia.trim();
+    }
+    if (this.habilitarFiltroPiso && this.filtrosExportar.piso) {
+      reqFiltros.piso = this.filtrosExportar.piso.trim();
+    }
+    if (this.habilitarFiltroCategoria && this.filtrosExportar.categoriaIncidencia) {
+      reqFiltros.categoriaIncidencia = this.filtrosExportar.categoriaIncidencia;
+    }
+    if (this.habilitarFiltroEstado && this.filtrosExportar.estadoIncidencia) {
+      reqFiltros.estadoIncidencia = this.filtrosExportar.estadoIncidencia;
+    }
+    if (this.habilitarFiltroFechas) {
+      if (this.filtrosExportar.fechaInicial) {
+        reqFiltros.fechaInicial = new Date(this.filtrosExportar.fechaInicial).toISOString().split('.')[0];
+      }
+      if (this.filtrosExportar.fechaFinal) {
+        reqFiltros.fechaFinal = new Date(this.filtrosExportar.fechaFinal).toISOString().split('.')[0];
+      }
+    }
+
+    this.mostrarModalExportar = false;
+    this.cdr.detectChanges();
+
+    this.incidenciasService.exportar(this.promocionId, reqFiltros).subscribe({
       next: (blob) => {
         const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
         const hoy = new Date();
@@ -232,12 +307,60 @@ export class IncidenciasComponent implements OnInit, OnDestroy {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `incidencias_${promoLimpia}_${fechaStr}.xlsx`;
+        a.download = `incidencias_filtradas_${promoLimpia}_${fechaStr}.xlsx`;
         a.click();
         window.URL.revokeObjectURL(url);
       },
       error: (err) => {
-        this.alerta.error("Error al exportar: " + err.message);
+        const parseAndConfirm = (msg: string) => {
+          if (msg.includes("No se encontraron registros")) {
+            this.alerta.confirmar(
+              "Reporte Vacío",
+              "El documento exportado no tiene registros, ¿aún quiere descargarlo?",
+              "Sí, descargar"
+            ).then((confirmado) => {
+              if (confirmado) {
+                this.descargarVacioForzado(reqFiltros);
+              }
+            });
+          } else {
+            this.alerta.error("Error al exportar: " + msg);
+          }
+        };
+
+        if (err.error instanceof Blob) {
+          const reader = new FileReader();
+          reader.onload = (e: any) => {
+            parseAndConfirm(e.target.result || "");
+          };
+          reader.readAsText(err.error);
+        } else {
+          parseAndConfirm(err.error || err.message || "");
+        }
+      }
+    });
+  }
+
+  descargarVacioForzado(reqFiltros: any): void {
+    if (this.promocionId === null) return;
+    this.incidenciasService.exportar(this.promocionId, reqFiltros, true).subscribe({
+      next: (blob) => {
+        const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        const hoy = new Date();
+        const dia = hoy.getDate();
+        const mes = meses[hoy.getMonth()];
+        const fechaStr = `${dia}_de_${mes}`;
+        const promoLimpia = (this.promocionNombre || 'sin_promocion').toLowerCase().replace(/\s+/g, '_');
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `incidencias_filtradas_vacias_${promoLimpia}_${fechaStr}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        this.alerta.error("No se pudo descargar el reporte vacío: " + err.message);
       }
     });
   }

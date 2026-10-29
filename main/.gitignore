@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+### Google Cloud Credentials ###
+src/main/resources/gcs-key.json
+*gcs-key*.json

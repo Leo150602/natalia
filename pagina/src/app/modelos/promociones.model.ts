@@ -3,6 +3,7 @@ export interface PromocionItem {
   nombre: string;
   direccion?: string | null;
   coordenadas?: string | null;
+  color?: string | null;
 }
 
 export interface PromocionesDto {
@@ -10,6 +11,7 @@ export interface PromocionesDto {
   promocion: string;
   direccion?: string | null;
   coordenadas?: string | null;
+  color?: string | null;
 }
 
 export interface PromocionesRespuesta {

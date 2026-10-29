@@ -1,0 +1,91 @@
+<div class="container-fluid p-4">
+  
+  <!-- Cabecera de Detalle -->
+  <div class="table-page-header mb-4">
+    <!-- Top: Título y Subtítulo -->
+    <div class="header-title-box">
+      <h1 class="page-title">
+        {{ modoCrear ? 'Crear Propietario' : 'Detalle de Propietario' }}
+      </h1>
+      <p class="page-subtitle">
+        {{ modoCrear ? 'Registre un nuevo propietario en la base de datos' : 'Visualización completa y edición de los datos del propietario seleccionado' }}
+      </p>
+    </div>
+    
+    <!-- Separador -->
+    <div class="header-separator"></div>
+    
+    <!-- Bottom: Barra de menú integrada -->
+    <div class="header-menu-bar d-flex justify-content-between align-items-center">
+      <!-- Izquierda: Volver al Listado -->
+      <div class="menu-left-group">
+        <a class="menu-action-item" (click)="cancelar()">
+          <span>⬅️</span> Volver al listado
+        </a>
+      </div>
+      
+      <!-- Derecha: Acciones de Guardar y Eliminar -->
+      <div class="menu-right-group">
+        <button *ngIf="puedeEditar" class="menu-action-item" (click)="actualizar()" [disabled]="cargando">
+          <span>💾</span> {{ modoCrear ? 'Crear Propietario' : 'Guardar Cambios' }}
+        </button>
+        <button *ngIf="puedeEditar && !modoCrear" class="menu-action-item text-danger" (click)="eliminar()" [disabled]="cargando">
+          <span>🗑️</span> Borrar Propietario
+        </button>
+        <span *ngIf="!puedeEditar" class="menu-action-item text-muted disabled">
+          <span>🔒</span> Solo Lectura
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de Detalle / Visualización -->
+  <div class="row">
+    <div class="col-12 col-xl-9 mx-auto">
+      <div class="card shadow-sm border-0 detail-card p-4">
+        
+        <!-- Loading Spinner Overlay -->
+        <div *ngIf="cargando" class="detail-loading-overlay">
+          <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+          <span class="ms-2">Procesando propietario...</span>
+        </div>
+
+        <form (ngSubmit)="actualizar()" #detalleForm="ngForm">
+          <div class="row g-3">
+            
+            <!-- Nombre -->
+            <div class="col-md-6">
+              <label for="nombre" class="form-label field-label font-weight-bold">Nombre *</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="nombre" 
+                name="nombre" 
+                [(ngModel)]="persona.nombre" 
+                required 
+                [disabled]="!puedeEditar"
+                placeholder="Nombre completo..." />
+            </div>
+
+            <!-- Teléfono -->
+            <div class="col-md-6">
+              <label for="telefono" class="form-label field-label font-weight-bold">Teléfono *</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="telefono" 
+                name="telefono" 
+                [(ngModel)]="persona.telefono" 
+                required 
+                [disabled]="!puedeEditar"
+                placeholder="Número de contacto..." />
+            </div>
+
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+</div>

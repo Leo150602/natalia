@@ -12,4 +12,5 @@ public class PromocionItem {
     private String nombre;
     private String direccion;
     private String coordenadas;
+    private String color;
 }

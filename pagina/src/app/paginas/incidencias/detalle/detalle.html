@@ -1,0 +1,866 @@
+<div class="container-fluid p-4">
+  
+  <!-- Cabecera de Detalle -->
+  <div class="table-page-header mb-4">
+    <!-- Top: Título y Subtítulo -->
+    <div class="header-title-box">
+      <h1 class="page-title">
+        {{ modoCrear ? (permisosService.puedeInsertarEditar() ? 'Crear Incidencia' : 'Solicitar Incidencia') : 'Detalle de Incidencia' }}
+      </h1>
+      <p class="page-subtitle">
+        {{ modoCrear ? 'Registre una nueva incidencia técnica en la promoción activa' : 'Visualización completa y edición de la incidencia técnica seleccionada' }}
+      </p>
+    </div>
+    
+    <!-- Separador -->
+    <div class="header-separator"></div>
+    
+    <!-- Bottom: Barra de menú integrada -->
+    <div class="header-menu-bar d-flex justify-content-between align-items-center">
+      <!-- Izquierda: Volver al Listado -->
+      <div class="menu-left-group">
+        <a class="menu-action-item" (click)="cancelar()">
+          <span>⬅️</span> Volver
+        </a>
+      </div>
+      
+      <!-- Derecha: Acciones de Guardar, Editar, Subir Evidencia y Eliminar -->
+      <div class="menu-right-group">
+        <!-- Modo Lectura -->
+        <ng-container *ngIf="!modoEdicion">
+          <button *ngIf="permisosService.puedeInsertarEditarIncidencias()" class="menu-action-item" (click)="activarModoEdicion()">
+            <span>✏️</span> Editar
+          </button>
+          <button *ngIf="!modoCrear" class="menu-action-item" (click)="abrirVisualizadorDocumentos()">
+            <span>📂</span> Visualizar Documentos
+          </button>
+          <button *ngIf="permisosService.puedeInsertarEditarIncidencias() && !modoCrear" class="menu-action-item" (click)="abrirModalSubir()">
+            <span>➕</span> Subir Documento o Evidencia
+          </button>
+        </ng-container>
+
+        <!-- Modo Edición -->
+        <ng-container *ngIf="modoEdicion">
+          <button *ngIf="puedeEditar" class="menu-action-item" (click)="actualizar()" [disabled]="cargando">
+            <span>💾</span> {{ modoCrear ? (permisosService.puedeInsertarEditar() ? 'Crear Incidencia' : 'Solicitar Incidencia') : 'Guardar Cambios' }}
+          </button>
+        </ng-container>
+
+        <button *ngIf="puedeEditar && !modoCrear" class="menu-action-item text-danger" (click)="eliminar()" [disabled]="cargando">
+          <span>🗑️</span> Borrar Incidencia
+        </button>
+        <span *ngIf="!puedeEditar" class="menu-action-item text-muted disabled">
+          <span>🔒</span> Solo Lectura
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de Detalle / Visualización -->
+  <!-- VISTA DE PANELES DE DETALLE (LECTURA) -->
+  <ng-container *ngIf="!modoEdicion">
+    <div class="row animate__animated animate__fadeIn">
+      <div class="col-12 col-xl-9 mx-auto">
+        
+        <!-- Panel Principal de Incidencia -->
+        <div class="card shadow-sm border-0 mb-4 p-4" style="border-radius: 16px; background: #ffffff;">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.8rem;">
+                📋
+              </div>
+              <div>
+                <h4 class="font-weight-bold mb-1 text-dark">{{ incidencia.numeroIncidencia }}</h4>
+                <p class="text-muted mb-0 small">
+                  Fecha reporte: <strong class="text-dark">{{ incidencia.fechaIncidencia | date:'dd/MM/yyyy HH:mm' }}</strong>
+                </p>
+              </div>
+            </div>
+            
+            <div>
+              <span class="badge py-2 px-3 text-uppercase" [ngClass]="{
+                'bg-success-subtle text-success': incidencia.estadoIncidencia === 'RESUELTA' || incidencia.estadoIncidencia === 'CERRADA' || (incidencia.estadoIncidencia && (incidencia.estadoIncidencia.includes('RESUE') || incidencia.estadoIncidencia.includes('CERRA'))),
+                'bg-warning-subtle text-warning': incidencia.estadoIncidencia === 'EN_PROCESO' || (incidencia.estadoIncidencia && (incidencia.estadoIncidencia.includes('PROC') || incidencia.estadoIncidencia.includes('ASIG'))),
+                'bg-danger-subtle text-danger': incidencia.estadoIncidencia === 'ABIERTA' || (incidencia.estadoIncidencia && (incidencia.estadoIncidencia.includes('ABIE') || incidencia.estadoIncidencia.includes('SOLI')))
+              }" style="font-size: 0.8rem; letter-spacing: 0.5px; border-radius: 20px;">
+                {{ incidencia.estadoIncidencia || 'ABIERTA' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ficha de Detalles de la Incidencia -->
+        <div class="row g-4 mb-4">
+          
+          <!-- Clasificación y Ubicación -->
+          <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100 p-4" style="border-radius: 16px; background: #ffffff; min-height: 180px;">
+              <h5 class="font-weight-bold text-dark mb-3 pb-2" style="border-bottom: 1.5px solid var(--color-soft-beige-dark, #e2e8f0);">🏢 Ubicación y Categoría</h5>
+              <div class="d-flex flex-column gap-3">
+                <div>
+                  <span class="text-muted d-block small font-weight-semibold">Piso / Vivienda</span>
+                  <span class="font-weight-bold text-dark" style="font-size: 0.95rem;">{{ busquedaPiso || 'No asignado' }}</span>
+                </div>
+                <div>
+                  <span class="text-muted d-block small font-weight-semibold">Categoría</span>
+                  <span class="font-weight-bold text-dark text-capitalize" style="font-size: 0.95rem;">{{ incidencia.categoriaIncidencia || 'Sin Categoría' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seguimiento y Tiempos -->
+          <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100 p-4" style="border-radius: 16px; background: #ffffff; min-height: 180px;">
+              <h5 class="font-weight-bold text-dark mb-3 pb-2" style="border-bottom: 1.5px solid var(--color-soft-beige-dark, #e2e8f0);">⏳ Seguimiento</h5>
+              <div class="d-flex flex-column gap-2">
+                <div class="d-flex justify-content-between border-bottom pb-1">
+                  <span class="text-muted small">Horas Trabajadas:</span>
+                  <strong class="text-dark small">{{ incidencia.horasTrabajadas || '0' }}</strong>
+                </div>
+                <div class="d-flex justify-content-between border-bottom pb-1">
+                  <span class="text-muted small">Presupuesto Aprobado:</span>
+                  <strong class="text-dark small">{{ incidencia.presupuesto === 'SI' ? 'Sí' : (incidencia.presupuesto === 'NO' ? 'No' : 'N/A') }}</strong>
+                </div>
+                <div class="d-flex justify-content-between pb-1">
+                  <span class="text-muted small">Proforma Entregada:</span>
+                  <strong class="text-dark small">{{ incidencia.proforma === 'SI' ? 'Sí' : (incidencia.proforma === 'NO' ? 'No' : 'N/A') }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Descripción del Daño -->
+          <div class="col-12">
+            <div class="card shadow-sm border-0 p-4" style="border-radius: 16px; background: #ffffff;">
+              <h5 class="font-weight-bold text-dark mb-3 pb-2" style="border-bottom: 1.5px solid var(--color-soft-beige-dark, #e2e8f0);">📝 Detalles de la Incidencia</h5>
+              <div class="mb-3">
+                <span class="text-muted d-block small font-weight-semibold">Descripción del Daño</span>
+                <p class="text-dark mt-1" style="font-size: 0.85rem; line-height: 1.4; white-space: pre-line;">
+                  {{ incidencia.descripcionIncidencia || 'Sin descripción detallada.' }}
+                </p>
+              </div>
+              <div class="mb-3" *ngIf="incidencia.materialesRequeridos">
+                <span class="text-muted d-block small font-weight-semibold">Materiales Requeridos</span>
+                <p class="text-dark mt-1" style="font-size: 0.85rem; line-height: 1.4; white-space: pre-line;">
+                  {{ incidencia.materialesRequeridos }}
+                </p>
+              </div>
+              <div *ngIf="incidencia.observaciones">
+                <span class="text-muted d-block small font-weight-semibold">Observaciones / Seguimiento</span>
+                <p class="text-dark mt-1" style="font-size: 0.85rem; line-height: 1.4; white-space: pre-line;">
+                  {{ incidencia.observaciones }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- MODO EDICIÓN / FORMULARIO -->
+  <div class="row" *ngIf="modoEdicion">
+    <div class="col-12 col-xl-9 mx-auto">
+      <div class="card shadow-sm border-0 detail-card p-4">
+        
+        <!-- Loading Spinner Overlay -->
+        <div *ngIf="cargando" class="detail-loading-overlay">
+          <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+          <span class="ms-2">Procesando incidencia...</span>
+        </div>
+
+        <form (ngSubmit)="actualizar()" #detalleForm="ngForm">
+          <div class="row g-3">
+            
+            <!-- Nº Incidencia -->
+            <div class="col-md-6">
+              <label for="numeroIncidencia" class="form-label field-label font-weight-bold">Número de Incidencia *</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="numeroIncidencia" 
+                name="numeroIncidencia" 
+                [(ngModel)]="incidencia.numeroIncidencia" 
+                required 
+                [disabled]="!puedeEditar"
+                [placeholder]="placeholderNumeroIncidencia" />
+            </div>
+
+            <!-- Piso (Custom Searchable) -->
+            <div class="col-md-6">
+              <label class="form-label field-label font-weight-bold">Piso / Vivienda *</label>
+              <div class="custom-select-container">
+                <input 
+                  type="text" 
+                  class="form-control form-select-custom"
+                  [disabled]="!puedeEditar"
+                  (focus)="abrirDropdownPiso()"
+                  (blur)="cerrarDropdownPiso()"
+                  [(ngModel)]="busquedaPiso"
+                  (ngModelChange)="filtrarPisos()"
+                  name="busquedaPisoInput"
+                  placeholder="Seleccione un piso..." />
+                
+                <div *ngIf="mostrarDropdownPiso" class="custom-select-dropdown shadow-lg">
+                  <div 
+                    *ngFor="let p of pisosFiltrados" 
+                    (mousedown)="seleccionarPiso(p)"
+                    class="custom-select-option"
+                    [class.selected]="p.idPiso === incidencia.idPiso"
+                    [title]="p.piso">
+                    {{ p.piso }}
+                  </div>
+                  <div *ngIf="pisosFiltrados.length === 0" class="custom-select-option text-muted disabled">
+                    Sin coincidencias
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Categoría (Select Normal) -->
+            <div class="col-md-6">
+              <label for="categoria" class="form-label field-label font-weight-bold">Categoría</label>
+              <select 
+                class="form-select" 
+                id="categoria" 
+                name="categoria" 
+                [(ngModel)]="incidencia.categoriaIncidencia"
+                [disabled]="!puedeEditar">
+                <option value="">Seleccione categoría...</option>
+                <option *ngFor="let cat of categorias" [value]="cat.value">
+                  {{ cat.descripcion }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Estado (Select Normal - Oculto si no es Nata/Dev) -->
+            <div class="col-md-6" *ngIf="permisosService.puedeInsertarEditar()">
+              <label for="estado" class="form-label field-label font-weight-bold">Estado</label>
+              <select 
+                class="form-select" 
+                id="estado" 
+                name="estado" 
+                [(ngModel)]="incidencia.estadoIncidencia"
+                [disabled]="!puedeEditar">
+                <option value="" disabled selected>Seleccione estado...</option>
+                <option *ngFor="let est of estados" [value]="est.value">
+                  {{ est.descripcion }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Fecha de Incidencia -->
+            <div class="col-md-6">
+              <label for="fechaIncidencia" class="form-label field-label font-weight-bold">Fecha de Registro</label>
+              <input 
+                type="datetime-local" 
+                class="form-control" 
+                id="fechaIncidencia" 
+                name="fechaIncidencia" 
+                [(ngModel)]="incidencia.fechaIncidencia"
+                [disabled]="!puedeEditar" />
+            </div>
+
+            <!-- Horas Trabajadas (Select Normal) -->
+            <div class="col-md-6">
+              <label for="horas" class="form-label field-label font-weight-bold">Horas Trabajadas</label>
+              <select 
+                class="form-select" 
+                id="horas" 
+                name="horas" 
+                [(ngModel)]="incidencia.horasTrabajadas"
+                [disabled]="!puedeEditar">
+                <option value="">Seleccione horas...</option>
+                <option *ngFor="let hor of horasLista" [value]="hor.value">
+                  {{ hor.descripcion }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Presupuesto (Select Normal) -->
+            <div class="col-md-6">
+              <label for="presupuesto" class="form-label field-label font-weight-bold">¿Requiere Presupuesto?</label>
+              <select 
+                class="form-select" 
+                id="presupuesto" 
+                name="presupuesto" 
+                [(ngModel)]="incidencia.presupuesto"
+                [disabled]="!puedeEditar">
+                <option *ngFor="let r of respuestasSNN" [value]="r.value">
+                  {{ r.descripcion }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Proforma (Select Normal) -->
+            <div class="col-md-6">
+              <label for="proforma" class="form-label field-label font-weight-bold">¿Cuenta con Proforma?</label>
+              <select 
+                class="form-select" 
+                id="proforma" 
+                name="proforma" 
+                [(ngModel)]="incidencia.proforma"
+                [disabled]="!puedeEditar">
+                <option *ngFor="let r of respuestasSNN" [value]="r.value">
+                  {{ r.descripcion }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Descripción -->
+            <div class="col-12">
+              <label for="descripcion" class="form-label field-label font-weight-bold">Descripción de la Incidencia</label>
+              <textarea 
+                class="form-control" 
+                id="descripcion" 
+                name="descripcion" 
+                rows="3" 
+                [(ngModel)]="incidencia.descripcionIncidencia" 
+                [disabled]="!puedeEditar"
+                placeholder="Escriba aquí los detalles de la incidencia técnica..."></textarea>
+            </div>
+
+            <!-- Materiales Requeridos -->
+            <div class="col-12">
+              <label for="materiales" class="form-label field-label font-weight-bold">Materiales Requeridos / Notas de Repuestos</label>
+              <textarea 
+                class="form-control" 
+                id="materiales" 
+                name="materiales" 
+                rows="2" 
+                [(ngModel)]="incidencia.materialesRequeridos" 
+                [disabled]="!puedeEditar"
+                placeholder="Indique los repuestos o piezas solicitados..."></textarea>
+            </div>
+
+            <!-- Observaciones -->
+            <div class="col-12">
+              <label for="observaciones" class="form-label field-label font-weight-bold">Observaciones / Seguimiento Técnico</label>
+              <textarea 
+                class="form-control" 
+                id="observaciones" 
+                name="observaciones" 
+                rows="3" 
+                [(ngModel)]="incidencia.observaciones" 
+                [disabled]="!puedeEditar"
+                placeholder="Ingrese las observaciones del estado o avance de la reparación..."></textarea>
+            </div>
+
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- El listado de evidencias y documentos se visualiza y administra a través del menú superior -->
+
+  <!-- Modal para Subir Documento -->
+  <div *ngIf="mostrarModalSubir" class="custom-modal-overlay" (click)="cerrarModalSubir()">
+    <div class="custom-modal-container" (click)="$event.stopPropagation()">
+      <div class="custom-modal-header d-flex justify-content-between align-items-center mb-3">
+        <h5 class="m-0 font-weight-bold text-dark">Subir Documento o Evidencia de Incidencia</h5>
+        <button class="btn-close-modal" (click)="cerrarModalSubir()">&times;</button>
+      </div>
+      <div class="custom-modal-body">
+        <!-- Origen del Documento (Primero) -->
+        <div class="mb-3">
+          <label class="form-label field-label font-weight-bold text-dark">Origen del Documento *</label>
+          <div class="d-flex gap-3">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="origenDoc" id="origenLocal" value="LOCAL" [(ngModel)]="docSubir.origen" />
+              <label class="form-check-label text-dark" style="font-size: 0.8rem;" for="origenLocal">
+                Subir Documento o Evidencia Local
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="origenDoc" id="origenPlantilla" value="PLANTILLA" [(ngModel)]="docSubir.origen" />
+              <label class="form-check-label text-dark" style="font-size: 0.8rem;" for="origenPlantilla">
+                Usar Plantilla del Sistema
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Si selecciona PLANTILLA (Dropdown autocompletable/buscable) -->
+        <div class="mb-3 position-relative" *ngIf="docSubir.origen === 'PLANTILLA'">
+          <label class="form-label field-label font-weight-bold text-dark">Seleccionar Plantilla *</label>
+          <div class="input-group">
+            <input type="text" 
+                   class="form-control text-dark bg-white" 
+                   id="busquedaPlantillaInput" 
+                   [(ngModel)]="busquedaPlantilla" 
+                   (focus)="mostrarDropdownPlantillas = true"
+                   (blur)="cerrarDropdownRetardado()"
+                   (input)="filtrarPlantillas()"
+                   placeholder="🔍 Escriba para buscar plantilla..." 
+                   autocomplete="off" />
+            <button class="btn btn-outline-secondary" type="button" (click)="toggleDropdownPlantillas()">
+              ▼
+            </button>
+          </div>
+          
+          <ul class="dropdown-menu show w-100 shadow border border-secondary bg-white overflow-auto" 
+              *ngIf="mostrarDropdownPlantillas" 
+              style="max-height: 200px; display: block; z-index: 1050; position: absolute; margin-top: 2px; padding: 0;">
+            <li *ngFor="let p of plantillasFiltradas" 
+                class="dropdown-item py-2 px-3 text-dark cursor-pointer border-bottom-1"
+                (mousedown)="seleccionarPlantillaDesdeDropdown(p)"
+                style="font-size: 0.8rem; border-bottom: 1px solid #f1f1f1;">
+              <strong>{{ p.nombre }}</strong> 
+              <span class="badge bg-secondary ms-2" style="font-size: 0.6rem;">{{ p.formato }}</span>
+            </li>
+            <li class="dropdown-item text-muted py-2 px-3 text-center" *ngIf="plantillasFiltradas.length === 0">
+              No se encontraron plantillas.
+            </li>
+          </ul>
+        </div>
+
+        <!-- Si selecciona LOCAL (Campos específicos para subida local) -->
+        <div *ngIf="docSubir.origen === 'LOCAL'">
+          <div class="mb-3">
+            <label for="nombreDocSubir" class="form-label field-label font-weight-bold">Nombre del Documento o Evidencia *</label>
+            <input type="text" class="form-control" id="nombreDocSubir" [(ngModel)]="docSubir.nombre" placeholder="Ej. Acta de Firma, Informe técnico, Foto de daño" />
+          </div>
+          <div class="mb-3">
+            <label for="estadoDocSubir" class="form-label field-label font-weight-bold">Estado *</label>
+            <select class="form-select text-dark" id="estadoDocSubir" [(ngModel)]="docSubir.estado">
+              <option value="FALTAN_FIRMAS">Faltan Firmas</option>
+              <option value="FIRMADO">Firmado</option>
+              <option value="NO_APLICA">No aplica</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label field-label font-weight-bold text-dark">Archivo de Documento o Evidencia *</label>
+            <div class="upload-dropzone p-3 text-center border border-dashed rounded bg-light cursor-pointer" (click)="fileInputSubir.click()">
+              <input type="file" #fileInputSubir (change)="onArchivoSeleccionadoSubir($event)" style="display: none;" />
+              <div class="upload-icon mb-1" style="font-size: 1.5rem;">📁</div>
+              <p class="mb-0 text-dark" style="font-size: 0.75rem;"><strong>Haga clic aquí</strong> para seleccionar el archivo</p>
+              <div *ngIf="docSubir.archivo" class="mt-2 text-success font-weight-bold" style="font-size: 0.75rem;">
+                Seleccionado: {{ docSubir.archivo.name }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="custom-modal-footer d-flex gap-2 justify-content-end mt-4">
+        <button class="btn btn-outline-secondary btn-sm px-3" (click)="cerrarModalSubir()">Cancelar</button>
+        
+        <!-- Botón de subir convencional para archivo LOCAL -->
+        <button *ngIf="docSubir.origen === 'LOCAL'" class="btn btn-primary btn-sm px-3" (click)="guardarDocIncidencia()" [disabled]="cargandoSubir || !docSubir.archivo">
+          <span *ngIf="cargandoSubir" class="spinner-border spinner-border-sm me-1"></span> Subir
+        </button>
+
+        <!-- Botón de abrir lienzo para PLANTILLA -->
+        <button *ngIf="docSubir.origen === 'PLANTILLA'" class="btn btn-primary btn-sm px-3" (click)="abrirEditorLienzoConPlantilla()" [disabled]="!docSubir.plantillaId">
+          ✍️ Firmar y Editar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Editar/Intercambiar Documento -->
+  <div *ngIf="mostrarModalEditar" class="custom-modal-overlay" (click)="cerrarModalEditar()">
+    <div class="custom-modal-container" (click)="$event.stopPropagation()">
+      <div class="custom-modal-header d-flex justify-content-between align-items-center mb-3">
+        <h5 class="m-0 font-weight-bold text-dark">Editar Documento</h5>
+        <button class="btn-close-modal" (click)="cerrarModalEditar()">&times;</button>
+      </div>
+      
+      <div class="custom-modal-body">
+        <!-- Pantalla de Selección de Acción -->
+        <div *ngIf="!seccionEdicion" class="d-flex flex-column gap-3">
+          <p class="text-muted" style="font-size: 0.8rem;">Seleccione la acción que desea realizar sobre este documento:</p>
+          
+          <button class="btn btn-outline-primary py-3 text-start font-weight-bold d-flex align-items-center gap-3 w-100" (click)="irAEdicionMetadatos()">
+            <span style="font-size: 1.5rem;">📁</span>
+            <div>
+              <div class="text-dark">Actualizar Archivo o Nombre</div>
+              <div class="text-muted font-weight-normal" style="font-size: 0.72rem;">Cambie el nombre o suba un archivo local para reemplazarlo.</div>
+            </div>
+          </button>
+          
+          <button class="btn btn-outline-success py-3 text-start font-weight-bold d-flex align-items-center gap-3 w-100" (click)="abrirEditorLienzoConDocumentoExistente()">
+            <span style="font-size: 1.5rem;">✍️</span>
+            <div>
+              <div class="text-dark">Escribir o Firmar sobre el Documento</div>
+              <div class="text-muted font-weight-normal" style="font-size: 0.72rem;">Abra el lienzo utilizando este mismo archivo como base.</div>
+            </div>
+          </button>
+        </div>
+
+        <!-- Opción A: Edición convencional -->
+        <div *ngIf="seccionEdicion === 'METADATOS'">
+          <div class="mb-3">
+            <label for="nombreDocEditar" class="form-label field-label font-weight-bold text-dark">Nombre del Documento *</label>
+            <input type="text" class="form-control" id="nombreDocEditar" [(ngModel)]="docEditar.nombre" />
+          </div>
+          <div class="mb-3">
+            <label for="estadoDocEditar" class="form-label field-label font-weight-bold text-dark">Estado *</label>
+            <select class="form-select text-dark" id="estadoDocEditar" [(ngModel)]="docEditar.estado">
+              <option value="FALTAN_FIRMAS">Faltan Firmas</option>
+              <option value="FIRMADO">Firmado</option>
+              <option value="NO_APLICA">No aplica</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label field-label font-weight-bold text-dark">Intercambiar por nuevo archivo (Opcional)</label>
+            <div class="upload-dropzone p-3 text-center border border-dashed rounded bg-light cursor-pointer" (click)="fileInputEditar.click()">
+              <input type="file" #fileInputEditar (change)="onArchivoSeleccionadoEditar($event)" style="display: none;" />
+              <div class="upload-icon mb-1" style="font-size: 1.5rem;">📁</div>
+              <p class="mb-0 text-dark" style="font-size: 0.75rem;"><strong>Haga clic aquí</strong> para cambiar el archivo</p>
+              <div *ngIf="docEditar.archivo" class="mt-2 text-success font-weight-bold" style="font-size: 0.75rem;">
+                Seleccionado: {{ docEditar.archivo.name }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="custom-modal-footer d-flex gap-2 justify-content-end mt-4">
+        <button class="btn btn-outline-secondary btn-sm px-3" (click)="cerrarModalEditar()">Cancelar</button>
+        <button *ngIf="seccionEdicion === 'METADATOS'" class="btn btn-primary btn-sm px-3" (click)="actualizarDocIncidencia()" [disabled]="cargandoEditar">
+          <span *ngIf="cargandoEditar" class="spinner-border spinner-border-sm me-1"></span> Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cortina / Overlay de Previsualización Flotante -->
+  <div *ngIf="documentoEnVista" class="preview-overlay" (click)="cerrarPreview()">
+    <button class="btn-close-preview" (click)="cerrarPreview()" title="Cerrar vista previa">&times;</button>
+    <div class="preview-container" (click)="$event.stopPropagation()">
+      <div class="preview-body">
+        <iframe *ngIf="esPdf(documentoEnVista)" [src]="safePreviewUrl" class="iframe-preview"></iframe>
+        
+        <div *ngIf="esOffice(documentoEnVista)" class="w-100 h-100 d-flex flex-column">
+          <div class="p-2 bg-dark text-white d-flex justify-content-between align-items-center" style="font-size: 0.8rem; border-bottom: 1px solid #333;">
+            <span>💡 Los archivos de Word/Excel pueden tardar en convertirse por Microsoft.</span>
+            <a [href]="documentoEnVista.ruta" target="_blank" class="btn btn-sm btn-primary py-0 px-2 font-weight-bold" style="font-size: 0.72rem;">
+              📥 Descargar Archivo
+            </a>
+          </div>
+          <iframe [src]="safePreviewUrl" 
+                  class="iframe-preview flex-grow-1" style="height: calc(100% - 37px);">
+          </iframe>
+        </div>
+        
+        <img *ngIf="esImagen(documentoEnVista)" [src]="documentoEnVista.ruta" class="img-preview" alt="Previsualización" />
+        <video *ngIf="esVideo(documentoEnVista)" [src]="documentoEnVista.ruta" controls class="video-preview"></video>
+        
+        <div *ngIf="!esPrevisualizable(documentoEnVista)" class="text-center p-5 text-white">
+          <span style="font-size: 3rem;">📁</span>
+          <h5 class="mt-3">El archivo "{{ documentoEnVista.nombre }}" no admite vista previa directa.</h5>
+          <a [href]="documentoEnVista.ruta" target="_blank" class="btn btn-primary mt-2 px-4">Descargar Archivo</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lienzo Editor y Firmador de Documento -->
+  <div *ngIf="mostrarEditorLienzo" class="canvas-editor-overlay animate__animated animate__fadeIn">
+    <div class="canvas-editor-container">
+      
+      <!-- Panel de Control Lateral -->
+      <div class="canvas-editor-sidebar">
+        <h5 class="font-weight-bold mb-3 text-white">✍️ Firmador y Editor</h5>
+        
+        <div class="mb-4">
+          <p class="text-white-50" style="font-size: 0.72rem;">
+            Añada textos y firmas sobre el documento. Puede arrastrarlos, redimensionarlos y hacer doble clic para editar el texto.
+          </p>
+        </div>
+        
+        <div class="d-flex flex-column gap-2 mb-4">
+          <button class="btn btn-outline-light btn-sm font-weight-bold text-start py-2 px-3" (click)="agregarTextoAlLienzo()">
+            📝 Agregar Texto
+          </button>
+          <button class="btn btn-outline-light btn-sm font-weight-bold text-start py-2 px-3" (click)="abrirSignaturePad()">
+            ✒️ Dibujar Firma
+          </button>
+        </div>
+
+        <div class="mb-3">
+          <label for="canvasNombreDoc" class="form-label text-white-50 font-weight-bold" style="font-size: 0.72rem;">Nombre del Documento Guardado</label>
+          <input type="text" class="form-control bg-dark text-white border-secondary" id="canvasNombreDoc" [(ngModel)]="lienzoNombreDoc" />
+          <span class="text-white-50" style="font-size: 0.65rem;">Se guardará con la regla de colisiones de incidencias</span>
+        </div>
+
+        <div class="mb-4">
+          <label for="canvasEstadoDoc" class="form-label text-white-50 font-weight-bold" style="font-size: 0.72rem;">Estado del Documento</label>
+          <select class="form-select bg-dark text-white border-secondary" id="canvasEstadoDoc" [(ngModel)]="lienzoEstadoDoc">
+            <option value="FALTAN_FIRMAS">Faltan Firmas</option>
+            <option value="FIRMADO">Firmado</option>
+          </select>
+        </div>
+        
+        <div class="mt-auto d-flex flex-column gap-2">
+          <button class="btn btn-success font-weight-bold py-2" (click)="guardarLienzo()" [disabled]="cargandoLienzo">
+            <span *ngIf="cargandoLienzo" class="spinner-border spinner-border-sm me-1"></span> Guardar y Asociar
+          </button>
+          <button class="btn btn-outline-danger btn-sm py-2" (click)="cerrarLienzoEditor()">
+            Cancelar / Salir
+          </button>
+        </div>
+      </div>
+      
+      <!-- Lienzo de Dibujo / visualización del documento -->
+      <div class="canvas-editor-workspace">
+        <div id="lienzo-captura-container" class="lienzo-captura-container">
+          <!-- Background: PDF Rendered Canvas -->
+          <canvas id="canvas-pdf-bg" class="canvas-bg-element" [style.display]="esPdfLienzo ? 'block' : 'none'"></canvas>
+          
+          <!-- Background: Image Element -->
+          <img *ngIf="!esPdfLienzo && backgroundLienzoUrl" [src]="backgroundLienzoUrl" class="img-bg-element" alt="Documento Base" />
+          
+          <!-- Elementos arrastrables overlay -->
+          <div 
+            *ngFor="let item of elementosLienzo" 
+            class="elemento-lienzo-overlay"
+            [class.seleccionado]="item.seleccionado"
+            [ngStyle]="{ 'top.px': item.y, 'left.px': item.x, 'width.px': item.ancho, 'height.px': item.alto }"
+            (mousedown)="iniciarArrastre($event, item)">
+            
+            <!-- Botón de Eliminar elemento -->
+            <button class="btn-eliminar-item" (click)="eliminarElementoLienzo($event, item)">&times;</button>
+            
+            <!-- Si es TEXTO -->
+            <ng-container *ngIf="item.tipo === 'texto'">
+              <div *ngIf="!item.editando" class="text-display text-dark" (dblclick)="editarTextoLienzo(item)">
+                {{ item.contenido || 'Doble clic para editar' }}
+              </div>
+              <textarea 
+                *ngIf="item.editando" 
+                class="text-input text-dark" 
+                [(ngModel)]="item.contenido" 
+                (blur)="guardarEdicionTexto(item)"
+                (mousedown)="$event.stopPropagation()"
+                #txtInput
+                autofocus>
+              </textarea>
+            </ng-container>
+            
+            <!-- Si es FIRMA -->
+            <img *ngIf="item.tipo === 'firma'" [src]="item.contenido" class="w-100 h-100 object-contain" draggable="false" />
+            
+            <!-- Manija de redimensionamiento (Resize Handle) -->
+            <div class="resize-handle" (mousedown)="iniciarRedimension($event, item)"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal Pad de Firma Dibujo -->
+  <div *ngIf="mostrarSignaturePad" class="custom-modal-overlay" style="z-index: 2100;" (click)="cerrarSignaturePad()">
+    <div class="custom-modal-container" style="width: 450px;" (click)="$event.stopPropagation()">
+      <div class="custom-modal-header d-flex justify-content-between align-items-center mb-3">
+        <h5 class="m-0 font-weight-bold text-dark">✍️ Dibujar Firma</h5>
+        <button class="btn-close-modal" (click)="cerrarSignaturePad()">&times;</button>
+      </div>
+      <div class="custom-modal-body text-center">
+        <p class="text-muted" style="font-size: 0.75rem;">Dibuje su firma con el ratón o en su pantalla táctil en el recuadro gris.</p>
+        <canvas id="canvas-firma-pad" width="400" height="200" 
+                class="border rounded bg-light cursor-crosshair"
+                (mousedown)="startDrawing($event)" 
+                (mousemove)="draw($event)" 
+                (mouseup)="stopDrawing()" 
+                (mouseleave)="stopDrawing()"
+                (touchstart)="startDrawingTouch($event)"
+                (touchmove)="drawTouch($event)"
+                (touchend)="stopDrawing()">
+        </canvas>
+      </div>
+      <div class="custom-modal-footer d-flex gap-2 justify-content-end mt-4">
+        <button class="btn btn-outline-secondary btn-sm px-3" (click)="limpiarFirma()">Limpiar</button>
+        <button class="btn btn-outline-danger btn-sm px-3" (click)="cerrarSignaturePad()">Cancelar</button>
+        <button class="btn btn-primary btn-sm px-3" (click)="aceptarFirmaDibujada()">Aceptar Firma</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menú Contextual Flotante para Documentos -->
+  <div *ngIf="menuContextualVisible"
+       class="menu-contextual shadow-lg"
+       [ngStyle]="{ 'top': menuContextualPosicion.y, 'left': menuContextualPosicion.x }">
+    <button (click)="verDetalleDocumento()" class="menu-item">
+      <span class="icono">👁️</span> Detalle Documento
+    </button>
+  </div>
+
+  <!-- Backdrop invisible para cerrar el menú al hacer clic fuera -->
+  <div *ngIf="menuContextualVisible" 
+       class="menu-contextual-backdrop" 
+       (click)="cerrarMenuContextual()" 
+       (contextmenu)="cerrarMenuContextual(); $event.preventDefault()">
+  </div>
+
+  <!-- Modal/Overlay de Visualización de Documentos Completo -->
+  <div *ngIf="mostrarVisualizadorDocumentos" class="preview-overlay animate__animated animate__fadeIn" style="z-index: 1060; background: rgba(0, 0, 0, 0.85); display: flex;" (click)="cerrarVisualizadorDocumentos()">
+    <div class="custom-modal-container bg-white p-4 animate__animated animate__zoomIn" style="width: 90%; max-width: 950px; height: 85%; max-height: 750px; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column;" (click)="$event.stopPropagation()">
+      
+      <!-- Cabecera Visualizador -->
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <h4 class="font-weight-bold text-dark m-0">📁 Evidencias y Documentos de la Incidencia</h4>
+        <div class="d-flex gap-2">
+          <button *ngIf="permisosService.puedeInsertarEditarIncidencias()" class="btn btn-sm btn-primary font-weight-bold px-3" (click)="abrirModalSubir()">
+            ➕ Agregar Evidencia
+          </button>
+          <button class="btn-close-modal" (click)="cerrarVisualizadorDocumentos()" title="Cerrar">&times;</button>
+        </div>
+      </div>
+
+      <!-- Barra de pestañas (Tabs selector) -->
+      <div class="d-flex gap-2 mb-3 border-bottom pb-2">
+        <button class="btn btn-sm" [class.btn-dark]="tabActiva === 'imagenes'" [class.btn-outline-dark]="tabActiva !== 'imagenes'" (click)="tabActiva = 'imagenes'">
+          🖼️ Imágenes ({{ obtenerListaDeTab('imagenes').length }})
+        </button>
+        <button class="btn btn-sm" [class.btn-dark]="tabActiva === 'videos'" [class.btn-outline-dark]="tabActiva !== 'videos'" (click)="tabActiva = 'videos'">
+          🎥 Videos ({{ obtenerListaDeTab('videos').length }})
+        </button>
+        <button class="btn btn-sm" [class.btn-dark]="tabActiva === 'documentos'" [class.btn-outline-dark]="tabActiva !== 'documentos'" (click)="tabActiva = 'documentos'">
+          📄 Otros Documentos ({{ obtenerListaDeTab('documentos').length }})
+        </button>
+      </div>
+
+      <!-- Contenedor dinámico según Tab activa -->
+      <div class="flex-grow-1 overflow-auto p-2" style="min-height: 0;">
+        
+        <!-- TAB IMÁGENES -->
+        <div *ngIf="tabActiva === 'imagenes'" class="row g-3">
+          <div *ngFor="let item of obtenerListaDeTab('imagenes'); let i = index" class="col-6 col-sm-4 col-md-3">
+            <div class="card h-100 border shadow-sm p-2 cursor-pointer position-relative text-center bg-light" (click)="abrirLightbox(i)">
+              <!-- Imagen Thumbnail -->
+              <div class="d-flex align-items-center justify-content-center" style="height: 120px; overflow: hidden; border-radius: 8px; background: #000;">
+                <img [src]="item.documento.ruta" class="img-fluid" style="max-height: 100%; object-fit: contain;" alt="Evidencia" />
+              </div>
+              <!-- Info & Actions -->
+              <div class="mt-2 text-start">
+                <div class="text-dark font-weight-bold text-truncate small" [title]="item.documento.nombre">{{ item.documento.nombre }}</div>
+                <div class="text-muted small" style="font-size: 0.65rem;">Por: {{ item.nombreSubio }}</div>
+                <div class="d-flex gap-1 justify-content-end mt-2">
+                  <button *ngIf="permisosService.puedeInsertarEditarIncidencias()" class="btn btn-xs btn-outline-danger py-0 px-2 font-weight-bold" (click)="$event.stopPropagation(); eliminarDocIncidencia(item)" style="font-size: 0.65rem;">
+                    🗑️ Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="obtenerListaDeTab('imagenes').length === 0" class="text-center text-muted p-5 w-100 small">
+            No se han subido imágenes de evidencia.
+          </div>
+        </div>
+
+        <!-- TAB VIDEOS -->
+        <div *ngIf="tabActiva === 'videos'" class="row g-3">
+          <div *ngFor="let item of obtenerListaDeTab('videos')" class="col-12 col-md-6">
+            <div class="card border shadow-sm p-3 bg-light">
+              <!-- Video player (preload metadata, NO autoplay) -->
+              <video [src]="item.documento.ruta" controls preload="metadata" style="max-height: 180px; width: 100%; border-radius: 8px; background: #000;"></video>
+              <!-- Info & Actions -->
+              <div class="mt-2">
+                <div class="text-dark font-weight-bold text-truncate small" [title]="item.documento.nombre">{{ item.documento.nombre }}</div>
+                <div class="text-muted small d-flex justify-content-between" style="font-size: 0.68rem;">
+                  <span>Subido por: {{ item.nombreSubio }}</span>
+                  <span>{{ item.fechaActualizacion | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+                <div class="d-flex gap-2 justify-content-end mt-2">
+                  <button *ngIf="permisosService.puedeInsertarEditarIncidencias()" class="btn btn-xs btn-outline-danger py-0 px-3 font-weight-bold" (click)="eliminarDocIncidencia(item)" style="font-size: 0.68rem;">
+                    🗑️ Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="obtenerListaDeTab('videos').length === 0" class="text-center text-muted p-5 w-100 small">
+            No se han subido videos de evidencia.
+          </div>
+        </div>
+
+        <!-- TAB OTROS DOCUMENTOS (PDF, DOCX, etc.) -->
+        <div *ngIf="tabActiva === 'documentos'">
+          <div class="table-responsive">
+            <table class="table table-custom w-100">
+              <thead>
+                <tr class="cabecera-celda">
+                  <th>Nombre del Documento</th>
+                  <th>Subido Por</th>
+                  <th>Fecha de Actualización</th>
+                  <th>Estado</th>
+                  <th class="text-center" style="width: 150px;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let docAssoc of obtenerListaDeTab('documentos')" class="fila-dato">
+                  <td class="dato-celda font-weight-bold text-dark">{{ docAssoc.documento.nombre }}</td>
+                  <td class="dato-celda text-muted">{{ docAssoc.nombreSubio }}</td>
+                  <td class="dato-celda text-muted">{{ docAssoc.fechaActualizacion | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td class="dato-celda">
+                    <span class="badge" [ngClass]="{
+                      'bg-success': docAssoc.estado === 'FIRMADO',
+                      'bg-warning text-dark': docAssoc.estado === 'FALTAN_FIRMAS',
+                      'bg-secondary': docAssoc.estado === 'NO_APLICA'
+                    }">
+                      {{ docAssoc.estado === 'FIRMADO' ? 'Firmado' : (docAssoc.estado === 'FALTAN_FIRMAS' ? 'Faltan Firmas' : 'No aplica') }}
+                    </span>
+                  </td>
+                  <td class="dato-celda text-center">
+                    <div class="d-flex gap-2 justify-content-center">
+                      <button class="btn btn-xs btn-outline-info py-0 px-2 font-weight-bold" (click)="visualizarDocumento(docAssoc.documento)" title="Descargar/Ver documento" style="font-size: 0.72rem;">
+                        👁️ Ver
+                      </button>
+                      <button *ngIf="permisosService.puedeInsertarEditarIncidencias()" class="btn btn-xs btn-outline-primary py-0 px-2 font-weight-bold" (click)="abrirModalEditar(docAssoc)" title="Editar documento/estado" style="font-size: 0.72rem;">
+                        ✏️ Editar
+                      </button>
+                      <button *ngIf="permisosService.puedeInsertarEditarIncidencias()" class="btn btn-xs btn-outline-danger py-0 px-2 font-weight-bold" (click)="eliminarDocIncidencia(docAssoc)" title="Eliminar documento" style="font-size: 0.72rem;">
+                        🗑️
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="obtenerListaDeTab('documentos').length === 0">
+                  <td colspan="5" class="text-center text-muted py-4 small">
+                    No hay otros formatos de documentos asociados.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LIGHTBOX PARA FOTOS -->
+  <div *ngIf="indiceImagenGrande !== null" class="preview-overlay animate__animated animate__fadeIn" style="z-index: 1070; background: rgba(0,0,0,0.95); display: flex;" (click)="cerrarLightbox()">
+    <button class="btn-close-preview" (click)="cerrarLightbox()" title="Cerrar">&times;</button>
+    
+    <!-- Botón Anterior -->
+    <button class="btn-lightbox-arrow" style="left: 20px;" (click)="$event.stopPropagation(); lightboxAnterior()">
+      &lsaquo;
+    </button>
+    
+    <!-- Contenedor Imagen Grande -->
+    <div class="preview-body d-flex flex-column justify-content-center align-items-center" (click)="$event.stopPropagation()">
+      <img [src]="obtenerListaDeTab('imagenes')[indiceImagenGrande]?.documento?.ruta" class="img-preview" alt="Evidencia Grande" style="max-height: 80vh; max-width: 80vw; object-fit: contain;" />
+      <div class="text-center text-white mt-3 font-weight-bold" style="font-size: 1.1rem;">
+        {{ obtenerListaDeTab('imagenes')[indiceImagenGrande]?.documento?.nombre }}
+      </div>
+      <div class="text-center text-white-50 small mt-1">
+        Imagen {{ indiceImagenGrande + 1 }} de {{ obtenerListaDeTab('imagenes').length }}
+      </div>
+    </div>
+
+    <!-- Botón Siguiente -->
+    <button class="btn-lightbox-arrow" style="right: 20px;" (click)="$event.stopPropagation(); lightboxSiguiente()">
+      &rsaquo;
+    </button>
+  </div>
+
+</div>

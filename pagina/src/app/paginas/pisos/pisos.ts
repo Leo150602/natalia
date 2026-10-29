@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EstadoGlobalService } from '../../servicios/global-service';
 import { PisosService } from '../../servicios/pisos-service';
@@ -15,7 +15,7 @@ import { PermisosService } from '../../servicios/permisos.service';
 @Component({
   selector: 'app-pisos',
   standalone: true,
-  imports: [CommonModule, TablaDatosComponent, FormsModule],
+  imports: [CommonModule, TablaDatosComponent, FormsModule, RouterLink],
   templateUrl: './pisos.html',
   styleUrl: './pisos.scss'
 })
@@ -27,6 +27,7 @@ export class PisosComponent implements OnInit, OnDestroy {
   datosFiltrados: PisosRespuesta[] = [];
   config = CONFIG_TABLA_PISOS;
   cargando = false;
+  mostrarMenuFiltros = false;
   private promoSub?: Subscription;
 
   // Filtros reactivos locales
@@ -52,13 +53,11 @@ export class PisosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Al abrir el componente, obtener el valor actual inmediatamente
     this.promocionId = this.estadoGlobal.getPromocion();
     if (this.promocionId !== null) {
       this.cargarPisos();
     }
 
-    // Suscribirse a cambios futuros desvinculando la anterior al destruir
     this.promoSub = this.estadoGlobal.promocion$.subscribe((id) => {
       if (id !== null && id !== this.promocionId) {
         this.promocionId = id;
@@ -68,6 +67,7 @@ export class PisosComponent implements OnInit, OnDestroy {
         this.promocionNombre = null;
         this.datos = [];
         this.datosFiltrados = [];
+        this.cdr.detectChanges();
       }
     });
   }
@@ -96,10 +96,10 @@ export class PisosComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Obtener el nombre de la promoción para armar el nombre del archivo
     this.promocionesService.obtenerPorId(this.promocionId).subscribe({
       next: (res) => {
         this.promocionNombre = res.promocion && res.promocion.length > 0 ? res.promocion[0].nombre : null;
+        this.cdr.detectChanges();
       },
       error: (err) => console.error("Error al obtener información de la promoción:", err)
     });
@@ -112,6 +112,12 @@ export class PisosComponent implements OnInit, OnDestroy {
       const matchTel = !this.filtros.telefono || (row.telefonoPropietario && row.telefonoPropietario.toLowerCase().includes(this.filtros.telefono.toLowerCase()));
       return matchPiso && matchProp && matchTel;
     });
+    this.cdr.detectChanges();
+  }
+
+  toggleMenuFiltros(): void {
+    this.mostrarMenuFiltros = !this.mostrarMenuFiltros;
+    this.cdr.detectChanges();
   }
 
   limpiarFiltros(): void {
@@ -123,8 +129,12 @@ export class PisosComponent implements OnInit, OnDestroy {
     this.aplicarFiltros();
   }
 
+  irAlDetalle(row: any): void {
+    this.router.navigate([`/pisos/detalle/${row.idPiso}`]);
+  }
+
   editarPiso(row: any): void {
-    this.router.navigate(['/importar-pisos'], { queryParams: { id: row.idPiso } });
+    this.router.navigate([`/pisos/detalle/${row.idPiso}`]);
   }
 
   eliminarPiso(row: any): void {
@@ -133,12 +143,16 @@ export class PisosComponent implements OnInit, OnDestroy {
       `¿Está seguro de que desea eliminar el piso "${row.piso}"?`
     ).then((confirmado) => {
       if (confirmado) {
+        this.cargando = true;
+        this.cdr.detectChanges();
         this.pisosService.eliminar(row.idPiso).subscribe({
           next: () => {
             this.alerta.exito("Piso eliminado con éxito.");
             this.cargarPisos();
           },
           error: (err) => {
+            this.cargando = false;
+            this.cdr.detectChanges();
             this.alerta.error("Error al eliminar: " + (err.error || err.message));
           }
         });
@@ -149,12 +163,16 @@ export class PisosComponent implements OnInit, OnDestroy {
   importarExcel(event: any): void {
     const file: File = event.target.files[0];
     if (file && this.promocionId !== null) {
+      this.cargando = true;
+      this.cdr.detectChanges();
       this.pisosService.importar(file, this.promocionId).subscribe({
         next: (res) => {
           this.alerta.exito("Importación de pisos completada exitosamente.");
           this.cargarPisos();
         },
         error: (err) => {
+          this.cargando = false;
+          this.cdr.detectChanges();
           this.alerta.error("Error al importar: " + (err.error || err.message));
         }
       });

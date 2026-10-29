@@ -3,8 +3,8 @@
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background-color: #ffffff;
-  color: #1e293b;
+  background-color: var(--color-soft-beige-light);
+  color: var(--color-primary-dark-base);
 
   .sidebar-wrapper {
     width: 250px;
@@ -21,13 +21,14 @@
     height: 100%;
     overflow: hidden;
     position: relative;
+    background-color: var(--color-soft-beige-light);
 
     .main-outlet {
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
       padding: 0;
-      background-color: #ffffff;
+      background-color: var(--color-soft-beige-light);
     }
   }
 
@@ -107,3 +108,32 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+.floating-home-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--color-primary-dark-base); /* Mismo gris del sidebar (#2C3639) */
+  color: var(--color-soft-beige-light);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 2000;
+  text-decoration: none;
+  font-size: 1.5rem;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid rgba(220, 215, 201, 0.2);
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--color-primary-dark-light);
+    transform: scale(1.08);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    color: var(--color-soft-beige-light);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}

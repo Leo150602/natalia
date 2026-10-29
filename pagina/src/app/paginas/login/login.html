@@ -26,7 +26,7 @@
 
       <div class="input-group-custom">
         <label for="password">Contraseña</label>
-        <div class="input-wrapper" style="position: relative;">
+        <div class="input-wrapper">
           <span class="input-icon">🔒</span>
           <input 
             [type]="verPassword ? 'text' : 'password'" 
@@ -37,12 +37,12 @@
             placeholder="Ingrese su contraseña"
             autocomplete="current-password"
             [disabled]="cargando"
-            style="padding-right: 45px;"
+            class="input-password"
           />
           <button 
             type="button" 
             (click)="verPassword = !verPassword"
-            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #a0aec0; z-index: 10; padding: 0;"
+            class="btn-toggle-password"
             [title]="verPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
           >
             {{ verPassword ? '👁️' : '🙈' }}

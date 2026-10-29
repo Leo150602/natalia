@@ -1,0 +1,257 @@
+<div class="container-fluid p-4">
+  
+  <!-- Cabecera de Detalle -->
+  <div class="table-page-header mb-4">
+    <!-- Top: Título y Subtítulo -->
+    <div class="header-title-box">
+      <h1 class="page-title">
+        {{ modoCrear ? 'Crear Promoción' : 'Detalle de Promoción' }}
+      </h1>
+      <p class="page-subtitle">
+        {{ modoCrear ? 'Registre una nueva promoción inmobiliaria y su promotora asociada' : 'Visualización completa y edición de la promoción inmobiliaria seleccionada' }}
+      </p>
+    </div>
+    
+    <!-- Separador -->
+    <div class="header-separator"></div>
+    
+    <!-- Bottom: Barra de menú integrada -->
+    <div class="header-menu-bar d-flex justify-content-between align-items-center">
+      <!-- Izquierda: Volver al Listado -->
+      <div class="menu-left-group">
+        <a class="menu-action-item" (click)="cancelar()">
+          <span>⬅️</span> Volver
+        </a>
+      </div>
+      
+      <!-- Derecha: Acciones de Guardar, Editar y Eliminar -->
+      <div class="menu-right-group">
+        <!-- Modo Lectura -->
+        <ng-container *ngIf="!modoEdicion">
+          <button *ngIf="permisosService.puedeInsertarEditar()" class="menu-action-item" (click)="activarModoEdicion()">
+            <span>✏️</span> Editar
+          </button>
+        </ng-container>
+
+        <!-- Modo Edición -->
+        <ng-container *ngIf="modoEdicion">
+          <button *ngIf="puedeEditar" class="menu-action-item" (click)="actualizar()" [disabled]="cargando">
+            <span>💾</span> {{ modoCrear ? 'Crear Promoción' : 'Guardar Cambios' }}
+          </button>
+        </ng-container>
+
+        <button *ngIf="permisosService.puedeInsertarEditar() && !modoCrear" class="menu-action-item text-danger" (click)="eliminar()" [disabled]="cargando">
+          <span>🗑️</span> Borrar Promoción
+        </button>
+        <span *ngIf="!permisosService.puedeInsertarEditar()" class="menu-action-item text-muted disabled">
+          <span>🔒</span> Solo Lectura
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de Detalle / Visualización -->
+  <div class="row">
+    <div class="col-12 col-xl-9 mx-auto">
+      
+      <!-- Panel de Perfil Principal (Modo Lectura) -->
+      <div *ngIf="!modoEdicion" class="card shadow-sm border-0 mb-4 p-4 animate__animated animate__fadeIn" style="border-radius: 16px; background: #ffffff;">
+        <div class="d-flex align-items-center gap-4 flex-wrap">
+          <div class="rounded-circle text-white d-flex align-items-center justify-content-center" 
+               [ngStyle]="{ 'background-color': promocion.color || '#a27b5c' }"
+               style="width: 70px; height: 70px; font-size: 2rem; font-weight: bold;">
+            🏢
+          </div>
+          <div>
+            <h3 class="font-weight-bold mb-1 text-dark text-uppercase">{{ promocion.promocion }}</h3>
+            <p class="text-muted mb-0 d-flex align-items-center gap-2">
+              <span class="badge bg-secondary-subtle text-secondary text-uppercase" style="font-size: 0.7rem;">{{ promocion.promotora }}</span>
+              &bull;
+              <span class="badge text-white" [ngStyle]="{ 'background-color': promocion.color || '#a27b5c' }" style="font-size: 0.7rem;">
+                Color: {{ promocion.color }}
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0 detail-card p-4">
+        
+        <!-- Loading Spinner Overlay -->
+        <div *ngIf="cargando" class="detail-loading-overlay">
+          <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+          <span class="ms-2">Procesando promoción...</span>
+        </div>
+
+        <!-- MODO LECTURA / PANELES DE DETALLE -->
+        <div *ngIf="!modoEdicion" class="row g-3 mb-4 animate__animated animate__fadeIn">
+          
+          <div class="col-md-6">
+            <div class="p-3 border rounded bg-light-subtle h-100">
+              <span class="text-muted d-block small font-weight-semibold">Promotora</span>
+              <span class="font-weight-bold text-dark text-uppercase" style="font-size: 0.95rem;">{{ promocion.promotora || 'No asignada' }}</span>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="p-3 border rounded bg-light-subtle h-100">
+              <span class="text-muted d-block small font-weight-semibold">Promoción</span>
+              <span class="font-weight-bold text-dark text-uppercase" style="font-size: 0.95rem;">{{ promocion.promocion || 'No asignada' }}</span>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <div class="p-3 border rounded bg-light-subtle h-100">
+              <span class="text-muted d-block small font-weight-semibold">Dirección</span>
+              <span class="text-dark" style="font-size: 0.9rem;">{{ promocion.direccion || 'Sin dirección' }}</span>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <div class="p-3 border rounded bg-light-subtle h-100">
+              <span class="text-muted d-block small font-weight-semibold">Coordenadas (Latitud, Longitud)</span>
+              <span class="text-dark font-weight-mono" style="font-size: 0.9rem;">{{ promocion.coordenadas || 'Sin coordenadas fijadas' }}</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- MODO EDICIÓN / FORMULARIO -->
+        <form *ngIf="modoEdicion" (ngSubmit)="actualizar()" #detalleForm="ngForm">
+          <div class="row g-3">
+            
+            <!-- Promotora -->
+            <div class="col-12 col-md-6">
+              <label class="form-label field-label font-weight-bold">Promotora *</label>
+              <div class="custom-select-container">
+                <input 
+                  type="text" 
+                  class="form-control form-select-custom text-uppercase"
+                  [disabled]="!puedeEditar"
+                  (focus)="abrirDropdownPromotora()"
+                  (blur)="cerrarDropdownPromotora()"
+                  [(ngModel)]="busquedaPromotora"
+                  (ngModelChange)="filtrarPromotoras()"
+                  name="busquedaPromotoraInput"
+                  placeholder="Ej. ODECOR S.A." />
+                
+                <div *ngIf="mostrarDropdownPromotora" class="custom-select-dropdown shadow-lg">
+                  <div 
+                    *ngFor="let p of promotorasFiltradas" 
+                    (mousedown)="seleccionarPromotora(p)"
+                    class="custom-select-option"
+                    [class.selected]="p === promocion.promotora"
+                    [title]="p">
+                    {{ p }}
+                  </div>
+                  <div *ngIf="promotorasFiltradas.length === 0" class="custom-select-option text-muted disabled">
+                    Sin coincidencias (se guardará como nueva promotora)
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Promoción -->
+            <div class="col-12 col-md-6">
+              <label for="promocion" class="form-label field-label font-weight-bold">Promoción *</label>
+              <input 
+                type="text" 
+                class="form-control text-uppercase" 
+                id="promocion" 
+                name="promocion" 
+                [(ngModel)]="promocion.promocion" 
+                required 
+                [disabled]="!puedeEditar"
+                placeholder="Ej. EDIFICIO ALERCE" />
+            </div>
+
+            <!-- Dirección -->
+            <div class="col-12 col-lg-6">
+              <label for="direccion" class="form-label field-label font-weight-bold">Dirección / Ubicación</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="direccion" 
+                name="direccion" 
+                [(ngModel)]="promocion.direccion" 
+                [disabled]="!puedeEditar"
+                placeholder="Calle, Número, Ciudad..." />
+            </div>
+
+            <!-- Latitud -->
+            <div class="col-6 col-lg-3">
+              <label for="latitud" class="form-label field-label font-weight-bold">Latitud</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="latitud" 
+                name="latitud" 
+                [(ngModel)]="latitud" 
+                (ngModelChange)="actualizarMapaDesdeInputs()"
+                [disabled]="!puedeEditar"
+                placeholder="Ej. 41.3851" />
+            </div>
+
+            <!-- Longitud -->
+            <div class="col-6 col-lg-3">
+              <label for="longitud" class="form-label field-label font-weight-bold">Longitud</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="longitud" 
+                name="longitud" 
+                [(ngModel)]="longitud" 
+                (ngModelChange)="actualizarMapaDesdeInputs()"
+                [disabled]="!puedeEditar"
+                placeholder="Ej. 2.1734" />
+            </div>
+
+            <!-- Color Representativo -->
+            <div class="col-12 col-md-6 col-lg-3">
+              <label for="color" class="form-label field-label font-weight-bold">Color Representativo</label>
+              <div class="d-flex align-items-center gap-2">
+                <input 
+                  type="color" 
+                  class="form-control form-control-color" 
+                  id="color" 
+                  name="color" 
+                  [(ngModel)]="promocion.color" 
+                  [disabled]="!puedeEditar"
+                  title="Seleccione un color para esta promoción"
+                  style="width: 55px; height: 38px; padding: 2px; cursor: pointer;" />
+                <input 
+                  type="text" 
+                  class="form-control text-uppercase" 
+                  id="colorHex" 
+                  name="colorHex" 
+                  [(ngModel)]="promocion.color" 
+                  [disabled]="!puedeEditar"
+                  placeholder="#HEX"
+                  style="max-width: 120px;" />
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="form-text text-muted mt-1" style="font-size: 0.72rem; margin-top: -8px;">
+                Haga clic en el mapa de abajo para seleccionar la ubicación o introduzca las coordenadas manualmente.
+              </div>
+            </div>
+
+          </div>
+        </form>
+
+        <!-- Mapa de Selección (Siempre visible en el DOM para evitar roturas de Leaflet) -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <label class="form-label field-label font-weight-bold text-dark">Ubicación en el Mapa</label>
+            <div class="border rounded bg-light" style="position: relative; overflow: hidden; z-index: 1;">
+              <div id="mapa-seleccion-leaflet" style="width: 100%; height: 350px;"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>

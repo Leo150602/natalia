@@ -6,9 +6,11 @@ import com.proyect.main.modelos.Promociones;
 import com.proyect.main.modelos.enums.TipoPersonas;
 import com.proyect.main.modelos.dtos.entrada.PisosDto;
 import com.proyect.main.modelos.dtos.salida.PisosRespuesta;
+import com.proyect.main.repositorios.IRepositorioIncidencias;
 import com.proyect.main.repositorios.IRepositorioPersonas;
 import com.proyect.main.repositorios.IRepositorioPisos;
 import com.proyect.main.repositorios.IRepositorioPromociones;
+import com.proyect.main.repositorios.IRepositorioVisitas;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -16,6 +18,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
@@ -33,6 +36,9 @@ public class ServicioPisos {
     private final IRepositorioPisos repositorioPisos;
     private final IRepositorioPromociones repositorioPromociones;
     private final IRepositorioPersonas repositorioPersonas;
+    private final IRepositorioIncidencias repositorioIncidencias;
+    private final IRepositorioVisitas repositorioVisitas;
+    private final ServicioIncidenciaDocumento servicioIncidenciaDocumento;
 
     public PisosRespuesta insertar(PisosDto dto) {
         try {
@@ -280,8 +286,19 @@ public class ServicioPisos {
         };
     }
 
+    @Transactional
     public void eliminar(int id) {
         try {
+            List<Integer> idsIncidencias = repositorioIncidencias.findIdsByPisoId(id);
+            for (Integer idIncidencia : idsIncidencias) {
+                List<com.proyect.main.modelos.IncidenciaDocumento> relaciones =
+                        servicioIncidenciaDocumento.listarPorIncidencia(idIncidencia);
+                for (com.proyect.main.modelos.IncidenciaDocumento rel : relaciones) {
+                    servicioIncidenciaDocumento.eliminarAsociacion(rel.getId());
+                }
+            }
+            repositorioVisitas.deleteByPisoId(id);
+            repositorioIncidencias.deleteByPisoId(id);
             repositorioPisos.deleteById(id);
         } catch (Exception e) {
             throw new RuntimeException("Error al eliminar piso: " + e.getMessage(), e);

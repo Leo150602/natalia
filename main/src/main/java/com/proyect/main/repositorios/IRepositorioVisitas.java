@@ -32,4 +32,19 @@ public interface IRepositorioVisitas extends JpaRepository<Visitas, Integer> {
     @Transactional
     @Query("UPDATE Visitas v SET v.tecnico = null WHERE v.tecnico.id = :idUsuario")
     void setTecnicoToNull(@Param("idUsuario") int idUsuario);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Visitas v WHERE v.incidencia.idIncidencia = :idIncidencia")
+    void deleteByIncidenciaId(@Param("idIncidencia") int idIncidencia);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Visitas v WHERE v.incidencia.idIncidencia IN (SELECT i.idIncidencia FROM Incidencias i WHERE i.piso.idPiso IN (SELECT p.idPiso FROM Pisos p WHERE p.promocion.idPromocion = :idPromocion))")
+    void deleteByPromocionId(@Param("idPromocion") int idPromocion);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Visitas v WHERE v.incidencia.idIncidencia IN (SELECT i.idIncidencia FROM Incidencias i WHERE i.piso.idPiso = :idPiso)")
+    void deleteByPisoId(@Param("idPiso") int idPiso);
 }

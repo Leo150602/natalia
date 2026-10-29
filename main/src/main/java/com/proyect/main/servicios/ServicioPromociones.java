@@ -5,10 +5,14 @@ import com.proyect.main.modelos.Promotoras;
 import com.proyect.main.modelos.dtos.entrada.PromocionesDto;
 import com.proyect.main.modelos.dtos.salida.PromocionItem;
 import com.proyect.main.modelos.dtos.salida.PromocionesRespuesta;
+import com.proyect.main.repositorios.IRepositorioIncidencias;
+import com.proyect.main.repositorios.IRepositorioPisos;
 import com.proyect.main.repositorios.IRepositorioPromociones;
 import com.proyect.main.repositorios.IRepositorioPromotoras;
+import com.proyect.main.repositorios.IRepositorioVisitas;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,6 +26,10 @@ public class ServicioPromociones {
 
     private final IRepositorioPromociones repositorioPromociones;
     private final IRepositorioPromotoras repositorioPromotoras;
+    private final IRepositorioPisos repositorioPisos;
+    private final IRepositorioIncidencias repositorioIncidencias;
+    private final IRepositorioVisitas repositorioVisitas;
+    private final ServicioIncidenciaDocumento servicioIncidenciaDocumento;
 
     public PromocionesRespuesta insertar(PromocionesDto dto) {
         try {
@@ -42,6 +50,7 @@ public class ServicioPromociones {
                     .promotora(promotora)
                     .direccion(dto.getDireccion())
                     .coordenadas(dto.getCoordenadas())
+                    .color(dto.getColor())
                     .build();
 
             return mapearIndividual(repositorioPromociones.save(promocion));
@@ -64,6 +73,7 @@ public class ServicioPromociones {
                                             .nombre(p.getPromocion())
                                             .direccion(p.getDireccion())
                                             .coordenadas(p.getCoordenadas())
+                                            .color(p.getColor())
                                             .build(),
                                     Collectors.toList()
                             )
@@ -105,14 +115,36 @@ public class ServicioPromociones {
             promocion.setPromocion(dto.getPromocion());
             promocion.setDireccion(dto.getDireccion());
             promocion.setCoordenadas(dto.getCoordenadas());
+            promocion.setColor(dto.getColor());
             return mapearIndividual(repositorioPromociones.save(promocion));
         } catch (Exception e) {
             throw new RuntimeException("Error al actualizar promoción: " + e.getMessage(), e);
         }
     }
 
+    @Transactional
     public void eliminar(int id) {
         try {
+            // 1. Eliminar documentos asociados a las incidencias de esta promoción
+            List<Integer> idsIncidencias = repositorioIncidencias.findIdsByPromocionId(id);
+            for (Integer idIncidencia : idsIncidencias) {
+                List<com.proyect.main.modelos.IncidenciaDocumento> relaciones =
+                        servicioIncidenciaDocumento.listarPorIncidencia(idIncidencia);
+                for (com.proyect.main.modelos.IncidenciaDocumento rel : relaciones) {
+                    servicioIncidenciaDocumento.eliminarAsociacion(rel.getId());
+                }
+            }
+
+            // 2. Eliminar todas las visitas asociadas a las incidencias de esta promoción
+            repositorioVisitas.deleteByPromocionId(id);
+
+            // 3. Eliminar todas las incidencias asociadas a los pisos de esta promoción
+            repositorioIncidencias.deleteByPromocionId(id);
+
+            // 4. Eliminar todos los pisos asociados a esta promoción
+            repositorioPisos.deleteByPromocionId(id);
+
+            // 5. Eliminar la promoción
             repositorioPromociones.deleteById(id);
         } catch (Exception e) {
             throw new RuntimeException("Error al eliminar promoción: " + e.getMessage(), e);
@@ -128,6 +160,7 @@ public class ServicioPromociones {
                                 .nombre(promocion.getPromocion())
                                 .direccion(promocion.getDireccion())
                                 .coordenadas(promocion.getCoordenadas())
+                                .color(promocion.getColor())
                                 .build()
                 ))
                 .build();

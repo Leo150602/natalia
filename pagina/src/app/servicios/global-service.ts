@@ -1,7 +1,13 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
-export const API_URL = window.location.port === '4200' ? 'http://localhost:8080/api' : '/api';
+const esEntornoLocal =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+// En local apunta a tu backend en el puerto 8080.
+// En producción (Vercel) usa '/api', que vercel.json redirige automáticamente a tu servidor backend en la nube.
+export const API_URL = esEntornoLocal ? 'http://localhost:8080/api' : '/api';
 
 @Injectable({
   providedIn: 'root'

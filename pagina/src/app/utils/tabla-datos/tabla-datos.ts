@@ -34,10 +34,14 @@ export class TablaDatosComponent implements OnChanges, AfterViewInit {
   @Input() iconoEditar: string = '✏️';
   @Input() iconoEliminar: string = '🗑️';
   @Input() seleccionable: boolean = false;
+  @Input() mostrarAccionesEdicion: boolean = true; // Habilita o deshabilita botones de edición en menú contextual
+  @Input() etiquetaContextual: string = 'Ver Detalle';
 
   @Output() editar = new EventEmitter<any>();
   @Output() eliminar = new EventEmitter<any>();
   @Output() seleccionCambiada = new EventEmitter<any[]>();
+  @Output() verDetalle = new EventEmitter<any>();
+  @Output() visualizar = new EventEmitter<any>();
 
   columnasVisibles: string[] = [];
   dataSource = new MatTableDataSource<any>([]);
@@ -162,7 +166,6 @@ export class TablaDatosComponent implements OnChanges, AfterViewInit {
     return val;
   }
 
-  // Lógica del menú contextual al hacer clic derecho
   abrirMenuContextual(event: MouseEvent, row: any): void {
     if (!this.permitirAcciones) return;
     event.preventDefault(); // Evitar el menú nativo del navegador
@@ -178,6 +181,11 @@ export class TablaDatosComponent implements OnChanges, AfterViewInit {
     this.menuContextualVisible = false;
   }
 
+  onVerDetalle(): void {
+    this.verDetalle.emit(this.filaSeleccionada);
+    this.cerrarMenuContextual();
+  }
+
   onEditar(): void {
     this.editar.emit(this.filaSeleccionada);
     this.cerrarMenuContextual();
@@ -186,5 +194,10 @@ export class TablaDatosComponent implements OnChanges, AfterViewInit {
   onEliminar(): void {
     this.eliminar.emit(this.filaSeleccionada);
     this.cerrarMenuContextual();
+  }
+
+  onVisualizarFila(event: MouseEvent, element: any): void {
+    event.stopPropagation();
+    this.visualizar.emit(element);
   }
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ClientesService } from '../../servicios/clientes-service';
 import { AlertaService } from '../../servicios/alerta-service';
 import { PermisosService } from '../../servicios/permisos.service';
@@ -10,13 +10,14 @@ import { TablaDatosComponent } from '../../utils/tabla-datos/tabla-datos';
 @Component({
   selector: 'app-clientes',
   standalone: true,
-  imports: [CommonModule, FormsModule, TablaDatosComponent],
+  imports: [CommonModule, FormsModule, TablaDatosComponent, RouterLink],
   templateUrl: './clientes.html'
 })
 export class ClientesComponent implements OnInit {
   clientes: any[] = [];
   clientesFiltrados: any[] = [];
   cargando = false;
+  mostrarMenuFiltros = false;
 
   filtroUsername = '';
   filtroNombre = '';
@@ -62,6 +63,7 @@ export class ClientesComponent implements OnInit {
           activoText: c.activo !== false ? 'Activo' : 'Inactivo'
         }));
         this.aplicarFiltros();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.cargando = false;
@@ -80,14 +82,23 @@ export class ClientesComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  toggleMenuFiltros(): void {
+    this.mostrarMenuFiltros = !this.mostrarMenuFiltros;
+    this.cdr.detectChanges();
+  }
+
   limpiarFiltros(): void {
     this.filtroUsername = '';
     this.filtroNombre = '';
     this.aplicarFiltros();
   }
 
-  editarCliente(c: any): void {
-    this.router.navigate(['/importar-clientes'], { state: { clienteParaEditar: c } });
+  irAlDetalle(row: any): void {
+    this.router.navigate([`/clientes/detalle/${row.id}`]);
+  }
+
+  editarCliente(row: any): void {
+    this.router.navigate([`/clientes/detalle/${row.id}`]);
   }
 
   eliminarCliente(c: any): void {
@@ -99,12 +110,16 @@ export class ClientesComponent implements OnInit {
       "Sí, eliminar"
     ).then((confirmado) => {
       if (confirmado) {
+        this.cargando = true;
+        this.cdr.detectChanges();
         this.clientesService.eliminar(c.id).subscribe({
           next: () => {
             this.alertaService.exito("Cliente eliminado con éxito.");
             this.cargarClientes();
           },
           error: (err) => {
+            this.cargando = false;
+            this.cdr.detectChanges();
             this.alertaService.error("Error al eliminar cliente: " + (err.error || err.message));
           }
         });

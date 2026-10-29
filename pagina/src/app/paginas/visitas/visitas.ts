@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { VisitasService } from '../../servicios/visitas-service';
 import { EstadoGlobalService } from '../../servicios/global-service';
@@ -14,7 +14,7 @@ import { PermisosService } from '../../servicios/permisos.service';
 @Component({
   selector: 'app-visitas',
   standalone: true,
-  imports: [CommonModule, TablaDatosComponent, FormsModule],
+  imports: [CommonModule, TablaDatosComponent, FormsModule, RouterLink],
   templateUrl: './visitas.html',
   styleUrl: './visitas.scss'
 })
@@ -25,6 +25,7 @@ export class VisitasComponent implements OnInit, OnDestroy {
   datosFiltrados: VisitasRespuesta[] = [];
   config = CONFIG_TABLA_VISITAS;
   cargando = false;
+  mostrarMenuFiltros = false;
   private promoSub?: Subscription;
 
   // Filtros reactivos locales
@@ -45,13 +46,11 @@ export class VisitasComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Al abrir el componente, obtener el valor actual inmediatamente
     this.promocionId = this.estadoGlobal.getPromocion();
     if (this.promocionId !== null) {
       this.cargarVisitas();
     }
 
-    // Suscribirse a cambios futuros desvinculando al destruir
     this.promoSub = this.estadoGlobal.promocion$.subscribe((id) => {
       if (id !== null && id !== this.promocionId) {
         this.promocionId = id;
@@ -60,6 +59,7 @@ export class VisitasComponent implements OnInit, OnDestroy {
         this.promocionId = null;
         this.datos = [];
         this.datosFiltrados = [];
+        this.cdr.detectChanges();
       }
     });
   }
@@ -97,6 +97,12 @@ export class VisitasComponent implements OnInit, OnDestroy {
       const matchEst = !this.filtros.estado || (row.estadoVisita && row.estadoVisita.toLowerCase().includes(this.filtros.estado.toLowerCase()));
       return matchInc && matchPiso && matchTec && matchEst;
     });
+    this.cdr.detectChanges();
+  }
+
+  toggleMenuFiltros(): void {
+    this.mostrarMenuFiltros = !this.mostrarMenuFiltros;
+    this.cdr.detectChanges();
   }
 
   limpiarFiltros(): void {
@@ -109,8 +115,12 @@ export class VisitasComponent implements OnInit, OnDestroy {
     this.aplicarFiltros();
   }
 
+  irAlDetalle(row: any): void {
+    this.router.navigate([`/visitas/detalle/${row.idVisita}`]);
+  }
+
   editarVisita(row: any): void {
-    this.router.navigate(['/importar-visitas'], { queryParams: { id: row.idVisita } });
+    this.router.navigate([`/visitas/detalle/${row.idVisita}`]);
   }
 
   eliminarVisita(row: any): void {
@@ -119,13 +129,17 @@ export class VisitasComponent implements OnInit, OnDestroy {
       `¿Está seguro de que desea eliminar esta visita técnica?`
     ).then((confirmado) => {
       if (confirmado) {
+        this.cargando = true;
+        this.cdr.detectChanges();
         this.visitasService.eliminar(row.idVisita).subscribe({
           next: () => {
             this.alerta.exito("Visita técnica eliminada con éxito.");
             this.cargarVisitas();
           },
           error: (err) => {
+            this.cargando = false;
             this.alerta.error("Error al eliminar: " + (err.error || err.message));
+            this.cdr.detectChanges();
           }
         });
       }

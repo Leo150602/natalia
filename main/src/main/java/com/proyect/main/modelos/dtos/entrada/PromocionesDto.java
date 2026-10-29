@@ -13,4 +13,5 @@ public class PromocionesDto {
     private String promocion;
     private String direccion;
     private String coordenadas;
+    private String color;
 }

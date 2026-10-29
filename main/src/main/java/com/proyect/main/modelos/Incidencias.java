@@ -61,7 +61,7 @@ public class Incidencias {
     @Column(name = "fecha_incidencia")
     private LocalDateTime fechaIncidencia;
 
-    @OneToMany(mappedBy = "incidencia", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "incidencia", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Visitas> visitas;
 
     @ManyToOne(fetch = FetchType.LAZY)

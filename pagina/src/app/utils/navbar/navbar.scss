@@ -1,8 +1,8 @@
 .navbar-wrapper-container {
   height: 60px;
   width: 100%;
-  border-bottom: 1px solid #e2e8f0;
-  background-color: #ffffff;
+  border-bottom: 1px solid rgba(63, 78, 79, 0.15); // Borde usando Slate Medium traslúcido
+  background-color: var(--color-soft-beige-light); // Fondo Soft Beige Claro
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 
   @media (max-width: 768px) {
@@ -15,33 +15,43 @@
 }
 
 .toggle-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background-color: #f8fafc;
-  color: #64748b;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--color-primary-dark-base) !important; // Color Primary Dark
   cursor: pointer;
-  transition: all 0.2s;
+  padding: 0 !important;
+  transition: color 0.2s, transform 0.15s ease-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
 
   &:hover {
-    background-color: #f1f5f9;
-    color: #0f172a;
-    border-color: #cbd5e1;
+    color: var(--color-accent-bronze-base) !important; // Color Accent Bronze al pasar el cursor
+    transform: scale(1.18);
+  }
+
+  &:active {
+    transform: scale(0.9);
   }
 
   .toggle-icon {
-    font-size: 1.1rem;
-    font-weight: bold;
+    font-size: 2.1rem; // Tamaño aumentado para ser más visible y fácil de clickear
+    font-weight: normal;
+    line-height: 1;
   }
 }
 
 .breadcrumbs-path {
   .breadcrumb-link {
-    font-size: 0.95rem !important;
-    font-weight: 600 !important;
+    font-size: 1.15rem !important;
+    font-weight: 500 !important;
     
     a {
+      font-size: 1.15rem !important;
+      font-weight: 700 !important;
       color: #64748b !important;
       transition: color 0.2s;
 
@@ -52,7 +62,7 @@
   }
 
   .breadcrumb-active {
-    font-size: 0.95rem !important;
+    font-size: 1.15rem !important;
     font-weight: 800 !important;
     color: #0f172a !important;
   }
@@ -81,7 +91,8 @@
 
 .select-promocion-group {
   .select-label {
-    font-size: 0.8rem;
+    font-size: 1.2rem;
+    font-weight: 600;
     color: #64748b;
   }
 
@@ -277,14 +288,22 @@
     background: none;
     border: none;
     color: #64748b;
-    font-size: 1.75rem;
+    font-size: 2.2rem;
     cursor: pointer;
     line-height: 1;
     padding: 0;
-    transition: color 0.15s;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: transform 0.2s, color 0.15s;
 
     &:hover {
       color: #0f172a;
+      background-color: rgba(0, 0, 0, 0.05);
+      transform: scale(1.08);
     }
   }
 }

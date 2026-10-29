@@ -162,7 +162,7 @@
             <div class="table-responsive">
               <table class="table custom-table align-middle">
                 <thead>
-                  <tr>
+                  <tr class="table-header">
                     <th scope="col" class="text-center">#</th>
                     <th scope="col">CATEGORÍA</th>
                     <th scope="col" class="text-center">CASOS TOTALES</th>
@@ -316,25 +316,27 @@
         <div class="card border-0 shadow-sm p-4 traffic-light-box h-100">
           <h5 class="card-box-title text-dark mb-3">Semáforo de Alertas</h5>
           
-          <div class="text-center my-3">
-            <div class="glow-light-badge" [class]="semaforoColor">
-              <span class="pulse-ring-glow"></span>
-              <span class="light-bullet">
-                <span *ngIf="semaforoColor === 'verde'">🟢</span>
-                <span *ngIf="semaforoColor === 'naranja'">🟠</span>
-                <span *ngIf="semaforoColor === 'rojo'">🔴</span>
-              </span>
+          <div class="traffic-light-content d-flex flex-column justify-content-center align-items-center flex-grow-1">
+            <div class="text-center my-3">
+              <div class="glow-light-badge" [class]="semaforoColor">
+                <span class="pulse-ring-glow"></span>
+                <span class="light-bullet">
+                  <span *ngIf="semaforoColor === 'verde'">🟢</span>
+                  <span *ngIf="semaforoColor === 'naranja'">🟠</span>
+                  <span *ngIf="semaforoColor === 'rojo'">🔴</span>
+                </span>
+              </div>
+              <h4 class="glow-light-title mt-3" [class]="semaforoColor">{{ semaforoTexto }}</h4>
             </div>
-            <h4 class="glow-light-title mt-3" [class]="semaforoColor">{{ semaforoTexto }}</h4>
-          </div>
 
-          <div class="glow-desc-box p-3 rounded">
-            <p class="mb-0 smaller-text text-muted text-center">{{ semaforoExplicacion }}</p>
+            <div class="glow-desc-box p-3 rounded w-100">
+              <p class="mb-0 smaller-text text-muted text-center">{{ semaforoExplicacion }}</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="col-12" *ngIf="pestanaActiva === 'operacion'">
+      <div class="col-12">
         <div class="card border-0 shadow-sm content-box-card">
           <div class="card-header bg-white border-0 py-3 px-4 d-flex align-items-center gap-2">
             <span class="bell-icon">📋</span>
@@ -345,7 +347,7 @@
             <div class="table-responsive">
               <table class="table custom-table align-middle mb-0">
                 <thead>
-                  <tr>
+                  <tr class="table-header">
                     <th scope="col" class="text-center" style="width: 100px;">CÓDIGO</th>
                     <th scope="col" style="width: 120px;">VIVIENDA</th>
                     <th scope="col" style="width: 200px;">PROMOCIÓN / PROMOTORA</th>

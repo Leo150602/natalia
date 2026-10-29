@@ -22,7 +22,7 @@ public class Pisos {
     @Column()
     private String piso;
 
-    @OneToMany(mappedBy = "piso", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "piso", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Incidencias> incidencias;
 
     @ManyToOne(fetch = FetchType.LAZY)

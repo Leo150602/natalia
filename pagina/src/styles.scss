@@ -1,5 +1,49 @@
 @use '@angular/material' as mat;
 
+:root {
+  // --- PALETA DE COLORES GLOBAL (VARIABLES CSS) ---
+  // 1. Primary Dark (#2C3639) - Gris/pizarra oscuro
+  --color-primary-dark-base: #2C3639;
+  --color-primary-dark-dark: #1A2022;
+  --color-primary-dark-light: #425155;
+  --color-primary-dark-rgb: 44, 54, 57;
+
+  // 2. Slate Medium (#3F4E4F) - Gris pizarra medio
+  --color-slate-medium-base: #3F4E4F;
+  --color-slate-medium-dark: #2B3536;
+  --color-slate-medium-light: #5A6F70;
+  --color-slate-medium-rgb: 63, 78, 79;
+
+  // 3. Accent Bronze (#A27B5C) - Ocre/bronce cálido
+  --color-accent-bronze-base: #A27B5C;
+  --color-accent-bronze-dark: #7D5F47;
+  --color-accent-bronze-light: #C29F80;
+  --color-accent-bronze-rgb: 162, 123, 92;
+
+  // 4. Soft Beige (#DCD7C9) - Crema/beige suave
+  --color-soft-beige-base: #DCD7C9;
+  --color-soft-beige-dark: #BFB9A8;
+  --color-soft-beige-light: #FAF8F5;
+  --color-soft-beige-rgb: 220, 215, 201;
+
+  // --- ALIASES FUNCIONALES ---
+  --color-bg-dark: var(--color-primary-dark-base);
+  --color-bg-medium: var(--color-slate-medium-base);
+  --color-accent: var(--color-accent-bronze-base);
+  --color-bg-light: var(--color-soft-beige-base);
+
+  // Colores de texto
+  --color-text-light: #ffffff;
+  --color-text-dark: var(--color-primary-dark-base);
+  --color-text-muted: var(--color-slate-medium-light);
+  --color-text-beige: var(--color-soft-beige-base);
+
+  // Estados
+  --color-success: #6E856C;
+  --color-warning: #D9A05B;
+  --color-error: #B85C5C;
+}
+
 html {
   height: 100%;
   @include mat.theme(
@@ -37,135 +81,207 @@ app-root {
   min-height: 100vh;
 }
 
+// --- ANGULAR MATERIAL OVERLAYS (SELECT DROPDOWNS) ---
+// Se estilizan de forma global porque Angular los inyecta en el body de forma externa al app-layout.
 .mat-mdc-optgroup-label {
+  background-color: var(--color-slate-medium-light) !important; // Gris claro de la paleta
+  color: var(--color-soft-beige-light) !important; // Letras beige de la paleta
   font-weight: 800 !important;
-  font-size: 11px !important;
+  font-size: 0.65rem !important;
   text-transform: uppercase !important;
   letter-spacing: 1.2px !important;
-  color: #4c70bf !important; 
-  background-color: #f9fafb !important; 
-  padding-top: 8px !important;
-  padding-bottom: 4px !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  min-height: 36px !important;
 }
 
 .mat-mdc-option {
-  font-size: 13px !important;
+  background-color: var(--color-soft-beige-light) !important; // Fondo beige de la paleta
+  color: var(--color-primary-dark-base) !important; // Letras grises/oscuras de la paleta
+  font-size: 0.7rem !important;
   font-weight: 500 !important;
-  color: #1f2937 !important; 
-  padding-left: 24px !important; 
-}
+  padding-left: 24px !important;
+  border-bottom: 0.5px solid rgba(63, 78, 79, 0.08) !important; // Separador sutil
 
-.content-wrapper {
-  font-size: 13.5px !important;
-
-  h1 {
-    font-size: 22px !important;
-  }
-  h2 {
-    font-size: 18px !important;
-  }
-  h3 {
-    font-size: 16px !important;
-  }
-  h5 {
-    font-size: 14.5px !important;
-  }
-  h6, label, input, select, textarea, button, th, td, span, a {
-    font-size: 13px !important;
+  // Hover y focus
+  &.mat-mdc-option-active, &:hover {
+    background-color: var(--color-soft-beige-base) !important; // Beige base de la paleta al pasar el cursor
+    color: var(--color-primary-dark-dark) !important;
   }
 
-  .dato-celda {
-    font-size: 13px !important;
-  }
-
-  .cabecera-celda {
-    font-size: 11.5px !important;
+  // Estado seleccionado
+  &.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+    background-color: rgba(162, 123, 92, 0.12) !important; // Bronce muy claro/traslúcido para óptimo contraste con texto oscuro
+    color: var(--color-primary-dark-dark) !important;
+    font-weight: 700 !important;
   }
 }
 
-.container, .container-fluid {
-  .card {
-    background-color: #ffffff !important;
-    color: #0f172a !important;
-    border: 2px solid #cbd5e1 !important; 
-    border-radius: 12px !important;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02) !important;
+// --- TYPOGRAPHY FOR AUTHENTICATED APP PAGES (EXCLUDING LOGIN) ---
+.app-layout:not(.no-auth) {
+  // General text size defaults to 0.7rem
+  font-size: 0.7rem !important;
 
-    .card-header {
-      background-color: #f1f5f9 !important; 
-      border-bottom: 2px solid #cbd5e1 !important; 
-      border-top-left-radius: 12px !important;
-      border-top-right-radius: 12px !important;
+  // Sidebar and Navbar element scaling
+  .menu-link-item {
+    font-size: 0.7rem !important;
+  }
 
-      h2 {
-        color: #0f172a !important;
+  .brand-title {
+    font-size: 0.95rem !important;
+  }
+
+  .brand-subtitle {
+    font-size: 0.6rem !important;
+  }
+
+  .sec-lbl {
+    font-size: 0.65rem !important;
+  }
+
+  .content-wrapper {
+    font-size: 0.7rem !important;
+
+    h1, .h1 {
+      font-size: 1.35rem !important;
+      font-weight: 800 !important;
+      letter-spacing: -0.5px !important;
+    }
+    h2, .h2 {
+      font-size: 1.15rem !important;
+      font-weight: 700 !important;
+      letter-spacing: -0.3px !important;
+    }
+    h3, .h3 {
+      font-size: 0.95rem !important;
+      font-weight: 700 !important;
+    }
+    h4, .h4 {
+      font-size: 0.85rem !important;
+      font-weight: 650 !important;
+    }
+    h5, .h5 {
+      font-size: 0.8rem !important;
+      font-weight: 600 !important;
+    }
+    h6, .h6, label, input, select, textarea, button, th, td, span, a {
+      font-size: 0.7rem !important;
+    }
+
+    .dato-celda {
+      font-size: 0.7rem !important;
+    }
+
+    .cabecera-celda {
+      font-size: 0.65rem !important;
+      font-weight: 700 !important;
+    }
+
+    // Tables
+    table, .table {
+      font-size: 0.7rem !important;
+      
+      th, td {
+        font-size: 0.7rem !important;
+      }
+      
+      thead th {
+        font-size: 0.7rem !important;
         font-weight: 700 !important;
       }
-      small {
-        color: #475569 !important;
-      }
     }
+  }
 
-    .card-body {
+  .container, .container-fluid {
+    .card {
       background-color: #ffffff !important;
-      border-bottom-left-radius: 12px !important;
-      border-bottom-right-radius: 12px !important;
-    }
+      color: var(--color-primary-dark-base) !important;
+      border: 1px solid rgba(63, 78, 79, 0.15) !important; // Slate Medium traslúcido
+      border-radius: 16px !important;
+      box-shadow: 0 4px 20px rgba(44, 54, 57, 0.05) !important; // Sombra sutil con Primary Dark
 
-    label {
-      color: #334155 !important;
-      font-weight: 600 !important;
-    }
+      .card-header {
+        background-color: rgba(63, 78, 79, 0.03) !important; // Sutil fondo slate
+        border-bottom: 1px solid rgba(63, 78, 79, 0.15) !important; 
+        border-top-left-radius: 16px !important;
+        border-top-right-radius: 16px !important;
 
-    .form-control, .form-select {
-      background-color: #ffffff !important;
-      color: #0f172a !important;
-      border: 1.5px solid #94a3b8 !important; 
-      border-radius: 6px !important;
-      transition: border-color 0.2s, box-shadow 0.2s;
-
-      &::placeholder {
-        color: #94a3b8 !important;
-        opacity: 0.7;
+        h2 {
+          color: var(--color-primary-dark-base) !important;
+          font-weight: 700 !important;
+        }
+        small {
+          color: var(--color-slate-medium-light) !important;
+        }
       }
 
-      &:focus {
-        border-color: #4c70bf !important;
-        box-shadow: 0 0 0 3px rgba(76, 112, 191, 0.2) !important;
-        outline: none !important;
-      }
-
-      option {
+      .card-body {
         background-color: #ffffff !important;
-        color: #0f172a !important;
-      }
-    }
-
-    .btn-primary {
-      background-color: #4c70bf !important;
-      border-color: #4c70bf !important;
-      color: #ffffff !important;
-      font-weight: 600 !important;
-
-      &:hover {
-        background-color: #3b5ba3 !important;
-        border-color: #3b5ba3 !important;
+        border-bottom-left-radius: 16px !important;
+        border-bottom-right-radius: 16px !important;
       }
 
-      &:disabled {
-        background-color: #94a3b8 !important;
-        border-color: #94a3b8 !important;
-        opacity: 0.5;
+      label {
+        color: var(--color-slate-medium-base) !important;
+        font-weight: 600 !important;
       }
-    }
 
-    .btn-outline-secondary {
-      border-color: #cbd5e1 !important;
-      color: #475569 !important;
+      .form-control, .form-select {
+        background-color: #ffffff !important;
+        color: var(--color-primary-dark-base) !important;
+        border: 1.5px solid rgba(63, 78, 79, 0.3) !important; // Borde Slate Medium
+        border-radius: 8px !important;
+        transition: border-color 0.2s, box-shadow 0.2s;
 
-      &:hover {
-        background-color: #e2e8f0 !important;
-        color: #0f172a !important;
+        &::placeholder {
+          color: var(--color-slate-medium-light) !important;
+          opacity: 0.7;
+        }
+
+        &:focus {
+          border-color: var(--color-accent-bronze-base) !important; // Accent Bronze
+          box-shadow: 0 0 0 3px rgba(162, 123, 92, 0.2) !important; // Glow bronce
+          outline: none !important;
+        }
+
+        option {
+          background-color: #ffffff !important;
+          color: var(--color-primary-dark-base) !important;
+        }
+      }
+
+      .btn-primary {
+        background-color: var(--color-accent-bronze-base) !important; // Accent Bronze
+        border-color: var(--color-accent-bronze-base) !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+        transition: all 0.2s ease-in-out;
+
+        &:hover {
+          background-color: var(--color-accent-bronze-dark) !important; // Accent Bronze Dark
+          border-color: var(--color-accent-bronze-dark) !important;
+        }
+
+        &:disabled {
+          background-color: var(--color-slate-medium-light) !important;
+          border-color: var(--color-slate-medium-light) !important;
+          opacity: 0.5;
+        }
+      }
+
+      .btn-outline-secondary {
+        border-color: rgba(63, 78, 79, 0.3) !important;
+        color: var(--color-slate-medium-base) !important;
+        border-radius: 8px !important;
+        transition: all 0.2s ease-in-out;
+
+        &:hover {
+          background-color: rgba(63, 78, 79, 0.08) !important;
+          color: var(--color-primary-dark-base) !important;
+        }
       }
     }
   }
@@ -255,5 +371,249 @@ form {
 .swal2-container {
   z-index: 3000 !important;
 }
+
+// --- TABLE PAGE HEADER STYLES ---
+.table-page-header {
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 0.5px solid rgba(63, 78, 79, 0.25) !important;
+  box-shadow: 0 4px 12px rgba(44, 54, 57, 0.02);
+
+  .header-title-box {
+    padding: 14px 20px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    
+    .page-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--color-primary-dark-base);
+      margin: 0;
+    }
+    
+    .page-subtitle {
+      font-size: 0.68rem;
+      color: var(--color-slate-medium-light);
+      margin: 2px 0 0 0;
+    }
+  }
+
+  .header-separator {
+    height: 0.5px;
+    background-color: rgba(63, 78, 79, 0.25);
+    width: 100%;
+  }
+
+  .header-menu-bar {
+    background-color: #ffffff;
+    padding: 0 12px;
+    height: 42px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+  }
+
+  .menu-left-group, .menu-right-group {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+
+  .menu-action-item {
+    background: none;
+    border: none;
+    padding: 0 16px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-slate-medium-base);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    box-sizing: border-box;
+    outline: none;
+
+    .action-icon {
+      font-size: 0.85rem;
+    }
+
+    &:hover {
+      background-color: rgba(63, 78, 79, 0.08); // Tono más oscuro al pasar el mouse
+      color: var(--color-primary-dark-base);
+    }
+    
+    &:active {
+      background-color: rgba(63, 78, 79, 0.15);
+    }
+  }
+}
+
+.panel-filtros-flotante {
+  background-color: #ffffff !important;
+  border: 0.5px solid rgba(63, 78, 79, 0.25) !important;
+  box-shadow: 0 10px 15px -3px rgba(44, 54, 57, 0.1), 0 4px 6px -2px rgba(44, 54, 57, 0.05) !important;
+}
+
+.backdrop-filtros {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1070;
+  background: transparent;
+}
+
+/* --- CUSTOM SEARCHABLE SELECT STYLES --- */
+.custom-select-container {
+  position: relative;
+  width: 100%;
+}
+
+.form-select-custom {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%233F4E4F' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 16px 12px !important;
+  padding-right: 36px !important;
+}
+
+.custom-select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 220px; /* Altura máxima controlada para evitar desborde */
+  overflow-y: auto;
+  background-color: #ffffff;
+  border: 0.5px solid rgba(63, 78, 79, 0.25) !important;
+  border-radius: 8px;
+  margin-top: 4px;
+  z-index: 1090;
+  box-shadow: 0 10px 15px -3px rgba(44, 54, 57, 0.08), 0 4px 6px -2px rgba(44, 54, 57, 0.04);
+}
+
+.custom-select-option {
+  padding: 8px 12px;
+  font-size: 0.72rem;
+  color: var(--color-primary-dark-base);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Corta el texto largo con '...' */
+  transition: background-color 0.1s ease;
+
+  &:hover {
+    background-color: var(--color-soft-beige-light);
+    color: var(--color-primary-dark-dark);
+  }
+
+  &.selected {
+    background-color: rgba(162, 123, 92, 0.15) !important;
+    font-weight: 700;
+    color: var(--color-accent-bronze-dark);
+  }
+
+  &.disabled {
+    cursor: default;
+    color: var(--color-slate-medium-light);
+    &:hover {
+      background-color: transparent;
+    }
+  }
+}
+
+/* --- MEJORA DE BOTONES DE CERRAR (X) --- */
+.app-layout:not(.no-auth) .content-wrapper button.btn-close-modal,
+.app-layout:not(.no-auth) .content-wrapper button.close-btn-custom {
+  font-size: 2.2rem !important;
+  width: 44px !important;
+  height: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  transition: transform 0.2s, color 0.15s !important;
+  border-radius: 50% !important;
+  background: none !important;
+  border: none !important;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    transform: scale(1.08) !important;
+  }
+}
+
+.app-layout:not(.no-auth) .content-wrapper button.btn-close-preview {
+  font-size: 3.2rem !important;
+  width: 50px !important;
+  height: 50px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  transition: transform 0.2s, color 0.15s !important;
+  border-radius: 50% !important;
+  background: none !important;
+  border: none !important;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    transform: scale(1.1) !important;
+  }
+}
+
+.app-layout:not(.no-auth) .content-wrapper .elemento-lienzo-overlay button.btn-eliminar-item {
+  width: 28px !important;
+  height: 28px !important;
+  top: -14px !important;
+  right: -14px !important;
+  font-size: 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+}
+
+/* --- BOTONES DE FLECHAS EN LIGHTBOX --- */
+.app-layout:not(.no-auth) .content-wrapper button.btn-lightbox-arrow {
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 5rem !important;
+  width: 70px !important;
+  height: 70px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: none !important;
+  border: none !important;
+  color: #ffffff !important;
+  cursor: pointer !important;
+  transition: transform 0.2s, opacity 0.2s !important;
+  opacity: 0.6 !important;
+  z-index: 10 !important;
+  padding: 0 !important;
+
+  &:hover {
+    opacity: 1 !important;
+    transform: translateY(-50%) scale(1.2) !important;
+  }
+}
+
+
 
 

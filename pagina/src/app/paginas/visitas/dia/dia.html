@@ -1,0 +1,142 @@
+<div class="container-fluid p-4">
+  
+  <!-- Cabecera de Visitas del Día -->
+  <div class="table-page-header mb-4">
+    <div class="header-title-box">
+      <h1 class="page-title">📅 Visitas del día {{ fechaFormateada }}</h1>
+      <p class="page-subtitle">Listado de visitas técnicas agendadas para la promoción activa el día de hoy</p>
+    </div>
+    
+    <!-- Separador -->
+    <div class="header-separator"></div>
+    
+    <!-- Barra de menú integrada -->
+    <div class="header-menu-bar d-flex justify-content-between align-items-center">
+      <!-- Izquierda: Volver al Calendario -->
+      <div class="menu-left-group">
+        <a class="menu-action-item" (click)="volverAlCalendario()">
+          <span>⬅️</span> Volver al Calendario
+        </a>
+      </div>
+      
+      <!-- Derecha: Agendar Visita para este día -->
+      <div class="menu-right-group">
+        <a class="menu-action-item" 
+           [routerLink]="['/visitas/detalle/nuevo']" 
+           [queryParams]="{ fecha: fechaSeleccionada, origen: 'calendario' }"
+           *ngIf="permisosService.puedeInsertarEditarIncidencias() && !permisosService.esCliente() && !permisosService.esTecnico()">
+          <span>➕</span> Agendar Visita
+        </a>
+        <a class="menu-action-item" 
+           [routerLink]="['/visitas/detalle/nuevo']" 
+           [queryParams]="{ fecha: fechaSeleccionada, origen: 'calendario' }"
+           *ngIf="!(permisosService.puedeInsertarEditarIncidencias() && !permisosService.esCliente() && !permisosService.esTecnico())">
+          <span>➕</span> Solicitar Visita
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenedor principal de la lista -->
+  <div class="card shadow-sm border-0 p-4 bg-white" style="position: relative; min-height: 200px;">
+    <!-- Spinner de Carga -->
+    <div *ngIf="cargando" class="loading-overlay-custom">
+      <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+      <span class="ms-2">Procesando visitas...</span>
+    </div>
+
+    <!-- Lista Abierta -->
+    <div class="visitas-dia-list d-flex flex-column">
+      
+      <div *ngFor="let visita of visitas" 
+           class="visita-open-card d-flex align-items-center justify-content-between py-3"
+           [style.border-left]="'4px solid ' + obtenerColorVisita(visita)"
+           style="padding-left: 16px; margin-left: -8px;">
+        <!-- Grid de columnas fluidas -->
+        <div class="visita-info-grid d-flex flex-wrap gap-4 flex-grow-1">
+          
+          <!-- Promoción -->
+          <div class="info-col">
+            <span class="info-label">Promoción</span>
+            <span class="info-value font-weight-bold" [style.color]="obtenerColorVisita(visita)">
+              {{ visita.promocion }}
+            </span>
+          </div>
+
+          <!-- Hora -->
+          <div class="info-col">
+            <span class="info-label">Hora</span>
+            <span class="info-value font-weight-bold" style="font-size: 0.9rem;">
+              {{ obtenerHoraFormateada(visita.diaVisita) }}
+            </span>
+          </div>
+
+          <!-- Estado -->
+          <div class="info-col">
+            <span class="info-label">Estado</span>
+            <span class="info-value">
+              <span class="badge" [ngClass]="{
+                'bg-success': visita.estadoVisita === 'COMPLETADA',
+                'bg-warning text-dark': visita.estadoVisita === 'PENDIENTE',
+                'bg-danger': visita.estadoVisita === 'CANCELADA'
+              }">
+                {{ visita.estadoVisita === 'COMPLETADA' ? 'Completada' : (visita.estadoVisita === 'PENDIENTE' ? 'Pendiente' : 'Cancelada') }}
+              </span>
+            </span>
+          </div>
+
+          <!-- Incidencia -->
+          <div class="info-col">
+            <span class="info-label">Incidencia</span>
+            <span class="info-value font-weight-semibold">
+              {{ visita.numeroIncidencia || 'Sin Incidencia' }}
+            </span>
+          </div>
+
+          <!-- Piso -->
+          <div class="info-col">
+            <span class="info-label">Piso</span>
+            <span class="info-value">{{ visita.piso }}</span>
+          </div>
+
+          <!-- Técnico Responsable -->
+          <div class="info-col">
+            <span class="info-label">Técnico Responsable</span>
+            <span class="info-value font-weight-semibold">
+              {{ visita.tecnicoNombre || 'No asignada' }}
+            </span>
+          </div>
+
+          <!-- Observaciones -->
+          <div class="info-col flex-grow-1" style="min-width: 250px;">
+            <span class="info-label">Observaciones</span>
+            <span class="info-value text-muted" style="font-size: 0.8rem;">
+              {{ visita.observaciones || 'Sin observaciones registradas.' }}
+            </span>
+          </div>
+
+        </div>
+
+        <!-- Columna de Botones sin título a la derecha -->
+        <div class="visita-actions-col d-flex gap-2 ms-4 align-items-center">
+          <button class="btn btn-outline-primary btn-sm px-3" (click)="editarVisita(visita)" title="Ver Detalle / Editar">
+            ✏️ Editar
+          </button>
+          <button *ngIf="permisosService.puedeInsertarEditarIncidencias()" class="btn btn-outline-danger btn-sm px-3" (click)="eliminarVisita(visita)" title="Eliminar Visita">
+            🗑️ Eliminar
+          </button>
+        </div>
+
+      </div>
+
+      <!-- No hay registros -->
+      <div *ngIf="visitas.length === 0 && !cargando" class="text-center py-5 text-muted">
+        <span style="font-size: 2.5rem;">📅</span>
+        <h5 class="mt-3">No hay visitas agendadas para este día.</h5>
+        <p class="small">Haga clic en Volver al Calendario para buscar en otra fecha.</p>
+      </div>
+
+    </div>
+  </div>
+
+</div>

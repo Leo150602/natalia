@@ -1,0 +1,445 @@
+.detail-card {
+  position: relative;
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 0.5px solid rgba(63, 78, 79, 0.25) !important;
+  box-shadow: 0 4px 20px rgba(44, 54, 57, 0.04) !important;
+}
+
+.detail-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(250, 248, 245, 0.7);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 16px;
+  backdrop-filter: blur(2px);
+  color: var(--color-slate-medium-base);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.field-label {
+  font-size: 0.72rem;
+  color: var(--color-slate-medium-base);
+  margin-bottom: 4px;
+}
+
+.form-control, .form-select {
+  font-size: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(63, 78, 79, 0.2);
+  padding: 8px 12px;
+  background-color: var(--color-soft-beige-light);
+  color: var(--color-primary-dark-base);
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-accent-bronze-base);
+    box-shadow: 0 0 0 3px rgba(162, 123, 92, 0.2);
+    background-color: #ffffff;
+  }
+
+  &:disabled {
+    background-color: rgba(63, 78, 79, 0.04);
+    color: var(--color-slate-medium-light);
+    border-color: rgba(63, 78, 79, 0.1);
+    cursor: not-allowed;
+  }
+}
+
+textarea.form-control {
+  resize: vertical;
+}
+
+// Estilos de Modales y Vista Previa de Documentos Asociados
+.custom-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.55);
+  z-index: 1090;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.custom-modal-container {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 500px;
+  max-width: 90%;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.btn-close-modal {
+  background: none;
+  border: none;
+  color: var(--color-slate-medium-base);
+  font-size: 2.2rem;
+  line-height: 1;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: transform 0.2s, color 0.2s;
+  
+  &:hover {
+    color: #e53e3e;
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: scale(1.08);
+  }
+}
+
+.upload-dropzone {
+  transition: background-color 0.2s, border-color 0.2s;
+  border-width: 2px !important;
+  border-color: rgba(162, 123, 92, 0.3) !important;
+  background-color: var(--color-soft-beige-light) !important;
+
+  &:hover {
+    background-color: rgba(162, 123, 92, 0.05) !important;
+    border-color: var(--color-accent-bronze-base) !important;
+  }
+}
+
+.preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview-container {
+  position: relative;
+  background: #111111;
+  border-radius: 12px;
+  width: 95vw;
+  max-width: 95%;
+  height: 80vh;
+  padding: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.btn-close-preview {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 3.2rem;
+  line-height: 1;
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.2s, color 0.2s;
+  padding: 0;
+  width: 50px;
+  height: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  z-index: 2010;
+
+  &:hover {
+    transform: scale(1.1);
+    color: #e53e3e;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.preview-body {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: auto;
+  border-radius: 8px;
+  background-color: #222222;
+}
+
+.img-preview {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.video-preview {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  background-color: #000000;
+}
+
+.iframe-preview {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 6px;
+  background-color: #ffffff;
+}
+
+.btn-xs {
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+// Estilos del Lienzo Editor / Firmador
+.canvas-editor-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(26, 26, 26, 0.95);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.canvas-editor-container {
+  display: flex;
+  width: 98vw;
+  height: 96vh;
+  background-color: #2b2b2b;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6);
+}
+
+.canvas-editor-sidebar {
+  width: 300px;
+  background-color: #1e1e1e;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.canvas-editor-workspace {
+  flex-grow: 1;
+  background-color: #121212;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: auto;
+  padding: 20px;
+}
+
+.lienzo-captura-container {
+  position: relative;
+  background-color: #ffffff;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.4);
+  transform-origin: center;
+  user-select: none;
+  margin: auto;
+}
+
+.canvas-bg-element {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: block;
+}
+
+.img-bg-element {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  object-fit: contain;
+  display: block;
+}
+
+.elemento-lienzo-overlay {
+  position: absolute;
+  border: 1px dashed transparent;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: move;
+  padding: 4px;
+  
+  &.seleccionado {
+    border: 1px dashed #a27b5c;
+    background-color: rgba(162, 123, 92, 0.08);
+    
+    .btn-eliminar-item {
+      display: block;
+    }
+    
+    .resize-handle {
+      display: block;
+    }
+  }
+  
+  .btn-eliminar-item {
+    display: none;
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #e53e3e;
+    color: #ffffff;
+    border: none;
+    font-size: 12px;
+    line-height: 18px;
+    text-align: center;
+    cursor: pointer;
+    z-index: 10;
+    
+    &:hover {
+      background-color: #c53030;
+    }
+  }
+  
+  .resize-handle {
+    display: none;
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 8px;
+    height: 8px;
+    background-color: #a27b5c;
+    border: 1px solid #ffffff;
+    cursor: se-resize;
+    z-index: 10;
+  }
+  
+  .text-display {
+    width: 100%;
+    height: 100%;
+    word-break: break-word;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    color: #000000;
+  }
+  
+  .text-input {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #a27b5c;
+    background-color: #ffffff;
+    font-size: 14px;
+    resize: none;
+    outline: none;
+    color: #000000;
+  }
+}
+
+.cursor-crosshair {
+  cursor: crosshair;
+}
+
+/* Estilos para el Menú Contextual Flotante de Documentos */
+.menu-contextual {
+  position: fixed;
+  z-index: 9999;
+  background-color: #ffffff;
+  border: 0.5px solid rgba(63, 78, 79, 0.2) !important;
+  border-radius: 8px;
+  padding: 6px 0;
+  min-width: 150px;
+  box-shadow: 0 10px 15px -3px rgba(44, 54, 57, 0.1), 0 4px 6px -2px rgba(44, 54, 57, 0.05);
+  animation: scaleIn 0.12s cubic-bezier(0, 0, 0.2, 1);
+  transform-origin: top left;
+  display: flex;
+  flex-direction: column;
+
+  .menu-item {
+    background: none;
+    border: none;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--color-slate-medium-base);
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    .icono {
+      font-size: 13px;
+    }
+
+    &:hover {
+      background-color: var(--color-soft-beige-light);
+      color: var(--color-primary-dark-dark);
+    }
+
+    &.eliminar {
+      color: var(--color-error, #b85c5c);
+
+      &:hover {
+        background-color: rgba(184, 92, 92, 0.08);
+        color: var(--color-error, #b85c5c);
+      }
+    }
+  }
+}
+
+.menu-contextual-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 9998;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.fila-dato {
+  transition: background-color 0.2s ease;
+  cursor: context-menu;
+  
+  &:hover {
+    background-color: rgba(220, 215, 201, 0.25) !important;
+  }
+}
+
+

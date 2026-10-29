@@ -4,9 +4,11 @@ import com.proyect.main.modelos.Incidencias;
 import com.proyect.main.modelos.enums.CategoriaIncidencia;
 import com.proyect.main.modelos.enums.EstadoIncidencia;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -60,4 +62,20 @@ public interface IRepositorioIncidencias extends JpaRepository<Incidencias, Inte
 
     @Query("SELECT i FROM Incidencias i JOIN FETCH i.piso p JOIN FETCH p.promocion prom JOIN FETCH prom.promotora LEFT JOIN FETCH i.usuarioActualizo LEFT JOIN FETCH p.propietario WHERE i.estadoIncidencia = com.proyect.main.modelos.enums.EstadoIncidencia.SOLICITADO AND (:idPromocion IS NULL OR prom.idPromocion = :idPromocion)")
     List<Incidencias> findSolicitudes(@Param("idPromocion") Integer idPromocion);
+
+    @Query("SELECT i.idIncidencia FROM Incidencias i WHERE i.piso.promocion.idPromocion = :idPromocion")
+    List<Integer> findIdsByPromocionId(@Param("idPromocion") int idPromocion);
+
+    @Query("SELECT i.idIncidencia FROM Incidencias i WHERE i.piso.idPiso = :idPiso")
+    List<Integer> findIdsByPisoId(@Param("idPiso") int idPiso);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Incidencias i WHERE i.piso.idPiso IN (SELECT p.idPiso FROM Pisos p WHERE p.promocion.idPromocion = :idPromocion)")
+    void deleteByPromocionId(@Param("idPromocion") int idPromocion);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Incidencias i WHERE i.piso.idPiso = :idPiso")
+    void deleteByPisoId(@Param("idPiso") int idPiso);
 }

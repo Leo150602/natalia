@@ -40,8 +40,20 @@ export class IncidenciasService {
     return this.http.post(`${API_URL}/incidencias/importar/${idPromocion}`, formData, { responseType: 'text' });
   }
 
-  exportar(idPromocion: number): Observable<Blob> {
-    return this.http.get(`${API_URL}/incidencias/exportar/${idPromocion}`, { responseType: 'blob' });
+  exportar(idPromocion: number, filtros?: any, forzar = false): Observable<Blob> {
+    let params: any = {};
+    if (filtros) {
+      if (filtros.numeroIncidencia) params.numeroIncidencia = filtros.numeroIncidencia;
+      if (filtros.piso) params.piso = filtros.piso;
+      if (filtros.categoriaIncidencia) params.categoriaIncidencia = filtros.categoriaIncidencia;
+      if (filtros.estadoIncidencia) params.estadoIncidencia = filtros.estadoIncidencia;
+      if (filtros.fechaInicial) params.fechaInicial = filtros.fechaInicial;
+      if (filtros.fechaFinal) params.fechaFinal = filtros.fechaFinal;
+    }
+    if (forzar) {
+      params.forzar = 'true';
+    }
+    return this.http.get(`${API_URL}/incidencias/exportar/${idPromocion}`, { params, responseType: 'blob' });
   }
 
   eliminar(id: number): Observable<string> {

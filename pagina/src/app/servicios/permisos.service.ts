@@ -45,7 +45,16 @@ export class PermisosService {
   puedeInsertarEditar(): boolean {
     const user = this.authService.getCurrentUser();
     if (!user) return false;
-    return (user.rol || '').toUpperCase() === 'DESARROLLADOR' || user.id === 2;
+    const usernameLower = (user.username || '').toLowerCase().trim();
+    const rolUpper = (user.rol || '').toUpperCase().trim();
+    return rolUpper === 'DESARROLLADOR' || usernameLower === 'nataforonda' || user.id === 2;
+  }
+
+  puedeVerPlantillas(): boolean {
+    const user = this.authService.getCurrentUser();
+    if (!user) return false;
+    const rolUpper = (user.rol || '').toUpperCase().trim();
+    return rolUpper === 'DESARROLLADOR' || user.id === 2;
   }
 
   puedeRegistrarUsuarios(): boolean {

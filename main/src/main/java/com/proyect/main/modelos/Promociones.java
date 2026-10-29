@@ -23,7 +23,7 @@ public class Promociones {
     @Column
     private String promocion;
 
-    @OneToMany(mappedBy = "promocion", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "promocion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Pisos> pisos;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -35,4 +35,7 @@ public class Promociones {
 
     @Column(columnDefinition = "TEXT")
     private String coordenadas;
+
+    @Column
+    private String color;
 }

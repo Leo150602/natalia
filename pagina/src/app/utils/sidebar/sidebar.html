@@ -1,6 +1,6 @@
 <nav class="sidebar d-flex flex-column h-100">
     
-    <div class="sidebar-brand-box p-3 d-flex align-items-center gap-2 border-bottom border-dark-subtle">
+    <div class="sidebar-brand-box d-flex align-items-center gap-2" routerLink="/">
         <img src="fondo_negro_odecor.jpeg.png" alt="Odecor Logo" class="brand-logo-img" />
         <div class="brand-text-block">
             <h2 class="brand-title mb-0">ODECOR</h2>
@@ -27,16 +27,20 @@
                    [routerLink]="(hijo.requierePromo && !promocionSeleccionada) ? null : hijo.link" 
                    [class.deshabilitado]="hijo.requierePromo && !promocionSeleccionada"
                    routerLinkActive="activo"
+                   [routerLinkActiveOptions]="{ exact: true }"
                    class="menu-link-item d-flex align-items-center py-2 px-3 rounded text-decoration-none">
                     <span class="menu-icon me-2">
                       <span *ngIf="hijo.nombre === 'Incidencias'">📋</span>
                       <span *ngIf="hijo.nombre === 'Solicitudes'">📥</span>
-                      <span *ngIf="hijo.nombre === 'Visitas'">📅</span>
+                      <span *ngIf="hijo.nombre === 'Visitas'">🚶‍♂️</span>
+                      <span *ngIf="hijo.nombre === 'Calendario'">🗓️</span>
+                      <span *ngIf="hijo.nombre === 'Mapa de clientes'">🗺️</span>
                       <span *ngIf="hijo.nombre === 'Promociones'">🏢</span>
                       <span *ngIf="hijo.nombre === 'Propietarios'">👥</span>
                       <span *ngIf="hijo.nombre === 'Pisos'">🔑</span>
                       <span *ngIf="hijo.nombre === 'Usuarios'">👥</span>
                       <span *ngIf="hijo.nombre === 'Clientes'">🤝</span>
+                      <span *ngIf="hijo.nombre === 'Plantillas'">📄</span>
                       <span *ngIf="hijo.nombre === 'Registrar Usuario'">👤</span>
                       <span *ngIf="hijo.nombre.startsWith('Crear') || hijo.nombre.startsWith('Solicitar')">➕</span>
                     </span>

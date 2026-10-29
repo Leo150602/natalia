@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { PromocionesService } from '../../servicios/promociones-service';
 import { AlertaService } from '../../servicios/alerta-service';
 import { TablaDatosComponent } from '../../utils/tabla-datos/tabla-datos';
@@ -11,7 +11,7 @@ import { PermisosService } from '../../servicios/permisos.service';
 @Component({
   selector: 'app-promociones',
   standalone: true,
-  imports: [CommonModule, TablaDatosComponent, FormsModule],
+  imports: [CommonModule, TablaDatosComponent, FormsModule, RouterLink],
   templateUrl: './promociones.html',
   styleUrl: './promociones.scss'
 })
@@ -21,6 +21,7 @@ export class PromocionesComponent implements OnInit {
   datosFiltrados: any[] = [];
   config = CONFIG_TABLA_PROMOCIONES;
   cargando = false;
+  mostrarMenuFiltros = false;
 
   // Filtros reactivos locales
   filtros = {
@@ -51,12 +52,13 @@ export class PromocionesComponent implements OnInit {
       next: (res) => {
         const flatList: any[] = [];
         res.forEach(group => {
-          group.promocion.forEach(promo => {
+          group.promocion.forEach((promo: any) => {
             flatList.push({
               idPromocion: promo.idPromocion,
               promocion: promo.nombre,
               promotora: group.promotora,
-              direccion: promo.direccion
+              direccion: promo.direccion,
+              color: promo.color
             });
           });
         });
@@ -79,6 +81,12 @@ export class PromocionesComponent implements OnInit {
       const matchPrmtr = !this.filtros.promotora || (row.promotora && row.promotora.toLowerCase().includes(this.filtros.promotora.toLowerCase()));
       return matchPromo && matchPrmtr;
     });
+    this.cdr.detectChanges();
+  }
+
+  toggleMenuFiltros(): void {
+    this.mostrarMenuFiltros = !this.mostrarMenuFiltros;
+    this.cdr.detectChanges();
   }
 
   limpiarFiltros(): void {
@@ -89,8 +97,12 @@ export class PromocionesComponent implements OnInit {
     this.aplicarFiltros();
   }
 
+  irAlDetalle(row: any): void {
+    this.router.navigate([`/promociones/detalle/${row.idPromocion}`]);
+  }
+
   editarPromocion(row: any): void {
-    this.router.navigate(['/importar-promociones'], { queryParams: { id: row.idPromocion } });
+    this.router.navigate([`/promociones/detalle/${row.idPromocion}`]);
   }
 
   eliminarPromocion(row: any): void {
@@ -99,12 +111,16 @@ export class PromocionesComponent implements OnInit {
       `¿Está seguro de que desea eliminar la promoción "${row.promocion}"?`
     ).then((confirmado) => {
       if (confirmado) {
+        this.cargando = true;
+        this.cdr.detectChanges();
         this.promocionesService.eliminar(row.idPromocion).subscribe({
           next: () => {
             this.alerta.exito("Promoción eliminada con éxito.");
             this.cargarPromociones();
           },
           error: (err) => {
+            this.cargando = false;
+            this.cdr.detectChanges();
             this.alerta.error("Error al eliminar: " + (err.error || err.message));
           }
         });

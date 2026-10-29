@@ -30,3 +30,52 @@
     transform: translateY(0);
   }
 }
+
+// Estilos de Modales y Cortinas
+.custom-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.55);
+  z-index: 1090;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.custom-modal-container {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 500px;
+  max-width: 90%;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.btn-close-modal {
+  background: none;
+  border: none;
+  color: #718096;
+  font-size: 2.2rem;
+  line-height: 1;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: transform 0.2s, color 0.2s;
+  
+  &:hover {
+    color: #e53e3e;
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: scale(1.08);
+  }
+}

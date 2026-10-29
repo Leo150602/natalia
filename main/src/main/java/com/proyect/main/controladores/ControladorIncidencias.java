@@ -106,13 +106,55 @@ public class ControladorIncidencias {
     }
 
     @GetMapping("/exportar/{idPromocion}")
-    public ResponseEntity<?> exportar(@PathVariable int idPromocion) {
+    public ResponseEntity<?> exportar(
+            @PathVariable int idPromocion,
+            @RequestParam(required = false) String numeroIncidencia,
+            @RequestParam(required = false) String piso,
+            @RequestParam(required = false) String categoriaIncidencia,
+            @RequestParam(required = false) String estadoIncidencia,
+            @RequestParam(required = false) String fechaInicial,
+            @RequestParam(required = false) String fechaFinal,
+            @RequestParam(required = false, defaultValue = "false") boolean forzar) {
         try {
-            ByteArrayResource resource = servicioIncidencias.exportar(idPromocion);
+            com.proyect.main.modelos.dtos.entrada.IncidenciasFiltroDto filtro = 
+                new com.proyect.main.modelos.dtos.entrada.IncidenciasFiltroDto();
+            
+            if (numeroIncidencia != null && !numeroIncidencia.trim().isEmpty()) {
+                filtro.setNumeroIncidencia(numeroIncidencia.trim());
+            }
+            if (piso != null && !piso.trim().isEmpty()) {
+                filtro.setPiso(piso.trim());
+            }
+            if (categoriaIncidencia != null && !categoriaIncidencia.trim().isEmpty()) {
+                try {
+                    filtro.setCategoriaIncidencia(com.proyect.main.modelos.enums.CategoriaIncidencia.valueOf(categoriaIncidencia));
+                } catch (Exception ignored) {}
+            }
+            if (estadoIncidencia != null && !estadoIncidencia.trim().isEmpty()) {
+                try {
+                    filtro.setEstadoIncidencia(com.proyect.main.modelos.enums.EstadoIncidencia.valueOf(estadoIncidencia));
+                } catch (Exception ignored) {}
+            }
+            
+            // Handle common local date time formats (e.g. ISO format from frontend)
+            if (fechaInicial != null && !fechaInicial.trim().isEmpty()) {
+                try {
+                    filtro.setFechaInicial(java.time.LocalDateTime.parse(fechaInicial));
+                } catch (Exception ignored) {}
+            }
+            if (fechaFinal != null && !fechaFinal.trim().isEmpty()) {
+                try {
+                    filtro.setFechaFinal(java.time.LocalDateTime.parse(fechaFinal));
+                } catch (Exception ignored) {}
+            }
+
+            ByteArrayResource resource = servicioIncidencias.exportar(idPromocion, filtro, forzar);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"incidencias.xlsx\"")
                     .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                     .body(resource);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al exportar incidencias a Excel: " + e.getMessage());
         }

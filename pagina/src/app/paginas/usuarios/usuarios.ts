@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService, LoginRespuesta } from '../../servicios/auth-service';
 import { AlertaService } from '../../servicios/alerta-service';
 import { PermisosService } from '../../servicios/permisos.service';
@@ -10,7 +10,7 @@ import { TablaDatosComponent } from '../../utils/tabla-datos/tabla-datos';
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, FormsModule, TablaDatosComponent],
+  imports: [CommonModule, FormsModule, TablaDatosComponent, RouterLink],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.scss'
 })
@@ -19,6 +19,7 @@ export class UsuariosComponent implements OnInit {
   usuariosFiltrados: any[] = [];
   currentUser: LoginRespuesta | null = null;
   cargando = false;
+  mostrarMenuFiltros = false;
 
   filtroUsername = '';
   filtroNombre = '';
@@ -40,7 +41,6 @@ export class UsuariosComponent implements OnInit {
       { campo: 'correo', nombre: 'Correo Electrónico' },
       { campo: 'telefono', nombre: 'Teléfono / Número' },
       { campo: 'rolText', nombre: 'Rol' },
-      { campo: 'nombrePromotora', nombre: 'Promotora' },
       { campo: 'activoText', nombre: 'Estado' }
     ]
   };
@@ -100,6 +100,11 @@ export class UsuariosComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  toggleMenuFiltros(): void {
+    this.mostrarMenuFiltros = !this.mostrarMenuFiltros;
+    this.cdr.detectChanges();
+  }
+
   limpiarFiltros(): void {
     this.filtroUsername = '';
     this.filtroNombre = '';
@@ -112,8 +117,12 @@ export class UsuariosComponent implements OnInit {
     return found ? found.label : (rolName || '(Sin Rol)');
   }
 
+  irAlDetalle(row: any): void {
+    this.router.navigate([`/usuarios/detalle/${row.id}`]);
+  }
+
   editarUsuario(u: any): void {
-    this.router.navigate(['/registro-usuarios'], { state: { usuarioParaEditar: u } });
+    this.router.navigate([`/usuarios/detalle/${u.id}`]);
   }
 
   eliminarUsuario(u: any): void {
@@ -125,12 +134,16 @@ export class UsuariosComponent implements OnInit {
       "Sí, eliminar"
     ).then((confirmado) => {
       if (confirmado) {
+        this.cargando = true;
+        this.cdr.detectChanges();
         this.authService.eliminarUsuario(u.id).subscribe({
           next: () => {
             this.alertaService.exito("Usuario eliminado con éxito.");
             this.cargarUsuarios();
           },
           error: (err) => {
+            this.cargando = false;
+            this.cdr.detectChanges();
             this.alertaService.error("Error al eliminar usuario: " + (err.error || err.message));
           }
         });

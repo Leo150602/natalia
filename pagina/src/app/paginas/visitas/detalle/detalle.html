@@ -1,0 +1,492 @@
+<div class="container-fluid p-4">
+  
+  <!-- Cabecera de Detalle -->
+  <div class="table-page-header mb-4">
+    <!-- Top: Título y Subtítulo -->
+    <div class="header-title-box">
+      <h1 class="page-title">
+        {{ modoCrear ? (permisosService.puedeInsertarEditar() ? 'Agendar Visita' : 'Solicitar Visita') : 'Detalle de Visita' }}
+      </h1>
+      <p class="page-subtitle">
+        {{ modoCrear ? 'Agende una nueva visita técnica para una de las incidencias activas' : 'Visualización completa y seguimiento de la visita técnica seleccionada' }}
+      </p>
+    </div>
+    
+    <!-- Separador -->
+    <div class="header-separator"></div>
+    
+    <!-- Bottom: Barra de menú integrada -->
+    <div class="header-menu-bar d-flex justify-content-between align-items-center">
+      <!-- Izquierda: Volver al Listado -->
+      <div class="menu-left-group">
+        <a class="menu-action-item" (click)="cancelar()">
+          <span>⬅️</span> Volver
+        </a>
+      </div>
+      
+      <!-- Derecha: Acciones de Guardar, Editar, Subir Evidencia y Eliminar -->
+      <div class="menu-right-group">
+        <!-- Modo Lectura -->
+        <ng-container *ngIf="!modoEdicion">
+          <button *ngIf="permisosService.puedeInsertarEditarIncidencias()" class="menu-action-item" (click)="activarModoEdicion()">
+            <span>✏️</span> Editar
+          </button>
+          <button *ngIf="!modoCrear" class="menu-action-item" (click)="abrirVisualizadorDocumentos()">
+            <span>📂</span> Visualizar Documentos
+          </button>
+          <button *ngIf="permisosService.puedeInsertarEditarIncidencias() && visita.idIncidencia" class="menu-action-item" (click)="abrirModalSubir()">
+            <span>➕</span> Subir Evidencia
+          </button>
+        </ng-container>
+
+        <!-- Modo Edición -->
+        <ng-container *ngIf="modoEdicion">
+          <button *ngIf="puedeEditar" class="menu-action-item" (click)="actualizar()" [disabled]="cargando">
+            <span>💾</span> {{ modoCrear ? (permisosService.puedeInsertarEditar() ? 'Agendar Visita' : 'Solicitar Visita') : 'Guardar Cambios' }}
+          </button>
+        </ng-container>
+
+        <button *ngIf="puedeEditar && !modoCrear" class="menu-action-item text-danger" (click)="eliminar()" [disabled]="cargando">
+          <span>🗑️</span> Borrar Visita
+        </button>
+        <span *ngIf="!puedeEditar" class="menu-action-item text-muted disabled">
+          <span>🔒</span> Solo Lectura
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de Detalle / Visualización -->
+  <!-- MODO LECTURA / PANELES DE DETALLE -->
+  <ng-container *ngIf="!modoEdicion">
+    <div class="row animate__animated animate__fadeIn">
+      <div class="col-12 col-xl-9 mx-auto">
+        
+        <!-- Panel Principal de Visita -->
+        <div class="card shadow-sm border-0 mb-4 p-4" style="border-radius: 16px; background: #ffffff;">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.8rem;">
+                🚶‍♂️
+              </div>
+              <div>
+                <h4 class="font-weight-bold mb-1 text-dark">Visita Técnica</h4>
+                <p class="text-muted mb-0 small">
+                  Fecha programada: <strong class="text-dark">{{ visita.diaVisita | date:'dd/MM/yyyy HH:mm' }}</strong>
+                </p>
+              </div>
+            </div>
+            
+            <div>
+              <span class="badge py-2 px-3 text-uppercase" [ngClass]="{
+                'bg-success-subtle text-success': visita.estadoVisita === 'COMPLETADA' || (visita.estadoVisita && visita.estadoVisita.toUpperCase().includes('COMPLE')),
+                'bg-warning-subtle text-warning': visita.estadoVisita === 'PENDIENTE' || (visita.estadoVisita && visita.estadoVisita.toUpperCase().includes('PENDI')),
+                'bg-danger-subtle text-danger': visita.estadoVisita === 'CANCELADA' || (visita.estadoVisita && visita.estadoVisita.toUpperCase().includes('CANCE'))
+              }" style="font-size: 0.8rem; letter-spacing: 0.5px; border-radius: 20px;">
+                {{ visita.estadoVisita || 'PENDIENTE' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ficha de Detalles de Visita -->
+        <div class="row g-4 mb-4">
+          
+          <!-- Incidencia y Técnico -->
+          <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100 p-4" style="border-radius: 16px; background: #ffffff; min-height: 180px;">
+              <h5 class="font-weight-bold text-dark mb-3 pb-2" style="border-bottom: 1.5px solid var(--color-soft-beige-dark, #e2e8f0);">📋 Asignación</h5>
+              <div class="d-flex flex-column gap-3">
+                <div>
+                  <span class="text-muted d-block small font-weight-semibold">Incidencia Asociada</span>
+                  <span class="font-weight-bold text-dark" style="font-size: 0.95rem;">{{ busquedaIncidencia || 'Ninguna' }}</span>
+                </div>
+                <div>
+                  <span class="text-muted d-block small font-weight-semibold">Técnico Asignado</span>
+                  <span class="font-weight-bold text-dark" style="font-size: 0.95rem;">{{ obtenerNombreTecnico(visita.idTecnico) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notas y Observaciones -->
+          <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100 p-4" style="border-radius: 16px; background: #ffffff; min-height: 180px;">
+              <h5 class="font-weight-bold text-dark mb-3 pb-2" style="border-bottom: 1.5px solid var(--color-soft-beige-dark, #e2e8f0);">📝 Observaciones</h5>
+              <div class="h-100">
+                <span class="text-muted d-block small font-weight-semibold">Detalles de la Visita</span>
+                <p class="text-dark mt-1" style="font-size: 0.85rem; line-height: 1.4; white-space: pre-line;">
+                  {{ visita.observaciones || 'Sin observaciones registradas.' }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- MODO EDICIÓN / FORMULARIO -->
+  <div class="row" *ngIf="modoEdicion">
+    <div class="col-12 col-xl-9 mx-auto">
+      <div class="card shadow-sm border-0 detail-card p-4">
+        
+        <!-- Loading Spinner Overlay -->
+        <div *ngIf="cargando" class="detail-loading-overlay">
+          <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+          <span class="ms-2">Procesando visita...</span>
+        </div>
+
+        <form (ngSubmit)="actualizar()" #detalleForm="ngForm">
+          <div class="row g-3">
+            
+            <!-- Incidencia (Custom Searchable) -->
+            <div class="col-md-6">
+              <label class="form-label field-label font-weight-bold">Incidencia Asociada *</label>
+              <div class="custom-select-container">
+                <input 
+                  type="text" 
+                  class="form-control form-select-custom"
+                  [disabled]="!puedeEditar"
+                  (focus)="abrirDropdownIncidencia()"
+                  (blur)="cerrarDropdownIncidencia()"
+                  [(ngModel)]="busquedaIncidencia"
+                  (ngModelChange)="filtrarIncidencias()"
+                  name="busquedaIncidenciaInput"
+                  placeholder="Seleccione una incidencia..." />
+                
+                <div *ngIf="mostrarDropdownIncidencia" class="custom-select-dropdown shadow-lg">
+                  <div 
+                    *ngFor="let inc of incidenciasFiltradas" 
+                    (mousedown)="seleccionarIncidencia(inc)"
+                    class="custom-select-option"
+                    [class.selected]="inc.idIncidencia === visita.idIncidencia"
+                    [title]="inc.numeroIncidencia + ' - ' + inc.descripcion + ' (Piso: ' + inc.pisos?.piso + ')'">
+                    {{ inc.numeroIncidencia }} - {{ inc.descripcion || 'Sin descripción' }} (Piso: {{ inc.pisos?.piso }})
+                  </div>
+                  <div *ngIf="incidenciasFiltradas.length === 0" class="custom-select-option text-muted disabled">
+                    Sin coincidencias
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Técnico (Select Normal) -->
+            <div class="col-md-6">
+              <label for="idTecnico" class="form-label field-label font-weight-bold">Técnico Asignado *</label>
+              <select 
+                class="form-select" 
+                id="idTecnico" 
+                name="idTecnico" 
+                [(ngModel)]="visita.idTecnico" 
+                required 
+                [disabled]="!puedeEditar">
+                <option [value]="null" disabled selected>Seleccione un técnico...</option>
+                <option *ngFor="let tec of tecnicos" [value]="tec.id">
+                  {{ tec.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Fecha Visita -->
+            <div class="col-md-6">
+              <label for="diaVisita" class="form-label field-label font-weight-bold">Fecha y Hora de la Visita *</label>
+              <input 
+                type="datetime-local" 
+                class="form-control" 
+                id="diaVisita" 
+                name="diaVisita" 
+                [(ngModel)]="visita.diaVisita"
+                required
+                [disabled]="!puedeEditar" />
+            </div>
+
+            <!-- Estado de la Visita (Select Normal - Oculto si no es Nata/Dev) -->
+            <div class="col-md-6" *ngIf="permisosService.puedeInsertarEditar()">
+              <label for="estadoVisita" class="form-label field-label font-weight-bold">Estado de la Visita</label>
+              <select 
+                class="form-select" 
+                id="estadoVisita" 
+                name="estadoVisita" 
+                [(ngModel)]="visita.estadoVisita"
+                [disabled]="!puedeEditar">
+                <option value="" disabled selected>Seleccione estado...</option>
+                <option *ngFor="let est of estados" [value]="est.value">
+                  {{ est.descripcion }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Observaciones -->
+            <div class="col-12">
+              <label for="observaciones" class="form-label field-label font-weight-bold">Observaciones / Notas de Visita</label>
+              <textarea 
+                class="form-control" 
+                id="observaciones" 
+                name="observaciones" 
+                rows="4" 
+                [(ngModel)]="visita.observaciones" 
+                [disabled]="!puedeEditar"
+                placeholder="Escriba aquí los detalles conversados o el diagnóstico del técnico en el piso..."></textarea>
+            </div>
+
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- El listado de evidencias y documentos se visualiza y administra a través del menú superior -->
+
+  <!-- Modal para Subir Documento -->
+  <div *ngIf="mostrarModalSubir" class="custom-modal-overlay" (click)="cerrarModalSubir()">
+    <div class="custom-modal-container" (click)="$event.stopPropagation()">
+      <div class="custom-modal-header d-flex justify-content-between align-items-center mb-3">
+        <h5 class="m-0 font-weight-bold text-dark">Subir Documento o Evidencia a la Incidencia</h5>
+        <button class="btn-close-modal" (click)="cerrarModalSubir()">&times;</button>
+      </div>
+      <div class="custom-modal-body">
+        <div class="mb-3">
+          <label for="nombreDocSubir" class="form-label field-label font-weight-bold text-dark">Nombre del Documento o Evidencia *</label>
+          <input type="text" class="form-control text-dark" id="nombreDocSubir" [(ngModel)]="docSubir.nombre" placeholder="Ej. Informe de visita, Foto de reparación" />
+        </div>
+        <div class="mb-3">
+          <label for="estadoDocSubir" class="form-label field-label font-weight-bold text-dark">Estado *</label>
+          <select class="form-select text-dark" id="estadoDocSubir" [(ngModel)]="docSubir.estado">
+            <option value="FALTAN_FIRMAS">Faltan Firmas</option>
+            <option value="FIRMADO">Firmado</option>
+            <option value="NO_APLICA">No aplica</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label field-label font-weight-bold text-dark">Archivo de Evidencia *</label>
+          <div class="upload-dropzone p-3 text-center border border-dashed rounded bg-light cursor-pointer" (click)="fileInputSubir.click()">
+            <input type="file" #fileInputSubir (change)="onArchivoSeleccionadoSubir($event)" style="display: none;" />
+            <div class="upload-icon mb-1" style="font-size: 1.5rem;">📁</div>
+            <p class="mb-0 text-dark" style="font-size: 0.75rem;"><strong>Haga clic aquí</strong> para seleccionar el archivo</p>
+            <div *ngIf="docSubir.archivo" class="mt-2 text-success font-weight-bold" style="font-size: 0.75rem;">
+              Seleccionado: {{ docSubir.archivo.name }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="custom-modal-footer d-flex gap-2 justify-content-end mt-4">
+        <button class="btn btn-outline-secondary btn-sm px-3" (click)="cerrarModalSubir()">Cancelar</button>
+        <button class="btn btn-primary btn-sm px-3" (click)="guardarDocIncidencia()" [disabled]="cargandoSubir || !docSubir.archivo">
+          <span *ngIf="cargandoSubir" class="spinner-border spinner-border-sm me-1"></span> Subir
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal/Overlay de Visualización de Documentos Completo -->
+  <div *ngIf="mostrarVisualizadorDocumentos" class="preview-overlay animate__animated animate__fadeIn" style="z-index: 1060; background: rgba(0, 0, 0, 0.85); display: flex;" (click)="cerrarVisualizadorDocumentos()">
+    <div class="custom-modal-container bg-white p-4 animate__animated animate__zoomIn" style="width: 90%; max-width: 950px; height: 85%; max-height: 750px; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column;" (click)="$event.stopPropagation()">
+      
+      <!-- Cabecera Visualizador -->
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <h4 class="font-weight-bold text-dark m-0">📁 Evidencias y Documentos de la Incidencia</h4>
+        <div class="d-flex gap-2">
+          <button *ngIf="permisosService.puedeInsertarEditarIncidencias()" class="btn btn-sm btn-primary font-weight-bold px-3" (click)="abrirModalSubir()">
+            ➕ Agregar Evidencia
+          </button>
+          <button class="btn-close-modal" (click)="cerrarVisualizadorDocumentos()" title="Cerrar">&times;</button>
+        </div>
+      </div>
+
+      <!-- Barra de pestañas (Tabs selector) -->
+      <div class="d-flex gap-2 mb-3 border-bottom pb-2">
+        <button class="btn btn-sm" [class.btn-dark]="tabActiva === 'imagenes'" [class.btn-outline-dark]="tabActiva !== 'imagenes'" (click)="tabActiva = 'imagenes'">
+          🖼️ Imágenes ({{ obtenerListaDeTab('imagenes').length }})
+        </button>
+        <button class="btn btn-sm" [class.btn-dark]="tabActiva === 'videos'" [class.btn-outline-dark]="tabActiva !== 'videos'" (click)="tabActiva = 'videos'">
+          🎥 Videos ({{ obtenerListaDeTab('videos').length }})
+        </button>
+        <button class="btn btn-sm" [class.btn-dark]="tabActiva === 'documentos'" [class.btn-outline-dark]="tabActiva !== 'documentos'" (click)="tabActiva = 'documentos'">
+          📄 Otros Documentos ({{ obtenerListaDeTab('documentos').length }})
+        </button>
+      </div>
+
+      <!-- Contenedor dinámico según Tab activa -->
+      <div class="flex-grow-1 overflow-auto p-2" style="min-height: 0;">
+        
+        <!-- TAB IMÁGENES -->
+        <div *ngIf="tabActiva === 'imagenes'" class="row g-3">
+          <div *ngFor="let item of obtenerListaDeTab('imagenes'); let i = index" class="col-6 col-sm-4 col-md-3">
+            <div class="card h-100 border shadow-sm p-2 cursor-pointer position-relative text-center bg-light" (click)="abrirLightbox(i)">
+              <!-- Imagen Thumbnail -->
+              <div class="d-flex align-items-center justify-content-center" style="height: 120px; overflow: hidden; border-radius: 8px; background: #000;">
+                <img [src]="item.documento.ruta" class="img-fluid" style="max-height: 100%; object-fit: contain;" alt="Evidencia" />
+              </div>
+              <!-- Info & Actions -->
+              <div class="mt-2 text-start">
+                <div class="text-dark font-weight-bold text-truncate small" [title]="item.documento.nombre">{{ item.documento.nombre }}</div>
+                <div class="text-muted small" style="font-size: 0.65rem;">Por: {{ item.nombreSubio }}</div>
+                <div class="d-flex gap-1 justify-content-between mt-2">
+                  <button *ngIf="permisosService.puedeInsertarEditarIncidencias()" class="btn btn-xs btn-outline-danger py-0 px-2 font-weight-bold" (click)="$event.stopPropagation(); eliminarDocIncidencia(item)" style="font-size: 0.65rem;">
+                    🗑️ Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="obtenerListaDeTab('imagenes').length === 0" class="text-center text-muted p-5 w-100 small">
+            No se han subido imágenes de evidencia.
+          </div>
+        </div>
+
+        <!-- TAB VIDEOS -->
+        <div *ngIf="tabActiva === 'videos'" class="row g-3">
+          <div *ngFor="let item of obtenerListaDeTab('videos')" class="col-12 col-md-6">
+            <div class="card border shadow-sm p-3 bg-light">
+              <!-- Video player (preload metadata, NO autoplay) -->
+              <video [src]="item.documento.ruta" controls preload="metadata" style="max-height: 180px; width: 100%; border-radius: 8px; background: #000;"></video>
+              <!-- Info & Actions -->
+              <div class="mt-2">
+                <div class="text-dark font-weight-bold text-truncate small" [title]="item.documento.nombre">{{ item.documento.nombre }}</div>
+                <div class="text-muted small d-flex justify-content-between" style="font-size: 0.68rem;">
+                  <span>Subido por: {{ item.nombreSubio }}</span>
+                  <span>{{ item.fechaActualizacion | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+                <div class="d-flex gap-2 justify-content-end mt-2">
+                  <button *ngIf="permisosService.puedeInsertarEditarIncidencias()" class="btn btn-xs btn-outline-danger py-0 px-3 font-weight-bold" (click)="eliminarDocIncidencia(item)" style="font-size: 0.68rem;">
+                    🗑️ Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="obtenerListaDeTab('videos').length === 0" class="text-center text-muted p-5 w-100 small">
+            No se han subido videos de evidencia.
+          </div>
+        </div>
+
+        <!-- TAB OTROS DOCUMENTOS (PDF, DOCX, etc.) -->
+        <div *ngIf="tabActiva === 'documentos'">
+          <div class="table-responsive">
+            <table class="table table-custom w-100">
+              <thead>
+                <tr class="cabecera-celda">
+                  <th>Nombre del Documento</th>
+                  <th>Subido Por</th>
+                  <th>Fecha de Actualización</th>
+                  <th>Estado</th>
+                  <th class="text-center" style="width: 150px;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let docAssoc of obtenerListaDeTab('documentos')" class="fila-dato">
+                  <td class="dato-celda font-weight-bold text-dark">{{ docAssoc.documento.nombre }}</td>
+                  <td class="dato-celda text-muted">{{ docAssoc.nombreSubio }}</td>
+                  <td class="dato-celda text-muted">{{ docAssoc.fechaActualizacion | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td class="dato-celda">
+                    <span class="badge" [ngClass]="{
+                      'bg-success': docAssoc.estado === 'FIRMADO',
+                      'bg-warning text-dark': docAssoc.estado === 'FALTAN_FIRMAS',
+                      'bg-secondary': docAssoc.estado === 'NO_APLICA'
+                    }">
+                      {{ docAssoc.estado === 'FIRMADO' ? 'Firmado' : (docAssoc.estado === 'FALTAN_FIRMAS' ? 'Faltan Firmas' : 'No aplica') }}
+                    </span>
+                  </td>
+                  <td class="dato-celda text-center">
+                    <div class="d-flex gap-2 justify-content-center">
+                      <button class="btn btn-xs btn-outline-info py-0 px-2 font-weight-bold" (click)="verDocumento(docAssoc.documento)" title="Descargar/Ver documento" style="font-size: 0.72rem;">
+                        👁️ Ver
+                      </button>
+                      <button *ngIf="permisosService.puedeInsertarEditarIncidencias()" class="btn btn-xs btn-outline-primary py-0 px-2 font-weight-bold" (click)="abrirModalEditar(docAssoc)" title="Editar documento/estado" style="font-size: 0.72rem;">
+                        ✏️ Editar
+                      </button>
+                      <button *ngIf="permisosService.puedeInsertarEditarIncidencias()" class="btn btn-xs btn-outline-danger py-0 px-2 font-weight-bold" (click)="eliminarDocIncidencia(docAssoc)" title="Eliminar documento" style="font-size: 0.72rem;">
+                        🗑️
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="obtenerListaDeTab('documentos').length === 0">
+                  <td colspan="5" class="text-center text-muted py-4 small">
+                    No hay otros formatos de documentos asociados.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal para Editar/Intercambiar Documento -->
+  <div *ngIf="mostrarModalEditar" class="custom-modal-overlay" style="z-index: 1065;" (click)="cerrarModalEditar()">
+    <div class="custom-modal-container bg-white p-4" style="max-width: 500px;" (click)="$event.stopPropagation()">
+      <div class="custom-modal-header d-flex justify-content-between align-items-center mb-3">
+        <h5 class="m-0 font-weight-bold text-dark">Editar Documento</h5>
+        <button class="btn-close-modal" (click)="cerrarModalEditar()">&times;</button>
+      </div>
+      
+      <div class="custom-modal-body">
+        <div class="mb-3">
+          <label for="nombreDocEditar" class="form-label field-label font-weight-bold text-dark">Nombre del Documento *</label>
+          <input type="text" class="form-control text-dark" id="nombreDocEditar" [(ngModel)]="docEditar.nombre" />
+        </div>
+        <div class="mb-3">
+          <label for="estadoDocEditar" class="form-label field-label font-weight-bold text-dark">Estado *</label>
+          <select class="form-select text-dark" id="estadoDocEditar" [(ngModel)]="docEditar.estado">
+            <option value="FALTAN_FIRMAS">Faltan Firmas</option>
+            <option value="FIRMADO">Firmado</option>
+            <option value="NO_APLICA">No aplica</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label field-label font-weight-bold text-dark">Intercambiar por nuevo archivo (Opcional)</label>
+          <div class="upload-dropzone p-3 text-center border border-dashed rounded bg-light cursor-pointer" (click)="fileInputEditar.click()">
+            <input type="file" #fileInputEditar (change)="onArchivoSeleccionadoEditar($event)" style="display: none;" />
+            <div class="upload-icon mb-1" style="font-size: 1.5rem;">📁</div>
+            <p class="mb-0 text-dark" style="font-size: 0.75rem;"><strong>Haga clic aquí</strong> para cambiar el archivo</p>
+            <div *ngIf="docEditar.archivo" class="mt-2 text-success font-weight-bold" style="font-size: 0.75rem;">
+              Seleccionado: {{ docEditar.archivo.name }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="custom-modal-footer d-flex gap-2 justify-content-end mt-4">
+        <button class="btn btn-outline-secondary btn-sm px-3" (click)="cerrarModalEditar()">Cancelar</button>
+        <button class="btn btn-primary btn-sm px-3" (click)="actualizarDocIncidencia()" [disabled]="cargandoEditar">
+          <span *ngIf="cargandoEditar" class="spinner-border spinner-border-sm me-1"></span> Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX PARA FOTOS -->
+  <div *ngIf="indiceImagenGrande !== null" class="preview-overlay animate__animated animate__fadeIn" style="z-index: 1070; background: rgba(0,0,0,0.95); display: flex;" (click)="cerrarLightbox()">
+    <button class="btn-close-preview" (click)="cerrarLightbox()" title="Cerrar">&times;</button>
+    
+    <!-- Botón Anterior -->
+    <button class="btn-lightbox-arrow" style="left: 20px;" (click)="$event.stopPropagation(); lightboxAnterior()">
+      &lsaquo;
+    </button>
+    
+    <!-- Contenedor Imagen Grande -->
+    <div class="preview-body d-flex flex-column justify-content-center align-items-center" (click)="$event.stopPropagation()">
+      <img [src]="obtenerListaDeTab('imagenes')[indiceImagenGrande]?.documento?.ruta" class="img-preview" alt="Evidencia Grande" style="max-height: 80vh; max-width: 80vw; object-fit: contain;" />
+      <div class="text-center text-white mt-3 font-weight-bold" style="font-size: 1.1rem;">
+        {{ obtenerListaDeTab('imagenes')[indiceImagenGrande]?.documento?.nombre }}
+      </div>
+      <div class="text-center text-white-50 small mt-1">
+        Imagen {{ indiceImagenGrande + 1 }} de {{ obtenerListaDeTab('imagenes').length }}
+      </div>
+    </div>
+
+    <!-- Botón Siguiente -->
+    <button class="btn-lightbox-arrow" style="right: 20px;" (click)="$event.stopPropagation(); lightboxSiguiente()">
+      &rsaquo;
+    </button>
+  </div>
+
+</div>

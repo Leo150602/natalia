@@ -1,60 +1,82 @@
 <div class="container-fluid p-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h1 class="mb-0">Importación y Gestión de Pisos</h1>
-      <p class="text-muted mb-0">Listado de pisos registrados y herramientas de carga/descarga Excel para la promoción seleccionada</p>
+  
+  <!-- Cabecera de Pisos -->
+  <div class="table-page-header mb-4">
+    <!-- Top: Título y Subtítulo -->
+    <div class="header-title-box">
+      <h1 class="page-title">Gestión de Pisos / Viviendas</h1>
+      <p class="page-subtitle">Listado de pisos registrados y herramientas de carga/descarga Excel para la promoción seleccionada</p>
     </div>
     
-    <div class="d-flex gap-2">
-      <!-- Input de archivo oculto -->
-      <input 
-        type="file" 
-        #fileInput 
-        (change)="importarExcel($event)" 
-        accept=".xlsx, .xls" 
-        class="d-none" />
+    <!-- Separador -->
+    <div class="header-separator"></div>
+    
+    <!-- Bottom: Barra de menú de acciones integrada -->
+    <div class="header-menu-bar d-flex justify-content-between align-items-center">
+      <!-- Izquierda: Opciones de creación -->
+      <div class="menu-left-group d-flex align-items-center">
+        <a class="menu-action-item" routerLink="/pisos/detalle/nuevo" *ngIf="permisosService.puedeInsertarEditarPisosYPropietarios()">
+          <span>➕</span> Crear Piso
+        </a>
+      </div>
+      
+      <!-- Derecha: Filtrado e Importar/Exportar -->
+      <div class="menu-right-group d-flex align-items-center gap-2">
+        <!-- Filtrado -->
+        <div class="position-relative menu-action-dropdown">
+          <button class="menu-action-item" (click)="toggleMenuFiltros()">
+            <span>🔍</span> Filtrado
+          </button>
 
-      <!-- Botón Importar -->
-      <button class="btn btn-outline-primary d-flex align-items-center gap-2" (click)="fileInput.click()">
-        <span>Importar Excel</span>
-      </button>
+          <!-- Tarjeta de Filtros Flotante -->
+          <div *ngIf="mostrarMenuFiltros" class="card shadow-lg border border-light position-absolute end-0 mt-2 p-3 panel-filtros-flotante" style="width: 320px; z-index: 1080;">
+            <h6 class="mb-3 text-dark font-weight-bold">Filtros de Búsqueda</h6>
+            
+            <div class="row g-2">
+              <div class="col-12">
+                <label class="form-label field-label">Piso</label>
+                <input type="text" class="form-control" [(ngModel)]="filtros.piso" (ngModelChange)="aplicarFiltros()" placeholder="Buscar por piso...">
+              </div>
+              <div class="col-12">
+                <label class="form-label field-label">Propietario</label>
+                <input type="text" class="form-control" [(ngModel)]="filtros.propietario" (ngModelChange)="aplicarFiltros()" placeholder="Buscar por propietario...">
+              </div>
+              <div class="col-12">
+                <label class="form-label field-label">Teléfono</label>
+                <input type="text" class="form-control" [(ngModel)]="filtros.telefono" (ngModelChange)="aplicarFiltros()" placeholder="Buscar por teléfono...">
+              </div>
+              
+              <div class="col-12 mt-3 d-flex gap-2">
+                <button class="btn btn-sm btn-primary flex-grow-1" (click)="toggleMenuFiltros()">Aceptar</button>
+                <button class="btn btn-sm btn-outline-secondary flex-grow-1" (click)="limpiarFiltros()">Limpiar</button>
+              </div>
+            </div>
+          </div>
 
-      <!-- Botón Exportar -->
-      <button class="btn btn-primary d-flex align-items-center gap-2" (click)="exportarExcel()">
-        <span>Exportar Excel</span>
-      </button>
-    </div>
-  </div>
+          <!-- Backdrop invisible para cerrar el menú al hacer clic fuera -->
+          <div *ngIf="mostrarMenuFiltros" class="backdrop-filtros" (click)="toggleMenuFiltros()"></div>
+        </div>
 
-  <!-- Barra de Filtros Reactivos -->
-  <div class="card bg-dark border-secondary mb-4">
-    <div class="card-body p-3">
-      <div class="row g-3 align-items-center">
-        <div class="col-md-3">
-          <div class="input-group input-group-sm">
-            <span class="input-group-text bg-secondary text-white border-secondary">Piso</span>
-            <input type="text" class="form-control bg-dark text-white border-secondary" [(ngModel)]="filtros.piso" (ngModelChange)="aplicarFiltros()" placeholder="Buscar piso...">
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="input-group input-group-sm">
-            <span class="input-group-text bg-secondary text-white border-secondary">Propietario</span>
-            <input type="text" class="form-control bg-dark text-white border-secondary" [(ngModel)]="filtros.propietario" (ngModelChange)="aplicarFiltros()" placeholder="Buscar propietario...">
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="input-group input-group-sm">
-            <span class="input-group-text bg-secondary text-white border-secondary">Teléfono</span>
-            <input type="text" class="form-control bg-dark text-white border-secondary" [(ngModel)]="filtros.telefono" (ngModelChange)="aplicarFiltros()" placeholder="Buscar teléfono...">
-          </div>
-        </div>
-        <div class="col-md-1 text-end">
-          <button class="btn btn-sm btn-outline-secondary w-100" (click)="limpiarFiltros()">Limpiar</button>
-        </div>
+        <!-- Carga de Archivo Oculta -->
+        <input 
+          type="file" 
+          #fileInput 
+          (change)="importarExcel($event)" 
+          accept=".xlsx, .xls" 
+          class="d-none" />
+
+        <button class="menu-action-item" (click)="fileInput.click()" *ngIf="permisosService.puedeInsertarEditarPisosYPropietarios()">
+          <span>📥</span> Importar Excel
+        </button>
+
+        <button class="menu-action-item" (click)="exportarExcel()">
+          <span>📤</span> Exportar Excel
+        </button>
       </div>
     </div>
   </div>
 
+  <!-- Tabla de Resultados -->
   <div class="row">
     <div class="col-12">
       <app-tabla-datos
@@ -63,10 +85,12 @@
         [mostrarId]="config.mostrarId"
         [idCampo]="config.idCampo"
         [idNombre]="config.idNombre"
-        [permitirAcciones]="permisosService.puedeInsertarEditarPisosYPropietarios()"
+        [permitirAcciones]="true"
+        [mostrarAccionesEdicion]="permisosService.puedeInsertarEditarPisosYPropietarios()"
         [cargando]="cargando"
         (editar)="editarPiso($event)"
-        (eliminar)="eliminarPiso($event)">
+        (eliminar)="eliminarPiso($event)"
+        (verDetalle)="irAlDetalle($event)">
       </app-tabla-datos>
     </div>
   </div>

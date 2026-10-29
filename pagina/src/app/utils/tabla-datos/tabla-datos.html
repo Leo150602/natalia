@@ -24,7 +24,14 @@
           {{ obtenerNombreColumna(col) }}
         </th>
         <td mat-cell *matCellDef="let element" class="dato-celda">
-          {{ obtenerValorCelda(element, col) }}
+          <ng-container *ngIf="col === 'visualizar'; else defaultTextoCelda">
+            <button class="btn btn-sm btn-outline-primary py-0 px-2 btn-tabla-visualizar" (click)="onVisualizarFila($event, element)" title="Visualizar documento">
+              👁️ Ver
+            </button>
+          </ng-container>
+          <ng-template #defaultTextoCelda>
+            {{ obtenerValorCelda(element, col) }}
+          </ng-template>
         </td>
       </ng-container>
 
@@ -57,11 +64,8 @@
   <div *ngIf="menuContextualVisible"
        class="menu-contextual shadow-lg"
        [ngStyle]="{ 'top': menuContextualPosicion.y, 'left': menuContextualPosicion.x }">
-    <button (click)="onEditar()" class="menu-item">
-      <span class="icono">{{ iconoEditar }}</span> {{ etiquetaEditar }}
-    </button>
-    <button (click)="onEliminar()" class="menu-item eliminar">
-      <span class="icono">{{ iconoEliminar }}</span> {{ etiquetaEliminar }}
+    <button (click)="onVerDetalle()" class="menu-item">
+      <span class="icono">👁️</span> {{ etiquetaContextual }}
     </button>
   </div>
 

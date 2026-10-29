@@ -1,0 +1,114 @@
+<div class="container-fluid p-4 d-flex flex-column h-100">
+  
+  <!-- Cabecera de Calendario -->
+  <div class="table-page-header mb-4 flex-shrink-0">
+    <div class="header-title-box">
+      <h1 class="page-title">📅 Calendario de Visitas</h1>
+      <p class="page-subtitle">Organización mensual de visitas técnicas planificadas por promoción activa</p>
+    </div>
+    
+    <!-- Separador -->
+    <div class="header-separator"></div>
+    
+    <!-- Barra de menú integrada -->
+    <div class="header-menu-bar d-flex justify-content-between align-items-center">
+      <!-- Izquierda: Navegación de meses -->
+      <div class="menu-left-group d-flex align-items-center gap-2" style="width: 25%;">
+        <button class="menu-action-item" (click)="mesAnterior()">
+          <span>◀</span> Anterior
+        </button>
+        <button class="menu-action-item" (click)="mesSiguiente()">
+          Siguiente <span>▶</span>
+        </button>
+      </div>
+      
+      <!-- Centro: Selectores de Mes y Año -->
+      <div class="menu-center-group d-flex align-items-center gap-2 justify-content-center" style="width: 40%;">
+        <select class="form-select form-select-sm text-uppercase" [(ngModel)]="mesActual" (change)="onFechaSelectorChange()" style="width: 130px; font-weight: 600; text-align: center;">
+          <option *ngFor="let m of meses" [value]="m.value">{{ m.label }}</option>
+        </select>
+        <select class="form-select form-select-sm" [(ngModel)]="anioActual" (change)="onFechaSelectorChange()" style="width: 90px; font-weight: 600; text-align: center;">
+          <option *ngFor="let y of anios" [value]="y">{{ y }}</option>
+        </select>
+      </div>
+      
+      <!-- Derecha: Selector Autocompletable de Promociones -->
+      <div class="menu-right-group d-flex align-items-center gap-2 justify-content-end position-relative" style="width: 35%; max-width: 320px;">
+        <span class="small font-weight-bold text-muted text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.5px;">Filtrar:</span>
+        <div class="custom-select-container flex-grow-1 position-relative" style="max-width: 220px; z-index: 100;">
+          <div class="input-group input-group-sm">
+            <input 
+              type="text" 
+              class="form-control text-uppercase"
+              style="font-size: 0.72rem; font-weight: 600;"
+              (focus)="abrirDropdownPromocion()"
+              (blur)="cerrarDropdownPromocion()"
+              [(ngModel)]="busquedaPromocion"
+              (ngModelChange)="filtrarPromociones()"
+              name="busquedaPromocionInput"
+              placeholder="TODAS LAS PROMOCIONES" />
+            <button *ngIf="busquedaPromocion" class="btn btn-outline-secondary border" type="button" (click)="limpiarFiltroPromocion()" style="font-size: 0.7rem;">&times;</button>
+          </div>
+          
+          <div *ngIf="mostrarDropdownPromocion" class="custom-select-dropdown shadow-lg position-absolute w-100 bg-white border rounded mt-1 overflow-auto" style="max-height: 200px; z-index: 999; top: 100%; left: 0;">
+            <div 
+              *ngFor="let p of promocionesFiltradas" 
+              (mousedown)="seleccionarPromocion(p)"
+              class="custom-select-option p-2 cursor-pointer small text-uppercase"
+              [class.bg-light]="p === promocionSeleccionadaFiltro"
+              style="font-size: 0.72rem; font-weight: 600; transition: background-color 0.15s;">
+              {{ p }}
+            </div>
+            <div *ngIf="promocionesFiltradas.length === 0" class="custom-select-option p-2 text-muted disabled small">
+              Sin coincidencias
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rejilla del Calendario -->
+  <div class="calendar-wrapper flex-grow-1 d-flex flex-column border rounded bg-white shadow-sm overflow-hidden position-relative" style="min-height: 500px;">
+    <!-- Spinner de Carga -->
+    <div *ngIf="cargando" class="calendar-loading-overlay">
+      <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+      <span class="ms-2">Cargando visitas...</span>
+    </div>
+
+    <!-- Días de la semana -->
+    <div class="calendar-header-week d-grid">
+      <div *ngFor="let dia of diasSemana" class="weekday-name text-center py-2 font-weight-bold text-muted small text-uppercase">
+        {{ dia }}
+      </div>
+    </div>
+
+    <!-- Celdas de días -->
+    <div class="calendar-grid-days flex-grow-1 d-grid">
+      <div *ngFor="let dia of diasCalendario" 
+           class="calendar-day-cell p-2 d-flex flex-column justify-content-between cursor-pointer"
+           [class.other-month]="!dia.isCurrentMonth"
+           [class.today]="dia.isToday"
+           (click)="irADia(dia)">
+        
+        <!-- Número del día -->
+        <div class="day-number-container d-flex justify-content-between align-items-center">
+          <span class="day-number" [class.font-weight-bold]="dia.isToday">{{ dia.dayNumber }}</span>
+          <span *ngIf="dia.visits.length > 0" class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill font-weight-bold" style="font-size: 0.65rem;">
+            {{ dia.visits.length }} {{ dia.visits.length === 1 ? 'visita' : 'visitas' }}
+          </span>
+        </div>
+
+        <!-- Círculos de visitas -->
+        <div class="day-visits-indicator d-flex flex-wrap gap-1 mt-auto pt-1">
+          <span *ngFor="let v of obtenerVisitasUnicasPorPromocion(dia.visits)" 
+                class="visit-dot-dot" 
+                [style.background-color]="obtenerColorVisita(v)"
+                [title]="'Promoción: ' + v.promocion">
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

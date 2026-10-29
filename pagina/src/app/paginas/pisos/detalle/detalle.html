@@ -1,0 +1,119 @@
+<div class="container-fluid p-4">
+  
+  <!-- Cabecera de Detalle -->
+  <div class="table-page-header mb-4">
+    <!-- Top: Título y Subtítulo -->
+    <div class="header-title-box">
+      <h1 class="page-title">
+        {{ modoCrear ? 'Crear Piso' : 'Detalle de Piso' }}
+      </h1>
+      <p class="page-subtitle">
+        {{ modoCrear ? 'Registre un nuevo piso / vivienda en la promoción seleccionada' : 'Visualización completa y edición de los datos del piso seleccionado' }}
+      </p>
+    </div>
+    
+    <!-- Separador -->
+    <div class="header-separator"></div>
+    
+    <!-- Bottom: Barra de menú integrada -->
+    <div class="header-menu-bar d-flex justify-content-between align-items-center">
+      <!-- Izquierda: Volver al Listado -->
+      <div class="menu-left-group">
+        <a class="menu-action-item" (click)="cancelar()">
+          <span>⬅️</span> Volver al listado
+        </a>
+      </div>
+      
+      <!-- Derecha: Acciones de Guardar y Eliminar -->
+      <div class="menu-right-group">
+        <button *ngIf="puedeEditar" class="menu-action-item" (click)="actualizar()" [disabled]="cargando">
+          <span>💾</span> {{ modoCrear ? 'Crear Piso' : 'Guardar Cambios' }}
+        </button>
+        <button *ngIf="puedeEditar && !modoCrear" class="menu-action-item text-danger" (click)="eliminar()" [disabled]="cargando">
+          <span>🗑️</span> Borrar Piso
+        </button>
+        <span *ngIf="!puedeEditar" class="menu-action-item text-muted disabled">
+          <span>🔒</span> Solo Lectura
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de Detalle / Visualización -->
+  <div class="row">
+    <div class="col-12 col-xl-9 mx-auto">
+      <div class="card shadow-sm border-0 detail-card p-4">
+        
+        <!-- Loading Spinner Overlay -->
+        <div *ngIf="cargando" class="detail-loading-overlay">
+          <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+          <span class="ms-2">Procesando piso...</span>
+        </div>
+
+        <form (ngSubmit)="actualizar()" #detalleForm="ngForm">
+          <div class="row g-3">
+            
+            <!-- Identificación del Piso -->
+            <div class="col-md-6">
+              <label for="piso" class="form-label field-label font-weight-bold">Identificación del Piso *</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="piso" 
+                name="piso" 
+                [(ngModel)]="nuevoPiso.piso" 
+                required 
+                [disabled]="!puedeEditar"
+                [placeholder]="placeholderPiso" />
+            </div>
+
+            <!-- Propietario (Custom Autocompletable Dropdown) -->
+            <div class="col-md-6">
+              <label class="form-label field-label font-weight-bold">Propietario / Contacto</label>
+              <div class="custom-select-container">
+                <div class="d-flex align-items-center">
+                  <input 
+                    type="text" 
+                    class="form-control form-select-custom flex-grow-1"
+                    [disabled]="!puedeEditar"
+                    (focus)="abrirDropdownPropietario()"
+                    (blur)="cerrarDropdownPropietario()"
+                    [(ngModel)]="busquedaPropietario"
+                    (ngModelChange)="filtrarPropietarios()"
+                    name="busquedaPropietarioInput"
+                    placeholder="Escriba para buscar propietario..." />
+                  
+                  <button 
+                    *ngIf="puedeEditar && nuevoPiso.idPropietario !== null" 
+                    type="button" 
+                    class="btn btn-sm btn-outline-secondary ms-2"
+                    (click)="limpiarPropietario()"
+                    title="Desvincular propietario">
+                    ✕
+                  </button>
+                </div>
+                
+                <div *ngIf="mostrarDropdownPropietario" class="custom-select-dropdown shadow-lg">
+                  <div 
+                    *ngFor="let p of propietariosFiltrados" 
+                    (mousedown)="seleccionarPropietario(p)"
+                    class="custom-select-option"
+                    [class.selected]="p.idPersona === nuevoPiso.idPropietario"
+                    [title]="p.nombre + ' (Tel: ' + p.telefono + ')'">
+                    {{ p.nombre }} <span class="text-muted">(Tel: {{ p.telefono }})</span>
+                  </div>
+                  <div *ngIf="propietariosFiltrados.length === 0" class="custom-select-option text-muted disabled">
+                    Sin coincidencias
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+</div>

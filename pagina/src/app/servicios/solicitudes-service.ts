@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { IncidenciasRespuesta } from '../modelos/incidencias.model';
-
-const API_URL = 'http://localhost:8080/api';
+import { API_URL } from './global-service';
 
 @Injectable({
   providedIn: 'root'

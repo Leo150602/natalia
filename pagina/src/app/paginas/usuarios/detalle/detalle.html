@@ -1,0 +1,244 @@
+<div class="container-fluid p-4">
+  
+  <!-- Cabecera de Detalle -->
+  <div class="table-page-header mb-4">
+    <!-- Top: Título y Subtítulo -->
+    <div class="header-title-box">
+      <h1 class="page-title">
+        {{ modoCrear ? 'Crear Usuario' : 'Detalle de Usuario' }}
+      </h1>
+      <p class="page-subtitle">
+        {{ modoCrear ? 'Registre un nuevo usuario en el sistema con accesos configurables' : 'Visualización completa y edición de los datos del usuario seleccionado' }}
+      </p>
+    </div>
+    
+    <!-- Separador -->
+    <div class="header-separator"></div>
+    
+    <!-- Bottom: Barra de menú integrada -->
+    <div class="header-menu-bar d-flex justify-content-between align-items-center">
+      <!-- Izquierda: Volver al Listado -->
+      <div class="menu-left-group">
+        <a class="menu-action-item" (click)="cancelar()">
+          <span>⬅️</span> Volver
+        </a>
+      </div>
+      
+      <!-- Derecha: Acciones de Guardar, Editar, Activar y Eliminar -->
+      <div class="menu-right-group">
+        <!-- Modo Lectura -->
+        <ng-container *ngIf="!modoEdicion">
+          <button *ngIf="permisosService.puedeInsertarEditar()" class="menu-action-item" (click)="activarModoEdicion()">
+            <span>✏️</span> Editar
+          </button>
+          <button *ngIf="permisosService.puedeInsertarEditar() && !modoCrear" class="menu-action-item" [class.text-success]="!usuario.activo" [class.text-warning]="usuario.activo" (click)="toggleActivo()">
+            <span>⚡</span> {{ usuario.activo ? 'Desactivar Usuario' : 'Activar Usuario' }}
+          </button>
+        </ng-container>
+
+        <!-- Modo Edición -->
+        <ng-container *ngIf="modoEdicion">
+          <button *ngIf="puedeEditar" class="menu-action-item" (click)="actualizar()" [disabled]="cargando">
+            <span>💾</span> {{ modoCrear ? 'Crear Usuario' : 'Guardar Cambios' }}
+          </button>
+        </ng-container>
+
+        <button *ngIf="permisosService.puedeInsertarEditar() && !modoCrear" class="menu-action-item text-danger" (click)="eliminar()" [disabled]="cargando">
+          <span>🗑️</span> Borrar Usuario
+        </button>
+        <span *ngIf="!permisosService.puedeInsertarEditar()" class="menu-action-item text-muted disabled">
+          <span>🔒</span> Solo Lectura
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de Detalle / Visualización -->
+  <!-- VISTA DE PANELES DE DETALLE (LECTURA) -->
+  <ng-container *ngIf="!modoEdicion">
+    <div class="row">
+      <div class="col-12 col-xl-9 mx-auto animate__animated animate__fadeIn">
+        
+        <!-- Panel de Perfil Principal -->
+        <div class="card shadow-sm border-0 mb-4 p-4" style="border-radius: 16px; background: #ffffff;">
+          <div class="d-flex align-items-center gap-4 flex-wrap">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; font-size: 2rem; font-weight: bold;">
+              {{ usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : 'U' }}
+            </div>
+            <div>
+              <h3 class="font-weight-bold mb-1 text-dark">{{ usuario.nombre }}</h3>
+              <p class="text-muted mb-0 d-flex align-items-center gap-2">
+                <span class="badge bg-secondary-subtle text-secondary text-uppercase" style="font-size: 0.7rem;">{{ usuario.rol }}</span>
+                &bull;
+                <span class="badge" [ngClass]="usuario.activo ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'" style="font-size: 0.7rem;">
+                  {{ usuario.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paneles de Información Detallada -->
+        <div class="row g-4 mb-4">
+          
+          <!-- Datos de Cuenta -->
+          <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100 p-4" style="border-radius: 16px; background: #ffffff; min-height: 180px;">
+              <h5 class="font-weight-bold text-dark mb-3 pb-2" style="border-bottom: 1.5px solid var(--color-soft-beige-dark, #e2e8f0);">🔑 Datos de Cuenta</h5>
+              <div class="d-flex flex-column gap-3">
+                <div>
+                  <span class="text-muted d-block small font-weight-semibold">Nombre de Usuario</span>
+                  <span class="font-weight-bold text-dark" style="font-size: 0.95rem;">{{ usuario.username }}</span>
+                </div>
+                <div>
+                  <span class="text-muted d-block small font-weight-semibold">Rol Asignado</span>
+                  <span class="font-weight-bold text-dark text-capitalize" style="font-size: 0.95rem;">{{ usuario.rol }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información de Contacto -->
+          <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100 p-4" style="border-radius: 16px; background: #ffffff; min-height: 180px;">
+              <h5 class="font-weight-bold text-dark mb-3 pb-2" style="border-bottom: 1.5px solid var(--color-soft-beige-dark, #e2e8f0);">📞 Contacto</h5>
+              <div class="d-flex flex-column gap-3">
+                <div>
+                  <span class="text-muted d-block small font-weight-semibold">Correo Electrónico</span>
+                  <span class="font-weight-bold text-dark" style="font-size: 0.95rem;">{{ usuario.correo || 'No registrado' }}</span>
+                </div>
+                <div>
+                  <span class="text-muted d-block small font-weight-semibold">Teléfono</span>
+                  <span class="font-weight-bold text-dark" style="font-size: 0.95rem;">{{ usuario.telefono || 'No registrado' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- MODO EDICIÓN / FORMULARIO -->
+  <div class="row" *ngIf="modoEdicion">
+    <div class="col-12 col-xl-9 mx-auto">
+      <div class="card shadow-sm border-0 detail-card p-4">
+        
+        <!-- Loading Spinner Overlay -->
+        <div *ngIf="cargando" class="detail-loading-overlay">
+          <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+          <span class="ms-2">Procesando usuario...</span>
+        </div>
+
+        <form (ngSubmit)="actualizar()" #detalleForm="ngForm">
+          <div class="row g-3">
+            
+            <!-- Usuario (Login) -->
+            <div class="col-md-6" *ngIf="modoCrear">
+              <label for="username" class="form-label field-label font-weight-bold">Nombre de Usuario (Login) *</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="username" 
+                name="username" 
+                [(ngModel)]="usuario.username" 
+                required 
+                [disabled]="!puedeEditar"
+                placeholder="Ej. nataliamin" />
+            </div>
+
+            <!-- Contraseña -->
+            <div class="col-md-6" *ngIf="modoCrear">
+              <label for="password" class="form-label field-label font-weight-bold">
+                Contraseña *
+              </label>
+              <div style="position: relative; width: 100%;">
+                <input 
+                  [type]="verPassword ? 'text' : 'password'" 
+                  class="form-control" 
+                  id="password" 
+                  name="password" 
+                  [(ngModel)]="usuario.password" 
+                  required
+                  [disabled]="!puedeEditar"
+                  placeholder="Mínimo 4 caracteres..."
+                  style="padding-right: 45px;" />
+                <button 
+                  type="button" 
+                  (click)="verPassword = !verPassword"
+                  style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1rem; color: #a0aec0; z-index: 10; padding: 0;"
+                  [title]="verPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                >
+                  {{ verPassword ? '👁️' : '🙈' }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Nombre Completo -->
+            <div class="col-md-6">
+              <label for="nombre" class="form-label field-label font-weight-bold">Nombre Completo *</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="nombre" 
+                name="nombre" 
+                [(ngModel)]="usuario.nombre" 
+                required 
+                [disabled]="!puedeEditar"
+                placeholder="Ej. Natalia Gómez" />
+            </div>
+
+            <!-- Rol de Usuario -->
+            <div class="col-md-6">
+              <label for="rol" class="form-label field-label font-weight-bold">Rol del Usuario *</label>
+              <select 
+                id="rol" 
+                name="rol" 
+                [(ngModel)]="usuario.rol" 
+                required 
+                class="form-select"
+                [disabled]="!puedeEditar"
+              >
+                <option value="" disabled selected>Seleccione un rol</option>
+                <option *ngFor="let r of rolesDisponibles" [value]="r.value">{{ r.label }}</option>
+              </select>
+            </div>
+
+
+
+            <!-- Correo Electrónico -->
+            <div class="col-md-6">
+              <label for="correo" class="form-label field-label font-weight-bold">Correo Electrónico</label>
+              <input 
+                type="email" 
+                class="form-control" 
+                id="correo" 
+                name="correo" 
+                [(ngModel)]="usuario.correo" 
+                [disabled]="!puedeEditar"
+                placeholder="Ej. usuario@correo.com" />
+            </div>
+
+            <!-- Teléfono -->
+            <div class="col-md-6">
+              <label for="telefono" class="form-label field-label font-weight-bold">Teléfono de Contacto</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="telefono" 
+                name="telefono" 
+                [(ngModel)]="usuario.telefono" 
+                [disabled]="!puedeEditar"
+                placeholder="Ej. 600123456" />
+            </div>
+
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -4,22 +4,63 @@
   justify-content: center;
   min-height: 100vh;
   width: 100%;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%);
+  position: relative;
+  overflow: hidden; // Evita scrollbars causadas por la escala del fondo
   padding: 20px;
   box-sizing: border-box;
+
+  // Fondo de pantalla completa centrado, recortado y un poco difuminado
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('/fondo_login.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(6px); // Imagen de fondo un poco difuminada
+    transform: scale(1.05); // Escala para cubrir bordes difuminados blancos
+    z-index: 1;
+  }
+
+  // Capa oscura sutil encima de la imagen de fondo difuminada para mejorar contraste
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.22);
+    z-index: 2;
+  }
 }
 
 .login-card {
+  position: relative;
+  z-index: 10; // Encima de los pseudo-elementos del fondo
   width: 100%;
   max-width: 440px;
-  background: rgba(30, 41, 59, 0.85); 
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
+  
+  // Menos oscuro (0.70) y menos difuminado (10px), pero siempre más difuminado que el fondo general (6px)
+  background: rgba(44, 54, 57, 0.7); 
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  
+  // Bordes suaves y elegantes basados en Soft Beige (#DCD7C9)
+  border: 1px solid rgba(220, 215, 201, 0.18);
+  border-radius: 24px;
+  
   padding: 40px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25), 
-              0 0 80px rgba(79, 70, 229, 0.1);
+  
+  // Sombra premium y profunda
+  box-shadow: 
+    0 24px 48px rgba(0, 0, 0, 0.35), 
+    inset 0 1px 2px rgba(255, 255, 255, 0.1);
+  
   animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
   text-align: center;
@@ -40,7 +81,7 @@
   margin-bottom: 35px;
 
   .logo-badge {
-    margin-bottom: 15px;
+    margin-bottom: 18px;
     display: inline-block;
     animation: pulseLogo 3s infinite ease-in-out;
 
@@ -49,8 +90,8 @@
       height: 80px;
       border-radius: 50%;
       object-fit: cover;
-      border: 2px solid rgba(255, 255, 255, 0.15);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      border: 2px solid rgba(220, 215, 201, 0.3); // Suave borde beige
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
   }
 
@@ -59,24 +100,25 @@
       transform: scale(1);
     }
     50% {
-      transform: scale(1.05);
+      transform: scale(1.04);
     }
   }
 
   .login-title {
     font-size: 1.85rem;
     font-weight: 800;
-    color: #ffffff; 
     margin: 0 0 8px 0;
     letter-spacing: -0.5px;
-    background: linear-gradient(to right, #ffffff, #c7d2fe);
+    
+    // Degradado sutil con Soft Beige
+    background: linear-gradient(to right, #ffffff, var(--color-soft-beige-base));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   .login-subtitle {
     font-size: 0.95rem;
-    color: #94a3b8; 
+    color: var(--color-soft-beige-dark); // Beige suave
     margin: 0;
   }
 }
@@ -94,10 +136,10 @@
     display: block;
     font-size: 0.85rem;
     font-weight: 600;
-    color: #cbd5e1; 
+    color: var(--color-soft-beige-base); // Usar soft beige
     margin-bottom: 8px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
   }
 
   .input-wrapper {
@@ -109,7 +151,7 @@
       position: absolute;
       left: 14px;
       font-size: 1.1rem;
-      color: #64748b;
+      color: var(--color-soft-beige-dark);
       pointer-events: none;
       transition: color 0.3s;
     }
@@ -117,8 +159,10 @@
     input {
       width: 100%;
       padding: 14px 14px 14px 44px;
-      background: rgba(15, 23, 42, 0.6); 
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      
+      // Fondo oscuro semitransparente usando Slate Medium (#3F4E4F)
+      background: rgba(63, 78, 79, 0.4); 
+      border: 1px solid rgba(220, 215, 201, 0.15);
       border-radius: 12px;
       color: #ffffff;
       font-size: 0.95rem;
@@ -126,24 +170,57 @@
       box-sizing: border-box;
 
       &::placeholder {
-        color: #475569;
+        color: rgba(220, 215, 201, 0.5);
       }
 
       &:focus {
         outline: none;
-        border-color: #6366f1;
-        background: rgba(15, 23, 42, 0.8);
-        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15),
-                    inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        // Borde dorado/bronce al hacer foco (#A27B5C)
+        border-color: var(--color-accent-bronze-base);
+        background: rgba(63, 78, 79, 0.6);
+        box-shadow: 
+          0 0 0 4px rgba(162, 123, 92, 0.25),
+          inset 0 2px 4px rgba(0, 0, 0, 0.25);
 
         + .input-icon {
-          color: #818cf8;
+          color: var(--color-accent-bronze-light); // Tono bronce claro
         }
       }
 
       &:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+      }
+
+      &.input-password {
+        padding-right: 45px;
+      }
+    }
+
+    .btn-toggle-password {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: var(--color-soft-beige-dark);
+      z-index: 10;
+      padding: 0;
+      transition: color 0.2s, transform 0.15s ease-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        color: var(--color-accent-bronze-light);
+        transform: translateY(-50%) scale(1.15);
+      }
+
+      &:active {
+        transform: translateY(-50%) scale(0.9);
       }
     }
   }
@@ -152,7 +229,9 @@
 .btn-submit {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  
+  // Botón con el acento bronce (#A27B5C) y degradado
+  background: linear-gradient(135deg, var(--color-accent-bronze-base) 0%, var(--color-accent-bronze-dark) 100%);
   border: none;
   border-radius: 12px;
   color: #ffffff;
@@ -160,7 +239,7 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4px 14px rgba(162, 123, 92, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -169,8 +248,8 @@
 
   &:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
-    background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+    box-shadow: 0 6px 20px rgba(162, 123, 92, 0.45);
+    background: linear-gradient(135deg, var(--color-accent-bronze-light) 0%, var(--color-accent-bronze-base) 100%);
   }
 
   &:active:not(:disabled) {
@@ -178,7 +257,7 @@
   }
 
   &:disabled {
-    opacity: 0.7;
+    opacity: 0.6;
     cursor: not-allowed;
   }
 }
@@ -201,8 +280,8 @@
 .login-footer {
   margin-top: 35px;
   font-size: 0.75rem;
-  color: #94a3b8; 
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--color-soft-beige-dark); 
+  border-top: 1px solid rgba(220, 215, 201, 0.15);
   padding-top: 20px;
 }
 
@@ -214,7 +293,7 @@
   .login-card {
     padding: 24px 20px !important;
     max-width: 320px !important;
-    border-radius: 16px !important;
+    border-radius: 20px !important;
   }
   
   .login-header {
