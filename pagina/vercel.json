@@ -1,4 +1,6 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/pagina/browser",
   "installCommand": "npm install --legacy-peer-deps",
   "rewrites": [
     {
