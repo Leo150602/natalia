@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://REEMPLAZAR-CON-TU-BACKEND.onrender.com/api/:path*"
+      "destination": "https://natalia-hr3e.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
