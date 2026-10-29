@@ -27,18 +27,16 @@ public class GcsConfig {
 
     @Bean
     public Storage storage() throws IOException {
-        GoogleCredentials credentials;
+        StorageOptions.Builder builder = StorageOptions.newBuilder().setProjectId(projectId);
         if (credentialsJson != null && !credentialsJson.isBlank()) {
             try (InputStream is = new ByteArrayInputStream(credentialsJson.getBytes(StandardCharsets.UTF_8))) {
-                credentials = GoogleCredentials.fromStream(is);
+                builder.setCredentials(GoogleCredentials.fromStream(is));
             }
-        } else {
-            credentials = GoogleCredentials.fromStream(credentialsResource.getInputStream());
+        } else if (credentialsResource != null && credentialsResource.exists()) {
+            try (InputStream is = credentialsResource.getInputStream()) {
+                builder.setCredentials(GoogleCredentials.fromStream(is));
+            }
         }
-        return StorageOptions.newBuilder()
-                .setProjectId(projectId)
-                .setCredentials(credentials)
-                .build()
-                .getService();
+        return builder.build().getService();
     }
 }
