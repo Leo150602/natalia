@@ -79,7 +79,6 @@ export class Home implements OnInit, OnDestroy {
   };
 
   filtroVisitas = {
-    numero: '',
     piso: '',
     estadoVisita: ''
   };
@@ -680,10 +679,9 @@ export class Home implements OnInit, OnDestroy {
 
     // 2. Filtrar Visitas
     this.visitasTecnicoFiltradas = this.visitasTecnico.filter(v => {
-      const matchNum = !this.filtroVisitas.numero || (v.numeroIncidencia && v.numeroIncidencia.toLowerCase().includes(this.filtroVisitas.numero.toLowerCase()));
       const matchPiso = !this.filtroVisitas.piso || (v.piso && v.piso.toLowerCase().includes(this.filtroVisitas.piso.toLowerCase()));
       const matchEst = !this.filtroVisitas.estadoVisita || (v.estadoVisita && v.estadoVisita.toLowerCase().includes(this.filtroVisitas.estadoVisita.toLowerCase()));
-      return matchNum && matchPiso && matchEst;
+      return matchPiso && matchEst;
     });
   }
 
@@ -693,7 +691,7 @@ export class Home implements OnInit, OnDestroy {
   }
 
   limpiarFiltrosVisitas(): void {
-    this.filtroVisitas = { numero: '', piso: '', estadoVisita: '' };
+    this.filtroVisitas = { piso: '', estadoVisita: '' };
     this.aplicarFiltrosTecnico();
   }
 }

@@ -30,7 +30,6 @@ export class VisitasComponent implements OnInit, OnDestroy {
 
   // Filtros reactivos locales
   filtros = {
-    numeroIncidencia: '',
     piso: '',
     tecnico: '',
     estado: ''
@@ -91,11 +90,10 @@ export class VisitasComponent implements OnInit, OnDestroy {
 
   aplicarFiltros(): void {
     this.datosFiltrados = this.datos.filter(row => {
-      const matchInc = !this.filtros.numeroIncidencia || (row.numeroIncidencia && row.numeroIncidencia.toLowerCase().includes(this.filtros.numeroIncidencia.toLowerCase()));
       const matchPiso = !this.filtros.piso || (row.piso && row.piso.toLowerCase().includes(this.filtros.piso.toLowerCase()));
       const matchTec = !this.filtros.tecnico || (row.tecnicoNombre && row.tecnicoNombre.toLowerCase().includes(this.filtros.tecnico.toLowerCase()));
       const matchEst = !this.filtros.estado || (row.estadoVisita && row.estadoVisita.toLowerCase().includes(this.filtros.estado.toLowerCase()));
-      return matchInc && matchPiso && matchTec && matchEst;
+      return matchPiso && matchTec && matchEst;
     });
     this.cdr.detectChanges();
   }
@@ -107,7 +105,6 @@ export class VisitasComponent implements OnInit, OnDestroy {
 
   limpiarFiltros(): void {
     this.filtros = {
-      numeroIncidencia: '',
       piso: '',
       tecnico: '',
       estado: ''

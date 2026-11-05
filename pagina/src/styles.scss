@@ -83,6 +83,11 @@ app-root {
 
 // --- ANGULAR MATERIAL OVERLAYS (SELECT DROPDOWNS) ---
 // Se estilizan de forma global porque Angular los inyecta en el body de forma externa al app-layout.
+div.mat-mdc-select-panel.promocion-select-panel,
+.mat-mdc-select-panel {
+  max-height: 80vh !important;
+}
+
 .mat-mdc-optgroup-label {
   background-color: var(--color-slate-medium-light) !important; // Gris claro de la paleta
   color: var(--color-soft-beige-light) !important; // Letras beige de la paleta

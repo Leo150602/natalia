@@ -20,6 +20,7 @@
             <mat-select 
                 placeholder="Seleccione promoción" 
                 class="mat-select-custom" 
+                panelClass="promocion-select-panel"
                 [value]="promocionSeleccionada"
                 (selectionChange)="onPromocionChange($event.value)">
                 <mat-optgroup *ngFor="let group of promocionesAgrupadas" [label]="group.promotora">
@@ -46,6 +47,7 @@
                     <mat-select 
                         placeholder="Seleccione promoción" 
                         class="mat-select-custom w-100" 
+                        panelClass="promocion-select-panel"
                         [value]="promocionSeleccionada"
                         (selectionChange)="onPromocionChange($event.value); toggleMenuUsuario()">
                         <mat-optgroup *ngFor="let group of promocionesAgrupadas" [label]="group.promotora">

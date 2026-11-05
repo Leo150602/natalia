@@ -25,6 +25,9 @@ public class Pisos {
     @OneToMany(mappedBy = "piso", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Incidencias> incidencias;
 
+    @OneToMany(mappedBy = "piso", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Visitas> visitas;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idPromocion")
     private Promociones promocion;

@@ -27,11 +27,10 @@ export const CONFIG_TABLA_INCIDENCIAS: ConfiguracionTabla = {
 };
 
 export const CONFIG_TABLA_VISITAS: ConfiguracionTabla = {
-  idCampo: 'idVisitas',
+  idCampo: 'idVisita',
   idNombre: 'ID Visita',
   mostrarId: false, // Oculto porque es un ID numérico autogenerado
   columnas: [
-    { campo: 'numeroIncidencia', nombre: 'Nº Incidencia' },
     { campo: 'piso', nombre: 'Piso' },
     { campo: 'propietario', nombre: 'Propietario' },
     { campo: 'telefonoPropietario', nombre: 'Tel. Propietario' },

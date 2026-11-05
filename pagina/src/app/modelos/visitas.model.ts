@@ -3,7 +3,8 @@ export interface VisitasDto {
   diaVisita: string | Date;
   estadoVisita: string;
   idTecnico: number;
-  idIncidencia: number;
+  idPiso: number;
+  idIncidencia?: number;
 }
 
 export interface VisitasRespuesta {
@@ -13,8 +14,9 @@ export interface VisitasRespuesta {
   estadoVisita: string;
   tecnicoNombre: string;
   tecnicoTelefono: string;
-  numeroIncidencia: string;
-  idIncidencia: number;
+  numeroIncidencia?: string;
+  idIncidencia?: number;
+  idPiso: number;
   piso: string;
   promocion: string;
   propietario?: string | null;

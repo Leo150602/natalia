@@ -17,5 +17,6 @@ public class VisitasDto {
     private EstadoVisita estadoVisita;
     private int idTecnico;
     private int idIncidencia;
+    private int idPiso;
 
 }

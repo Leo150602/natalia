@@ -8,18 +8,18 @@
     <div class="card-body p-4">
       <form (ngSubmit)="guardar()" #visitaForm="ngForm">
         
-        <!-- Incidencia Relacionada -->
+        <!-- Piso Relacionado -->
         <div class="mb-3">
-          <label for="idIncidencia" class="form-label font-weight-bold">Incidencia Relacionada *</label>
+          <label for="idPiso" class="form-label font-weight-bold">Piso Relacionado *</label>
           <select 
             class="form-select" 
-            id="idIncidencia" 
-            name="idIncidencia" 
-            [(ngModel)]="nuevaVisita.idIncidencia" 
+            id="idPiso" 
+            name="idPiso" 
+            [(ngModel)]="nuevaVisita.idPiso" 
             required>
-            <option [ngValue]="null" disabled selected>Seleccione la incidencia...</option>
-            <option *ngFor="let inc of incidencias" [value]="inc.idIncidencia">
-              {{ inc.numeroIncidencia }} - {{ inc.descripcion || 'Sin descripción' }} (Piso: {{ inc.pisos?.piso }})
+            <option [ngValue]="null" disabled selected>Seleccione el piso...</option>
+            <option *ngFor="let p of pisos" [value]="p.idPiso">
+              {{ p.piso }}{{ p.propietario ? ' - ' + p.propietario : '' }}
             </option>
           </select>
         </div>

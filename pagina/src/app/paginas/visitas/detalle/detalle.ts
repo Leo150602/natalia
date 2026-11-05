@@ -6,13 +6,12 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { EstadoGlobalService } from '../../../servicios/global-service';
 import { VisitasService } from '../../../servicios/visitas-service';
-import { IncidenciasService } from '../../../servicios/incidencias-service';
+import { PisosService } from '../../../servicios/pisos-service';
 import { AuthService, LoginRespuesta } from '../../../servicios/auth-service';
 import { EnumService } from '../../../servicios/enum-service';
-import { DocumentosService } from '../../../servicios/documentos-service';
 import { AlertaService } from '../../../servicios/alerta-service';
 import { PermisosService } from '../../../servicios/permisos.service';
-import { IncidenciasRespuesta } from '../../../modelos/incidencias.model';
+import { PisosRespuesta } from '../../../modelos/pisos.model';
 import { VisitasDto } from '../../../modelos/visitas.model';
 
 @Component({
@@ -27,12 +26,16 @@ export class DetalleVisitaComponent implements OnInit, OnDestroy {
   idVisita!: number;
   promocionId: number | null = null;
   
-  incidencias: IncidenciasRespuesta[] = [];
+  pisos: PisosRespuesta[] = [];
   tecnicos: LoginRespuesta[] = [];
   estados: any[] = [];
   
   visita: any = {
-    idIncidencia: null,
+    idPiso: null,
+    pisoNombre: '',
+    promocion: '',
+    propietario: '',
+    telefonoPropietario: '',
     idTecnico: null,
     diaVisita: '',
     estadoVisita: '',
@@ -45,20 +48,10 @@ export class DetalleVisitaComponent implements OnInit, OnDestroy {
   modoEdicion = false;
   origen: string | null = null;
 
-  // Documentos de la incidencia asociada
-  documentosAsociados: any[] = [];
-  mostrarModalSubir = false;
-  cargandoSubir = false;
-  docSubir = {
-    nombre: '',
-    estado: 'FALTAN_FIRMAS',
-    archivo: null as File | null
-  };
-
-  // Solo Incidencia Asociada queda como Autocompletable Personalizado
-  busquedaIncidencia = '';
-  mostrarDropdownIncidencia = false;
-  incidenciasFiltradas: IncidenciasRespuesta[] = [];
+  // Selector Autocompletable de Piso Asociado
+  busquedaPiso = '';
+  mostrarDropdownPiso = false;
+  pisosFiltrados: PisosRespuesta[] = [];
 
   private destroy$ = new Subject<void>();
 
@@ -67,10 +60,9 @@ export class DetalleVisitaComponent implements OnInit, OnDestroy {
     private router: Router,
     private estadoGlobal: EstadoGlobalService,
     private visitasService: VisitasService,
-    private incidenciasService: IncidenciasService,
+    private pisosService: PisosService,
     private authService: AuthService,
     private enumService: EnumService,
-    private documentosService: DocumentosService,
     private alerta: AlertaService,
     public permisosService: PermisosService,
     private cdr: ChangeDetectorRef
@@ -90,10 +82,14 @@ export class DetalleVisitaComponent implements OnInit, OnDestroy {
       this.puedeEditar = true; // Permite a cualquiera rellenar el formulario al crear
       const fechaQuery = this.route.snapshot.queryParamMap.get('fecha');
       this.visita = {
-        idIncidencia: null,
+        idPiso: null,
+        pisoNombre: '',
+        promocion: '',
+        propietario: '',
+        telefonoPropietario: '',
         idTecnico: null,
         diaVisita: fechaQuery ? `${fechaQuery}T09:00` : new Date().toISOString().slice(0, 16),
-        estadoVisita: '', // Se asignará vacío para Nata/Dev, u asignado por cargarEnums para otros
+        estadoVisita: '',
         observaciones: ''
       };
     } else {
@@ -106,7 +102,7 @@ export class DetalleVisitaComponent implements OnInit, OnDestroy {
       .subscribe((id) => {
         this.promocionId = id;
         if (id !== null) {
-          this.cargarIncidencias();
+          this.cargarPisos();
         }
       });
 
@@ -119,19 +115,29 @@ export class DetalleVisitaComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  cargarIncidencias(): void {
+  formatearTextoPiso(p: PisosRespuesta): string {
+    return p.propietario ? `${p.piso} - ${p.propietario}` : `${p.piso}`;
+  }
+
+  cargarPisos(): void {
     if (this.promocionId === null) return;
-    this.incidenciasService.obtenerPorPromocion(this.promocionId).subscribe({
+    this.pisosService.obtenerPorPromocion(this.promocionId).subscribe({
       next: (res) => {
-        this.incidencias = res;
-        this.incidenciasFiltradas = [...res];
-        if (this.visita.idIncidencia) {
-          const match = this.incidencias.find(i => i.idIncidencia === this.visita.idIncidencia);
-          if (match) this.busquedaIncidencia = `${match.numeroIncidencia} - ${match.descripcion || 'Sin descripción'} (Piso: ${match.pisos?.piso})`;
+        this.pisos = res || [];
+        this.pisosFiltrados = [...this.pisos];
+        if (this.visita.idPiso) {
+          const match = this.pisos.find(p => p.idPiso === this.visita.idPiso);
+          if (match) {
+            this.busquedaPiso = this.formatearTextoPiso(match);
+            this.visita.pisoNombre = match.piso;
+            this.visita.promocion = match.promocion;
+            this.visita.propietario = match.propietario || '';
+            this.visita.telefonoPropietario = match.telefonoPropietario || '';
+          }
         }
         this.cdr.detectChanges();
       },
-      error: (err) => console.error("Error al cargar incidencias:", err)
+      error: (err) => console.error("Error al cargar pisos:", err)
     });
   }
 
@@ -199,18 +205,26 @@ export class DetalleVisitaComponent implements OnInit, OnDestroy {
         }
 
         this.visita = {
-          idIncidencia: res.idIncidencia || null,
+          idPiso: res.idPiso || null,
+          pisoNombre: res.piso || '',
+          promocion: res.promocion || '',
+          propietario: res.propietario || '',
+          telefonoPropietario: res.telefonoPropietario || '',
           idTecnico: tecnicoId,
           diaVisita: res.diaVisita ? new Date(res.diaVisita).toISOString().slice(0, 16) : '',
           estadoVisita: keyEstado,
           observaciones: res.observaciones || ''
         };
 
-        const incMatch = this.incidencias.find(i => i.idIncidencia === res.idIncidencia);
-        this.busquedaIncidencia = incMatch ? `${incMatch.numeroIncidencia} - ${incMatch.descripcion || 'Sin descripción'} (Piso: ${incMatch.pisos?.piso})` : '';
+        const pisoMatch = this.pisos.find(p => p.idPiso === res.idPiso || (res.piso && p.piso === res.piso));
+        if (pisoMatch) {
+          this.visita.idPiso = pisoMatch.idPiso;
+          this.busquedaPiso = this.formatearTextoPiso(pisoMatch);
+        } else {
+          this.busquedaPiso = res.piso ? (res.propietario ? `${res.piso} - ${res.propietario}` : res.piso) : '';
+        }
 
         this.cargando = false;
-        this.cargarDocumentosAsociados();
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -221,49 +235,57 @@ export class DetalleVisitaComponent implements OnInit, OnDestroy {
     });
   }
 
-  // --- Lógica de Dropdown Incidencia Autocompletable ---
+  // --- Lógica de Dropdown Piso Autocompletable ---
 
-  abrirDropdownIncidencia(): void {
+  abrirDropdownPiso(): void {
     if (!this.puedeEditar) return;
-    this.mostrarDropdownIncidencia = true;
-    this.incidenciasFiltradas = [...this.incidencias]; // Muestra siempre todos al dar click/focus
+    this.mostrarDropdownPiso = true;
+    this.pisosFiltrados = [...this.pisos]; // Muestra siempre todos al dar click/focus
     this.cdr.detectChanges();
   }
-  cerrarDropdownIncidencia(): void {
+
+  cerrarDropdownPiso(): void {
     setTimeout(() => {
-      this.mostrarDropdownIncidencia = false;
-      const match = this.incidencias.find(i => i.idIncidencia === this.visita.idIncidencia);
-      this.busquedaIncidencia = match ? `${match.numeroIncidencia} - ${match.descripcion || 'Sin descripción'} (Piso: ${match.pisos?.piso})` : '';
+      this.mostrarDropdownPiso = false;
+      const match = this.pisos.find(p => p.idPiso === this.visita.idPiso);
+      if (match) {
+        this.busquedaPiso = this.formatearTextoPiso(match);
+      }
       this.cdr.detectChanges();
     }, 150);
   }
-  filtrarIncidencias(): void {
-    const query = this.busquedaIncidencia ? this.busquedaIncidencia.toLowerCase() : '';
-    const match = this.incidencias.find(i => i.idIncidencia === this.visita.idIncidencia);
-    const selectedText = match ? `${match.numeroIncidencia} - ${match.descripcion || 'Sin descripción'} (Piso: ${match.pisos?.piso})` : '';
+
+  filtrarPisos(): void {
+    const query = this.busquedaPiso ? this.busquedaPiso.toLowerCase() : '';
+    const match = this.pisos.find(p => p.idPiso === this.visita.idPiso);
+    const selectedText = match ? this.formatearTextoPiso(match) : '';
 
     // Si la búsqueda coincide exactamente con el valor actual, mostramos todos (el usuario solo clickeó de nuevo sin cambiar texto)
-    if (match && selectedText === this.busquedaIncidencia) {
-      this.incidenciasFiltradas = [...this.incidencias];
+    if (match && selectedText === this.busquedaPiso) {
+      this.pisosFiltrados = [...this.pisos];
     } else {
-      this.incidenciasFiltradas = this.incidencias.filter(i => 
-        (i.numeroIncidencia && i.numeroIncidencia.toLowerCase().includes(query)) ||
-        (i.descripcion && i.descripcion.toLowerCase().includes(query)) ||
-        (i.pisos?.piso && i.pisos.piso.toLowerCase().includes(query))
+      this.pisosFiltrados = this.pisos.filter(p => 
+        (p.piso && p.piso.toLowerCase().includes(query)) ||
+        (p.propietario && p.propietario.toLowerCase().includes(query))
       );
     }
   }
-  seleccionarIncidencia(i: IncidenciasRespuesta): void {
-    this.visita.idIncidencia = i.idIncidencia;
-    this.busquedaIncidencia = `${i.numeroIncidencia} - ${i.descripcion || 'Sin descripción'} (Piso: ${i.pisos?.piso})`;
-    this.mostrarDropdownIncidencia = false;
+
+  seleccionarPiso(p: PisosRespuesta): void {
+    this.visita.idPiso = p.idPiso;
+    this.visita.pisoNombre = p.piso;
+    this.visita.promocion = p.promocion;
+    this.visita.propietario = p.propietario || '';
+    this.visita.telefonoPropietario = p.telefonoPropietario || '';
+    this.busquedaPiso = this.formatearTextoPiso(p);
+    this.mostrarDropdownPiso = false;
   }
 
   // --- Operaciones CRUD ---
 
   actualizar(): void {
-    if (!this.visita.idIncidencia || !this.visita.idTecnico || !this.visita.diaVisita) {
-      this.alerta.advertencia("Por favor complete los campos requeridos (Incidencia, Técnico y Fecha Visita).");
+    if (!this.visita.idPiso || !this.visita.idTecnico || !this.visita.diaVisita) {
+      this.alerta.advertencia("Por favor complete los campos requeridos (Piso, Técnico y Fecha Visita).");
       return;
     }
 
@@ -273,16 +295,16 @@ export class DetalleVisitaComponent implements OnInit, OnDestroy {
     const fecha = new Date(this.visita.diaVisita).toISOString().split('.')[0];
     const dto: VisitasDto = {
       idTecnico: Number(this.visita.idTecnico),
-      idIncidencia: Number(this.visita.idIncidencia),
+      idPiso: Number(this.visita.idPiso),
       diaVisita: fecha,
       estadoVisita: this.visita.estadoVisita || null,
       observaciones: this.visita.observaciones || null
     };
 
-    // Obtener la promoción y piso de la incidencia seleccionada
-    const chosenInc = this.incidencias.find(i => i.idIncidencia === Number(this.visita.idIncidencia));
-    const promoName = chosenInc?.pisos?.promocion;
-    const floorName = chosenInc?.pisos?.piso;
+    // Obtener la promoción y piso seleccionados
+    const chosenPiso = this.pisos.find(p => p.idPiso === Number(this.visita.idPiso));
+    const promoName = chosenPiso?.promocion;
+    const floorName = chosenPiso?.piso;
 
     // Verificar si ya hay visitas agendadas para esta promoción y piso el mismo día
     this.visitasService.obtenerTodas().subscribe({
@@ -292,9 +314,10 @@ export class DetalleVisitaComponent implements OnInit, OnDestroy {
           if (!this.modoCrear && v.idVisita === this.idVisita) return false;
           
           const mismaPromo = v.promocion && promoName && v.promocion.toUpperCase().trim() === promoName.toUpperCase().trim();
-          const mismoPiso = v.piso && floorName && v.piso.toUpperCase().trim() === floorName.toUpperCase().trim();
+          const mismoPiso = (v.idPiso && v.idPiso === Number(this.visita.idPiso)) ||
+                            (v.piso && floorName && v.piso.toUpperCase().trim() === floorName.toUpperCase().trim() && mismaPromo);
           
-          if (mismaPromo && mismoPiso) {
+          if (mismoPiso) {
             if (v.diaVisita) {
               const vDateStr = new Date(v.diaVisita).toISOString().split('T')[0];
               return vDateStr === dateStrSelected;
@@ -324,7 +347,6 @@ export class DetalleVisitaComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error("Error al verificar duplicidad de visitas:", err);
-        // En caso de error, procedemos directo
         this.ejecutarGuardado(dto);
       }
     });
@@ -391,115 +413,6 @@ export class DetalleVisitaComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  cargarDocumentosAsociados(): void {
-    if (!this.visita.idIncidencia) return;
-    this.documentosService.listarPorIncidencia(Number(this.visita.idIncidencia)).subscribe({
-      next: (res) => {
-        this.documentosAsociados = res || [];
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error("Error al cargar documentos de la incidencia:", err);
-      }
-    });
-  }
-
-  abrirModalSubir(): void {
-    this.cargandoSubir = false;
-    this.docSubir = {
-      nombre: '',
-      estado: 'FALTAN_FIRMAS',
-      archivo: null
-    };
-    this.mostrarModalSubir = true;
-    this.cdr.detectChanges();
-  }
-
-  cerrarModalSubir(): void {
-    this.cargandoSubir = false;
-    this.mostrarModalSubir = false;
-    this.cdr.detectChanges();
-  }
-
-  onArchivoSeleccionadoSubir(event: any): void {
-    const file = event.target.files?.[0];
-    if (file) {
-      this.docSubir.archivo = file;
-      if (!this.docSubir.nombre) {
-        this.docSubir.nombre = file.name.split('.')[0];
-      }
-      const ext = file.name.split('.').pop()?.toLowerCase();
-      if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'mp4', 'webm', 'avi', 'mov', 'mkv'].includes(ext || '')) {
-        this.docSubir.estado = 'NO_APLICA';
-      } else {
-        this.docSubir.estado = 'FALTAN_FIRMAS';
-      }
-      this.cdr.detectChanges();
-    }
-  }
-
-  guardarDocIncidencia(): void {
-    if (!this.visita.idIncidencia) {
-      this.alerta.advertencia("No se puede subir evidencia sin una incidencia asociada.");
-      return;
-    }
-    if (!this.docSubir.archivo) {
-      this.alerta.advertencia("Por favor seleccione un archivo.");
-      return;
-    }
-    this.cargandoSubir = true;
-    this.cdr.detectChanges();
-
-    this.documentosService.subirParaIncidencia(
-      Number(this.visita.idIncidencia),
-      this.docSubir.archivo,
-      this.docSubir.estado,
-      this.docSubir.nombre.trim()
-    ).subscribe({
-      next: () => {
-        this.cargandoSubir = false;
-        this.mostrarModalSubir = false;
-        this.alerta.exito("Evidencia subida y asociada correctamente.");
-        this.cargarDocumentosAsociados();
-      },
-      error: (err) => {
-        this.cargandoSubir = false;
-        this.cdr.detectChanges();
-        this.alerta.error("Error al subir evidencia: " + (err.error || err.message));
-      }
-    });
-  }
-
-  eliminarDocIncidencia(relacion: any): void {
-    this.alerta.confirmar(
-      '¿Eliminar Documento?',
-      `¿Está seguro de que desea desasociar y eliminar el documento "${relacion.documento.nombre}"?`
-    ).then((confirmado) => {
-      if (confirmado) {
-        this.cargando = true;
-        this.cdr.detectChanges();
-        this.documentosService.eliminarIncidenciaDocumento(relacion.id).subscribe({
-          next: () => {
-            this.cargando = false;
-            this.alerta.exito("Documento eliminado con éxito.");
-            this.cargarDocumentosAsociados();
-          },
-          error: (err) => {
-            this.cargando = false;
-            this.cdr.detectChanges();
-            this.alerta.error("Error al eliminar documento: " + (err.error || err.message));
-          }
-        });
-      }
-    });
-  }
-
-  verDocumento(doc: any): void {
-    if (doc && doc.ruta) {
-      window.open(doc.ruta, '_blank');
-    }
-  }
-
   obtenerNombreTecnico(id: any): string {
     if (!id) return 'No asignado';
     const tec = this.tecnicos.find(t => t.id === Number(id));
@@ -514,150 +427,5 @@ export class DetalleVisitaComponent implements OnInit, OnDestroy {
     } else {
       this.volver();
     }
-  }
-
-  // --- Visualizador de Evidencias ---
-  mostrarVisualizadorDocumentos = false;
-  tabActiva: 'imagenes' | 'videos' | 'documentos' = 'imagenes';
-  indiceImagenGrande: number | null = null;
-
-  abrirVisualizadorDocumentos(): void {
-    this.mostrarVisualizadorDocumentos = true;
-    this.tabActiva = 'imagenes';
-    this.indiceImagenGrande = null;
-    this.cdr.detectChanges();
-  }
-
-  cerrarVisualizadorDocumentos(): void {
-    this.mostrarVisualizadorDocumentos = false;
-    this.indiceImagenGrande = null;
-    this.cdr.detectChanges();
-  }
-
-  esImagen(doc: any): boolean {
-    if (!doc) return false;
-    const format = doc.formato;
-    const path = doc.ruta || '';
-    const ext = path.split('.').pop()?.toLowerCase();
-    
-    if (['pdf', 'docx', 'xlsx', 'xls', 'txt'].includes(ext || '')) {
-      return false;
-    }
-    
-    return format === 'IMAGEN' || ['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext || '');
-  }
-
-  esVideo(doc: any): boolean {
-    if (!doc) return false;
-    const format = doc.formato;
-    const path = doc.ruta || '';
-    const ext = path.split('.').pop()?.toLowerCase();
-    
-    if (['pdf', 'docx', 'xlsx', 'xls', 'txt'].includes(ext || '')) {
-      return false;
-    }
-    
-    return format === 'VIDEO' || ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv'].includes(ext || '');
-  }
-
-  obtenerListaDeTab(tipo: 'imagenes' | 'videos' | 'documentos'): any[] {
-    return this.documentosAsociados.filter(item => {
-      const isImg = this.esImagen(item.documento);
-      const isVid = this.esVideo(item.documento);
-      if (tipo === 'imagenes') return isImg;
-      if (tipo === 'videos') return isVid;
-      return !isImg && !isVid;
-    });
-  }
-
-  abrirLightbox(index: number): void {
-    this.indiceImagenGrande = index;
-    this.cdr.detectChanges();
-  }
-
-  cerrarLightbox(): void {
-    this.indiceImagenGrande = null;
-    this.cdr.detectChanges();
-  }
-
-  lightboxSiguiente(): void {
-    if (this.indiceImagenGrande === null) return;
-    const total = this.obtenerListaDeTab('imagenes').length;
-    if (total === 0) return;
-    this.indiceImagenGrande = (this.indiceImagenGrande + 1) % total;
-    this.cdr.detectChanges();
-  }
-
-  lightboxAnterior(): void {
-    if (this.indiceImagenGrande === null) return;
-    const total = this.obtenerListaDeTab('imagenes').length;
-    if (total === 0) return;
-    this.indiceImagenGrande = (this.indiceImagenGrande - 1 + total) % total;
-    this.cdr.detectChanges();
-  }
-
-  // --- Edición de Documentos ---
-  mostrarModalEditar = false;
-  cargandoEditar = false;
-  seccionEdicion = 'METADATOS';
-  docEditar = {
-    id: 0,
-    nombre: '',
-    estado: '',
-    archivo: null as File | null,
-    relacionOriginal: null as any
-  };
-
-  abrirModalEditar(relacion: any): void {
-    this.docEditar = {
-      id: relacion.id,
-      nombre: relacion.documento.nombre,
-      estado: relacion.estado,
-      archivo: null,
-      relacionOriginal: relacion
-    };
-    this.seccionEdicion = 'METADATOS';
-    this.mostrarModalEditar = true;
-    this.cdr.detectChanges();
-  }
-
-  cerrarModalEditar(): void {
-    this.mostrarModalEditar = false;
-    this.cdr.detectChanges();
-  }
-
-  onArchivoSeleccionadoEditar(e: any): void {
-    const file = e.target.files?.[0];
-    if (file) {
-      this.docEditar.archivo = file;
-      this.cdr.detectChanges();
-    }
-  }
-
-  actualizarDocIncidencia(): void {
-    if (!this.docEditar.nombre.trim()) {
-      this.alerta.advertencia("Por favor escriba un nombre.");
-      return;
-    }
-    this.cargandoEditar = true;
-    this.cdr.detectChanges();
-    this.documentosService.actualizarIncidenciaDocumento(
-      this.docEditar.id,
-      this.docEditar.archivo || undefined,
-      this.docEditar.estado,
-      this.docEditar.nombre.trim()
-    ).subscribe({
-      next: () => {
-        this.cargandoEditar = false;
-        this.mostrarModalEditar = false;
-        this.alerta.exito("Documento actualizado con éxito.");
-        this.cargarDocumentosAsociados();
-      },
-      error: (err) => {
-        this.cargandoEditar = false;
-        this.cdr.detectChanges();
-        this.alerta.error("Error al actualizar documento: " + (err.error || err.message));
-      }
-    });
   }
 }

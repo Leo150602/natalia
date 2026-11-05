@@ -4,11 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { EstadoGlobalService } from '../../servicios/global-service';
 import { VisitasService } from '../../servicios/visitas-service';
-import { IncidenciasService } from '../../servicios/incidencias-service';
+import { PisosService } from '../../servicios/pisos-service';
 import { AuthService, LoginRespuesta } from '../../servicios/auth-service';
 import { EnumService } from '../../servicios/enum-service';
 import { AlertaService } from '../../servicios/alerta-service';
-import { IncidenciasRespuesta } from '../../modelos/incidencias.model';
+import { PisosRespuesta } from '../../modelos/pisos.model';
 import { VisitasDto } from '../../modelos/visitas.model';
 import { PermisosService } from '../../servicios/permisos.service';
 
@@ -22,7 +22,7 @@ import { PermisosService } from '../../servicios/permisos.service';
 export class ImportarVisitasComponent implements OnInit {
 
   promocionId: number | null = null;
-  incidencias: IncidenciasRespuesta[] = [];
+  pisos: PisosRespuesta[] = [];
   tecnicos: LoginRespuesta[] = [];
   estados: any[] = [];
   cargando = false;
@@ -31,7 +31,7 @@ export class ImportarVisitasComponent implements OnInit {
   idVisitaEdicion: number | null = null;
 
   nuevaVisita: any = {
-    idIncidencia: null,
+    idPiso: null,
     idTecnico: null,
     diaVisita: '',
     estadoVisita: '',
@@ -41,7 +41,7 @@ export class ImportarVisitasComponent implements OnInit {
   constructor(
     private estadoGlobal: EstadoGlobalService,
     private visitasService: VisitasService,
-    private incidenciasService: IncidenciasService,
+    private pisosService: PisosService,
     private authService: AuthService,
     private enumService: EnumService,
     private alerta: AlertaService,
@@ -60,7 +60,7 @@ export class ImportarVisitasComponent implements OnInit {
     this.estadoGlobal.promocion$.subscribe((id) => {
       this.promocionId = id;
       if (id !== null) {
-        this.cargarIncidencias();
+        this.cargarPisos();
       }
     });
 
@@ -98,7 +98,7 @@ export class ImportarVisitasComponent implements OnInit {
         }
 
         this.nuevaVisita = {
-          idIncidencia: res.idIncidencia || null,
+          idPiso: res.idPiso || null,
           idTecnico: tecnicoId,
           diaVisita: res.diaVisita ? new Date(res.diaVisita).toISOString().slice(0, 16) : '',
           estadoVisita: keyEstado,
@@ -110,14 +110,14 @@ export class ImportarVisitasComponent implements OnInit {
     });
   }
 
-  cargarIncidencias(): void {
+  cargarPisos(): void {
     if (this.promocionId === null) return;
-    this.incidenciasService.obtenerPorPromocion(this.promocionId).subscribe({
+    this.pisosService.obtenerPorPromocion(this.promocionId).subscribe({
       next: (res) => {
-        this.incidencias = res;
+        this.pisos = res || [];
         this.cdr.detectChanges(); 
       },
-      error: (err) => console.error("Error al cargar incidencias:", err)
+      error: (err) => console.error("Error al cargar pisos:", err)
     });
   }
 
@@ -148,8 +148,8 @@ export class ImportarVisitasComponent implements OnInit {
   }
 
   guardar(): void {
-    if (!this.nuevaVisita.idIncidencia || !this.nuevaVisita.idTecnico || !this.nuevaVisita.diaVisita) {
-      this.alerta.advertencia("Por favor complete los campos requeridos (Incidencia, Técnico y Fecha Visita).");
+    if (!this.nuevaVisita.idPiso || !this.nuevaVisita.idTecnico || !this.nuevaVisita.diaVisita) {
+      this.alerta.advertencia("Por favor complete los campos requeridos (Piso, Técnico y Fecha Visita).");
       return;
     }
 
@@ -162,7 +162,7 @@ export class ImportarVisitasComponent implements OnInit {
 
     const dto: VisitasDto = {
       idTecnico: idTecnico,
-      idIncidencia: Number(this.nuevaVisita.idIncidencia),
+      idPiso: Number(this.nuevaVisita.idPiso),
       diaVisita: fecha,
       estadoVisita: this.nuevaVisita.estadoVisita || null,
       observaciones: this.nuevaVisita.observaciones || null

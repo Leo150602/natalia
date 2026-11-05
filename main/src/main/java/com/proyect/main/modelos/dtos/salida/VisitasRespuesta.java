@@ -18,6 +18,7 @@ public class VisitasRespuesta {
     private String tecnicoTelefono;
     private String numeroIncidencia;
     private int idIncidencia;
+    private int idPiso;
     private String piso;
     private String promocion;
     private String propietario;

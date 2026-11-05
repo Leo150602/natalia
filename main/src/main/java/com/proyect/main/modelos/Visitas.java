@@ -38,4 +38,8 @@ public class Visitas {
     @JoinColumn(name = "idIncidencia")
     private Incidencias incidencia;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "idPiso")
+    private Pisos piso;
+
 }
