@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -62,7 +61,9 @@ public class Incidencias {
     private LocalDateTime fechaIncidencia;
 
     @OneToMany(mappedBy = "incidencia", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Visitas> visitas;
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
+    private List<IncidenciaDocumento> documentosAsociados;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idPiso", nullable = false)

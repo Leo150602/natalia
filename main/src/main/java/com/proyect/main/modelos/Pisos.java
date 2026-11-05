@@ -23,9 +23,13 @@ public class Pisos {
     private String piso;
 
     @OneToMany(mappedBy = "piso", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
     private List<Incidencias> incidencias;
 
     @OneToMany(mappedBy = "piso", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
     private List<Visitas> visitas;
 
     @ManyToOne(fetch = FetchType.LAZY)

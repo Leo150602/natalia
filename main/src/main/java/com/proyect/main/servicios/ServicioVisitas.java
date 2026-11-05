@@ -2,19 +2,16 @@ package com.proyect.main.servicios;
 
 import com.proyect.main.modelos.Pisos;
 import com.proyect.main.modelos.Usuario;
-import com.proyect.main.modelos.Incidencias;
 import com.proyect.main.modelos.Visitas;
 import com.proyect.main.modelos.enums.RolUsuario;
 import com.proyect.main.modelos.dtos.entrada.VisitasDto;
 import com.proyect.main.modelos.dtos.salida.VisitasRespuesta;
 import com.proyect.main.repositorios.IRepositorioPisos;
 import com.proyect.main.repositorios.IRepositorioUsuario;
-import com.proyect.main.repositorios.IRepositorioIncidencias;
 import com.proyect.main.repositorios.IRepositorioVisitas;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,26 +23,7 @@ public class ServicioVisitas {
 
     private final IRepositorioVisitas repositorioVisitas;
     private final IRepositorioUsuario repositorioUsuario;
-    private final IRepositorioIncidencias repositorioIncidencias;
     private final IRepositorioPisos repositorioPisos;
-
-    @Transactional
-    public int migrarPisosDesdeIncidencias() {
-        try {
-            List<Visitas> visitas = repositorioVisitas.findAllForMigration();
-            int actualizadas = 0;
-            for (Visitas visita : visitas) {
-                if (visita.getPiso() == null && visita.getIncidencia() != null && visita.getIncidencia().getPiso() != null) {
-                    visita.setPiso(visita.getIncidencia().getPiso());
-                    repositorioVisitas.save(visita);
-                    actualizadas++;
-                }
-            }
-            return actualizadas;
-        } catch (Exception e) {
-            throw new RuntimeException("Error al migrar pisos en las visitas desde incidencias: " + e.getMessage(), e);
-        }
-    }
 
     public VisitasRespuesta insertar(VisitasDto dto) {
         try {
@@ -58,30 +36,14 @@ public class ServicioVisitas {
                         " no tiene el rol de TECNICO. Rol actual: " + tecnico.getRol());
             }
 
-            Incidencias incidencia = null;
-            if (dto.getIdIncidencia() > 0) {
-                incidencia = repositorioIncidencias.findById(dto.getIdIncidencia())
-                        .orElseThrow(() -> new IllegalArgumentException("Incidencia no encontrada con ID: " + dto.getIdIncidencia()));
-            }
-
-            Pisos piso = null;
-            if (dto.getIdPiso() > 0) {
-                piso = repositorioPisos.findById(dto.getIdPiso())
-                        .orElseThrow(() -> new IllegalArgumentException("Piso no encontrado con ID: " + dto.getIdPiso()));
-            } else if (incidencia != null) {
-                piso = incidencia.getPiso();
-            }
-
-            if (piso == null) {
-                throw new IllegalArgumentException("Se debe especificar un piso o una incidencia válida para la visita.");
-            }
+            Pisos piso = repositorioPisos.findByIdWithDetails(dto.getIdPiso())
+                    .orElseThrow(() -> new IllegalArgumentException("Piso no encontrado con ID: " + dto.getIdPiso()));
 
             Visitas visita = Visitas.builder()
                     .observaciones(dto.getObservaciones())
                     .diaVisita(dto.getDiaVisita())
                     .estadoVisita(dto.getEstadoVisita())
                     .tecnico(tecnico)
-                    .incidencia(incidencia)
                     .piso(piso)
                     .build();
 
@@ -123,29 +85,13 @@ public class ServicioVisitas {
                         " no tiene el rol de TECNICO. Rol actual: " + tecnico.getRol());
             }
 
-            Incidencias incidencia = null;
-            if (dto.getIdIncidencia() > 0) {
-                incidencia = repositorioIncidencias.findById(dto.getIdIncidencia())
-                        .orElseThrow(() -> new IllegalArgumentException("Incidencia no encontrada con ID: " + dto.getIdIncidencia()));
-            }
-
-            Pisos piso = null;
-            if (dto.getIdPiso() > 0) {
-                piso = repositorioPisos.findById(dto.getIdPiso())
-                        .orElseThrow(() -> new IllegalArgumentException("Piso no encontrado con ID: " + dto.getIdPiso()));
-            } else if (incidencia != null) {
-                piso = incidencia.getPiso();
-            }
-
-            if (piso == null) {
-                throw new IllegalArgumentException("Se debe especificar un piso o una incidencia válida para la visita.");
-            }
+            Pisos piso = repositorioPisos.findByIdWithDetails(dto.getIdPiso())
+                    .orElseThrow(() -> new IllegalArgumentException("Piso no encontrado con ID: " + dto.getIdPiso()));
 
             visita.setObservaciones(dto.getObservaciones());
             visita.setDiaVisita(dto.getDiaVisita());
             visita.setEstadoVisita(dto.getEstadoVisita());
             visita.setTecnico(tecnico);
-            visita.setIncidencia(incidencia);
             visita.setPiso(piso);
 
             return mapear(repositorioVisitas.save(visita));
@@ -179,10 +125,7 @@ public class ServicioVisitas {
         String propietarioTelefono = null;
         int idPiso = 0;
 
-        Pisos pisoRelacionado = visita.getPiso() != null
-                ? visita.getPiso()
-                : (visita.getIncidencia() != null ? visita.getIncidencia().getPiso() : null);
-
+        Pisos pisoRelacionado = visita.getPiso();
         if (pisoRelacionado != null) {
             idPiso = pisoRelacionado.getIdPiso();
             pisoNombre = pisoRelacionado.getPiso();
@@ -202,8 +145,6 @@ public class ServicioVisitas {
                 .estadoVisita(visita.getEstadoVisita() != null ? visita.getEstadoVisita().getDescripcion() : null)
                 .tecnicoNombre(visita.getTecnico() != null ? visita.getTecnico().getNombre() : null)
                 .tecnicoTelefono(visita.getTecnico() != null ? visita.getTecnico().getTelefono() : null)
-                .numeroIncidencia(visita.getIncidencia() != null ? visita.getIncidencia().getNumeroIncidencia() : null)
-                .idIncidencia(visita.getIncidencia() != null ? visita.getIncidencia().getIdIncidencia() : 0)
                 .idPiso(idPiso)
                 .piso(pisoNombre)
                 .promocion(promocionNombre)

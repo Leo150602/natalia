@@ -17,16 +17,6 @@ public class ControladorVisitas {
 
     private final ServicioVisitas servicioVisitas;
 
-    @PostMapping("/migrar-pisos")
-    public ResponseEntity<?> migrarPisosDesdeIncidencias() {
-        try {
-            int actualizadas = servicioVisitas.migrarPisosDesdeIncidencias();
-            return ResponseEntity.ok("Visitas actualizadas con la relación de piso: " + actualizadas);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        }
-    }
-
     @PostMapping
     public ResponseEntity<?> insertar(@RequestBody VisitasDto dto) {
         try {

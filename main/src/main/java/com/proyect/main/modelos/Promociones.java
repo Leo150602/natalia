@@ -24,6 +24,8 @@ public class Promociones {
     private String promocion;
 
     @OneToMany(mappedBy = "promocion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
     private List<Pisos> pisos;
 
     @ManyToOne(fetch = FetchType.LAZY)

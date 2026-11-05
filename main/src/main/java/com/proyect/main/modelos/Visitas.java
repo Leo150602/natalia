@@ -35,11 +35,7 @@ public class Visitas {
     private Usuario tecnico;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idIncidencia")
-    private Incidencias incidencia;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idPiso")
+    @JoinColumn(name = "idPiso", nullable = false)
     private Pisos piso;
 
 }

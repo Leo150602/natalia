@@ -291,15 +291,11 @@ public class ServicioPisos {
         try {
             List<Integer> idsIncidencias = repositorioIncidencias.findIdsByPisoId(id);
             for (Integer idIncidencia : idsIncidencias) {
-                List<com.proyect.main.modelos.IncidenciaDocumento> relaciones =
-                        servicioIncidenciaDocumento.listarPorIncidencia(idIncidencia);
-                for (com.proyect.main.modelos.IncidenciaDocumento rel : relaciones) {
-                    servicioIncidenciaDocumento.eliminarAsociacion(rel.getId());
-                }
+                servicioIncidenciaDocumento.eliminarPorIncidencia(idIncidencia);
             }
             repositorioVisitas.deleteByPisoId(id);
             repositorioIncidencias.deleteByPisoId(id);
-            repositorioPisos.deleteById(id);
+            repositorioPisos.deleteByIdPiso(id);
         } catch (Exception e) {
             throw new RuntimeException("Error al eliminar piso: " + e.getMessage(), e);
         }

@@ -69,13 +69,18 @@ public interface IRepositorioIncidencias extends JpaRepository<Incidencias, Inte
     @Query("SELECT i.idIncidencia FROM Incidencias i WHERE i.piso.idPiso = :idPiso")
     List<Integer> findIdsByPisoId(@Param("idPiso") int idPiso);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query("DELETE FROM Incidencias i WHERE i.piso.idPiso IN (SELECT p.idPiso FROM Pisos p WHERE p.promocion.idPromocion = :idPromocion)")
     void deleteByPromocionId(@Param("idPromocion") int idPromocion);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query("DELETE FROM Incidencias i WHERE i.piso.idPiso = :idPiso")
     void deleteByPisoId(@Param("idPiso") int idPiso);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Transactional
+    @Query("DELETE FROM Incidencias i WHERE i.idIncidencia = :idIncidencia")
+    void deleteByIdIncidencia(@Param("idIncidencia") int idIncidencia);
 }

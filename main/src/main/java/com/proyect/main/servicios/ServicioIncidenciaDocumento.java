@@ -35,6 +35,25 @@ public class ServicioIncidenciaDocumento {
     }
 
     @Transactional
+    public void eliminarPorIncidencia(int idIncidencia) {
+        List<IncidenciaDocumento> relaciones = repositorioIncidenciaDocumento.findByIncidenciaIdIncidencia(idIncidencia);
+        List<Integer> idsDocumentos = relaciones.stream()
+                .filter(rel -> rel.getDocumento() != null)
+                .map(rel -> rel.getDocumento().getId())
+                .collect(Collectors.toList());
+
+        repositorioIncidenciaDocumento.deleteByIncidenciaId(idIncidencia);
+
+        for (Integer docId : idsDocumentos) {
+            try {
+                servicioDocumento.eliminar(docId);
+            } catch (Exception e) {
+                System.err.println("Advertencia al eliminar documento ID " + docId + ": " + e.getMessage());
+            }
+        }
+    }
+
+    @Transactional
     public IncidenciaDocumento subirYAsociar(int idIncidencia, MultipartFile file, EstadoDocumentoIncidencia estado, String nombrePersonalizado) throws IOException {
         Incidencias incidencia = repositorioIncidencias.findById(idIncidencia)
                 .orElseThrow(() -> new IllegalArgumentException("Incidencia no encontrada con ID: " + idIncidencia));

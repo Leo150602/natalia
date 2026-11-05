@@ -29,13 +29,18 @@ public interface IRepositorioPisos extends JpaRepository<Pisos, Integer> {
 
     long countByPromocion_IdPromocion(int idPromocion);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query("UPDATE Pisos p SET p.propietario = null WHERE p.propietario.idPersona = :idPersona")
     void setPropietarioToNull(@Param("idPersona") int idPersona);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query("DELETE FROM Pisos p WHERE p.promocion.idPromocion = :idPromocion")
     void deleteByPromocionId(@Param("idPromocion") int idPromocion);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Transactional
+    @Query("DELETE FROM Pisos p WHERE p.idPiso = :idPiso")
+    void deleteByIdPiso(@Param("idPiso") int idPiso);
 }

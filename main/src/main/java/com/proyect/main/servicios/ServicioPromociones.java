@@ -125,17 +125,13 @@ public class ServicioPromociones {
     @Transactional
     public void eliminar(int id) {
         try {
-            // 1. Eliminar documentos asociados a las incidencias de esta promoción
+            // 1. Eliminar documentos asociados a todas las incidencias de esta promoción
             List<Integer> idsIncidencias = repositorioIncidencias.findIdsByPromocionId(id);
             for (Integer idIncidencia : idsIncidencias) {
-                List<com.proyect.main.modelos.IncidenciaDocumento> relaciones =
-                        servicioIncidenciaDocumento.listarPorIncidencia(idIncidencia);
-                for (com.proyect.main.modelos.IncidenciaDocumento rel : relaciones) {
-                    servicioIncidenciaDocumento.eliminarAsociacion(rel.getId());
-                }
+                servicioIncidenciaDocumento.eliminarPorIncidencia(idIncidencia);
             }
 
-            // 2. Eliminar todas las visitas asociadas a las incidencias de esta promoción
+            // 2. Eliminar todas las visitas asociadas a los pisos de esta promoción
             repositorioVisitas.deleteByPromocionId(id);
 
             // 3. Eliminar todas las incidencias asociadas a los pisos de esta promoción
@@ -145,7 +141,7 @@ public class ServicioPromociones {
             repositorioPisos.deleteByPromocionId(id);
 
             // 5. Eliminar la promoción
-            repositorioPromociones.deleteById(id);
+            repositorioPromociones.deleteByIdPromocion(id);
         } catch (Exception e) {
             throw new RuntimeException("Error al eliminar promoción: " + e.getMessage(), e);
         }

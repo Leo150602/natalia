@@ -14,40 +14,32 @@ import java.util.Optional;
 @Repository
 public interface IRepositorioVisitas extends JpaRepository<Visitas, Integer> {
 
-    @Query("SELECT v FROM Visitas v LEFT JOIN FETCH v.tecnico LEFT JOIN FETCH v.incidencia i LEFT JOIN FETCH i.piso ip LEFT JOIN FETCH ip.promocion LEFT JOIN FETCH v.piso p LEFT JOIN FETCH p.promocion")
+    @Query("SELECT v FROM Visitas v LEFT JOIN FETCH v.tecnico JOIN FETCH v.piso p JOIN FETCH p.promocion LEFT JOIN FETCH p.propietario")
     List<Visitas> findAllWithDetails();
 
-    @Query("SELECT v FROM Visitas v LEFT JOIN FETCH v.tecnico LEFT JOIN FETCH v.incidencia i LEFT JOIN FETCH i.piso ip LEFT JOIN FETCH ip.promocion LEFT JOIN FETCH v.piso p LEFT JOIN FETCH p.promocion WHERE v.idVisita = :id")
+    @Query("SELECT v FROM Visitas v LEFT JOIN FETCH v.tecnico JOIN FETCH v.piso p JOIN FETCH p.promocion LEFT JOIN FETCH p.propietario WHERE v.idVisita = :id")
     Optional<Visitas> findByIdWithDetails(@Param("id") int id);
 
-    @Query("SELECT v FROM Visitas v LEFT JOIN FETCH v.tecnico LEFT JOIN FETCH v.incidencia i LEFT JOIN FETCH i.piso ip LEFT JOIN FETCH ip.promocion iprom LEFT JOIN FETCH v.piso p LEFT JOIN FETCH p.promocion prom " +
-           "WHERE (prom.idPromocion = :idPromocion OR iprom.idPromocion = :idPromocion) ORDER BY v.diaVisita DESC")
+    @Query("SELECT v FROM Visitas v LEFT JOIN FETCH v.tecnico JOIN FETCH v.piso p JOIN FETCH p.promocion prom LEFT JOIN FETCH p.propietario " +
+           "WHERE prom.idPromocion = :idPromocion ORDER BY v.diaVisita DESC")
     List<Visitas> findRecentByPromocionId(@Param("idPromocion") int idPromocion, Pageable pageable);
 
-    @Query("SELECT v FROM Visitas v LEFT JOIN FETCH v.tecnico LEFT JOIN FETCH v.incidencia i LEFT JOIN FETCH i.piso ip LEFT JOIN FETCH ip.promocion iprom LEFT JOIN FETCH v.piso p LEFT JOIN FETCH p.promocion prom " +
-           "WHERE (prom.idPromocion = :idPromocion OR iprom.idPromocion = :idPromocion)")
+    @Query("SELECT v FROM Visitas v LEFT JOIN FETCH v.tecnico JOIN FETCH v.piso p JOIN FETCH p.promocion prom LEFT JOIN FETCH p.propietario " +
+           "WHERE prom.idPromocion = :idPromocion")
     List<Visitas> findByPromocionId(@Param("idPromocion") int idPromocion);
 
-    @Query("SELECT v FROM Visitas v LEFT JOIN FETCH v.incidencia i LEFT JOIN FETCH i.piso LEFT JOIN FETCH v.piso")
-    List<Visitas> findAllForMigration();
-
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query("UPDATE Visitas v SET v.tecnico = null WHERE v.tecnico.id = :idUsuario")
     void setTecnicoToNull(@Param("idUsuario") int idUsuario);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
-    @Query("DELETE FROM Visitas v WHERE v.incidencia.idIncidencia = :idIncidencia")
-    void deleteByIncidenciaId(@Param("idIncidencia") int idIncidencia);
-
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM Visitas v WHERE v.piso.idPiso IN (SELECT p.idPiso FROM Pisos p WHERE p.promocion.idPromocion = :idPromocion) OR v.incidencia.idIncidencia IN (SELECT i.idIncidencia FROM Incidencias i WHERE i.piso.idPiso IN (SELECT p.idPiso FROM Pisos p WHERE p.promocion.idPromocion = :idPromocion))")
+    @Query("DELETE FROM Visitas v WHERE v.piso.idPiso IN (SELECT p.idPiso FROM Pisos p WHERE p.promocion.idPromocion = :idPromocion)")
     void deleteByPromocionId(@Param("idPromocion") int idPromocion);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
-    @Query("DELETE FROM Visitas v WHERE v.piso.idPiso = :idPiso OR v.incidencia.idIncidencia IN (SELECT i.idIncidencia FROM Incidencias i WHERE i.piso.idPiso = :idPiso)")
+    @Query("DELETE FROM Visitas v WHERE v.piso.idPiso = :idPiso")
     void deleteByPisoId(@Param("idPiso") int idPiso);
 }

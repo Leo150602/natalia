@@ -590,20 +590,14 @@ public class ServicioIncidencias {
         };
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void eliminar(int id) {
         try {
-            // 1. Buscar y eliminar todas las relaciones de documentos de esta incidencia (incluye borrar de GCS)
-            List<com.proyect.main.modelos.IncidenciaDocumento> relaciones = 
-                servicioIncidenciaDocumento.listarPorIncidencia(id);
-            for (com.proyect.main.modelos.IncidenciaDocumento rel : relaciones) {
-                servicioIncidenciaDocumento.eliminarAsociacion(rel.getId());
-            }
-
-            // 1.5. Eliminar todas las visitas asociadas a la incidencia
-            repositorioVisitas.deleteByIncidenciaId(id);
+            // 1. Eliminar todas las relaciones de documentos de esta incidencia (incluye borrar de GCS de forma segura)
+            servicioIncidenciaDocumento.eliminarPorIncidencia(id);
 
             // 2. Eliminar la incidencia de la base de datos
-            repositorioIncidencias.deleteById(id);
+            repositorioIncidencias.deleteByIdIncidencia(id);
         } catch (Exception e) {
             throw new RuntimeException("Error al eliminar incidencia: " + e.getMessage(), e);
         }

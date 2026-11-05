@@ -15,7 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -77,18 +76,18 @@ public class ServicioDocumento {
     }
 
     public void eliminar(int id) {
-        Documento doc = repositorioDocumento.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Documento no encontrado con ID: " + id));
-
-        // Obtener el nombre del objeto en GCS decodificado desde la ruta
-        String uniqueFilename = obtenerNombreObjetoDesdeRuta(doc.getRuta());
-
-        // Eliminar de GCS
-        BlobId blobId = BlobId.of(bucketName, uniqueFilename);
-        storage.delete(blobId);
-
-        // Eliminar de la base de datos
-        repositorioDocumento.delete(doc);
+        repositorioDocumento.findById(id).ifPresent(doc -> {
+            String uniqueFilename = obtenerNombreObjetoDesdeRuta(doc.getRuta());
+            try {
+                if (uniqueFilename != null && !uniqueFilename.isEmpty()) {
+                    BlobId blobId = BlobId.of(bucketName, uniqueFilename);
+                    storage.delete(blobId);
+                }
+            } catch (Exception e) {
+                System.err.println("Advertencia al eliminar objeto de GCS (" + uniqueFilename + "): " + e.getMessage());
+            }
+            repositorioDocumento.deleteById(id);
+        });
     }
 
     public Documento actualizarDocumento(int id, MultipartFile file, String nombre) throws IOException {
