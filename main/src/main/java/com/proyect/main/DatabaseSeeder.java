@@ -66,7 +66,16 @@ public class DatabaseSeeder implements CommandLineRunner {
                 ADD CONSTRAINT fk_incidencias_piso
                 FOREIGN KEY (id_piso) REFERENCES pisos(id_piso) ON DELETE CASCADE;
 
-                -- 3. visitas -> pisos (id_piso)
+                -- 3. Migrar y limpiar id_incidencia en visitas si aún existe la columna antigua
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'visitas' AND column_name = 'id_incidencia'
+                ) THEN
+                    EXECUTE 'UPDATE visitas v SET id_piso = i.id_piso FROM incidencias i WHERE v.id_incidencia = i.id_incidencia AND v.id_piso IS NULL';
+                    EXECUTE 'ALTER TABLE visitas DROP COLUMN id_incidencia';
+                END IF;
+
+                -- 3b. visitas -> pisos (id_piso)
                 FOR r IN (
                     SELECT tc.constraint_name
                     FROM information_schema.table_constraints tc
